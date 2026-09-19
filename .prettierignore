@@ -1,0 +1,7 @@
+.expo
+assets
+dist
+node_modules
+package-lock.json
+AGENT*.md
+README*.md
