@@ -96,6 +96,25 @@ Before substantial implementation:
 8. Do not perform destructive system/database operations without explicit approval.
 9. Keep documentation updated when an architectural decision or developer workflow changes.
 10. If instructions conflict, ask before making an irreversible change.
+11. Before resuming work, read this entire `AGENTS.md`, `AGENT_STATUS.md`, and
+    only the recent relevant portion of `AGENT_WORKLOG.md`. Read archived logs
+    only when historical context is needed.
+12. After each meaningful environment- or code-changing action, update
+    `AGENT_WORKLOG.md`. Do not log trivial read-only commands unless they
+    materially affect understanding.
+13. Update `AGENT_STATUS.md` whenever the current phase, environment status,
+    completed milestones, blockers, important decisions or next action changes.
+
+`AGENT_STATUS.md` is the primary concise current-state source and must contain
+only: current phase, current branch, current environment status, completed
+milestones, active blockers, important current decisions and next intended
+action.
+
+Keep `AGENT_WORKLOG.md` as a rolling log of approximately the latest 30–50
+meaningful actions. When it exceeds that range, move older entries to
+`docs/agent-logs/YYYY-MM-<phase-or-topic>.md`; never delete history. Summarize
+outputs and retain only relevant error details. Never record passwords, tokens,
+API keys, OAuth secrets or other credentials in status or log files.
 
 Do not overengineer for one million users today. Build the MVP correctly, with clean boundaries that allow measured scaling later.
 
@@ -193,7 +212,9 @@ Organize domain UI/features coherently rather than creating one giant `component
 
 The app talks to the Food Roulette NestJS API.
 
-Do not call Google Places directly from the mobile application.
+The mobile app NEVER calls Google Places or another restaurant/places provider
+directly. Every restaurant, recommendation and provider request must go through
+`food-roulette-api`.
 
 Do not embed Google Places server credentials in the app.
 
