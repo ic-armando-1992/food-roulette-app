@@ -68,6 +68,18 @@ MVP:
 
 Web is not part of the MVP.
 
+### Android emulator from WSL
+
+Use the emulator-specific script so Expo advertises the Android host alias for
+the JavaScript bundle, Fast Refresh and LogBox connection:
+
+```bash
+npm run android:emulator -- --clear
+```
+
+The terminal should show `exp://10.0.2.2:8081`. The regular `npm run android`
+script remains available for other LAN/device setups.
+
 ---
 
 ## 🧠 State Ownership
@@ -125,6 +137,12 @@ error
 
 Final colors may change once the commercial name is defined.
 
+`src/theme/colors.json` is the single color source for both NativeWind and
+runtime props such as icons, SVG and native loading indicators. Feature-specific
+values that are not global design tokens belong in their feature constants
+module; discovery radii, timing and roulette geometry live in
+`src/features/discovery/constants/discovery.constants.ts`.
+
 Expected base components:
 
 ```text
@@ -178,13 +196,25 @@ Do not expose:
 
 1. Open the app.
 2. Request location.
-3. Show Discover.
-4. Choose radius/basic filters.
-5. Press **SURPRISE ME**.
-6. Call `POST /v1/recommendations/random`.
-7. Show name, photo, rating, category, price if available, and geographic distance.
-8. Allow reroll.
-9. Allow opening Maps.
+3. Resolve the current ISO country code from those coordinates.
+4. Show Discover.
+5. Choose radius/basic filters.
+6. Press **SURPRISE ME**.
+7. Call `POST /v1/recommendations/random` with international results disabled.
+8. Show name, photo, rating, category, price if available, and geographic distance.
+9. Allow reroll.
+10. Allow opening Maps.
+
+The discovery presentation is split into three focused UI states without
+changing the request contract: a roulette-first home, a dedicated animated
+search state, and a photo-led restaurant reveal. Reverse geocoding also supplies
+the compact city/region label shown on the home screen; only coordinates and the
+ISO country code are sent to the recommendation API.
+
+When a recommendation includes current opening hours, the result shows a compact
+open/closed state and next opening/closing time. The user can expand the same
+section to see the provider-supplied weekly schedule. Restaurants without hours
+simply omit the section.
 
 Do not block this milestone with:
 - login
@@ -215,6 +245,11 @@ Example:
 ```
 
 The circle represents geographic radius, not driving distance.
+
+The current app also sends the ISO country code resolved from the user's
+coordinates. The backend keeps recommendations inside that country even when
+the radius crosses a border. An international-results preference can be exposed
+later through the existing API flag.
 
 ---
 

@@ -1,6 +1,8 @@
 import { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import colors from '@/theme/colors.json';
+
 type ButtonProps = {
   label: string;
   onPress: () => void;
@@ -22,8 +24,8 @@ const labelClasses = {
 } as const;
 
 const loadingColors = {
-  primary: '#FFFFFF',
-  secondary: '#E85D3F',
+  primary: colors.primaryForeground,
+  secondary: colors.primary,
 } as const;
 
 export function Button({
@@ -42,10 +44,15 @@ export function Button({
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
       accessibilityState={{ busy: loading, disabled: isDisabled }}
-      className={`min-h-14 items-center justify-center rounded-2xl px-5 ${buttonClasses[variant]} ${isDisabled ? 'opacity-60' : ''}`}
+      className={`min-h-14 items-center justify-center rounded-full px-5 ${buttonClasses[variant]} ${isDisabled ? 'opacity-60' : ''}`}
       disabled={isDisabled}
       onPress={onPress}
       style={({ pressed }) => ({
+        backgroundColor:
+          pressed && !isDisabled && variant === 'primary'
+            ? colors.primaryPressed
+            : undefined,
+        opacity: pressed && !isDisabled && variant === 'secondary' ? 0.78 : 1,
         transform: [{ scale: pressed && !isDisabled ? 0.98 : 1 }],
       })}
     >

@@ -42,6 +42,7 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
+    "android:emulator": "REACT_NATIVE_PACKAGER_HOSTNAME=10.0.2.2 expo start --android",
     "ios": "expo start --ios",
     "format": "prettier --check .",
     "format:write": "prettier --write .",

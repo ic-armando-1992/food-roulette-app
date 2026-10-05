@@ -11,6 +11,8 @@ export type PriceLevel = (typeof PRICE_LEVELS)[number];
 export type RandomRecommendationRequest = {
   latitude: number;
   longitude: number;
+  countryCode: string;
+  allowInternational?: boolean;
   radiusMeters: number;
   cuisine?: string;
   priceLevels?: PriceLevel[];
@@ -31,6 +33,13 @@ export type RestaurantPhoto = {
   googleMapsUri: string;
 };
 
+export type RestaurantOpeningHours = {
+  openNow?: boolean;
+  nextOpenTime?: string;
+  nextCloseTime?: string;
+  weekdayDescriptions: string[];
+};
+
 export type RestaurantRecommendation = {
   id: string;
   name: string;
@@ -44,6 +53,7 @@ export type RestaurantRecommendation = {
   rating?: number;
   userRatingCount?: number;
   mapsUri?: string;
+  openingHours: RestaurantOpeningHours | null;
   photo: RestaurantPhoto | null;
 };
 

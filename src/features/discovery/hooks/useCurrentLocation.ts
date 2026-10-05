@@ -1,18 +1,18 @@
 import * as Location from 'expo-location';
 import { useCallback, useRef, useState } from 'react';
 
-const LAST_KNOWN_LOCATION_MAX_AGE_MS = 2 * 60 * 1_000;
-const LOCATION_REQUEST_TIMEOUT_MS = 12_000;
+import { DISCOVERY_TIMING } from '@/features/discovery/constants/discovery.constants';
 
 export type Coordinates = {
   latitude: number;
   longitude: number;
+  countryCode: string;
 };
 
 export type CurrentLocationState =
   | { status: 'idle' }
   | { status: 'requesting' }
-  | { status: 'granted'; coordinates: Coordinates }
+  | { status: 'granted'; coordinates: Coordinates; label: string }
   | { status: 'denied' }
   | { status: 'error' };
 
@@ -25,7 +25,7 @@ function watchForCurrentLocation(): Promise<Location.LocationObject> {
       settled = true;
       subscription?.remove();
       reject(new Error('Location request timed out'));
-    }, LOCATION_REQUEST_TIMEOUT_MS);
+    }, DISCOVERY_TIMING.locationRequestTimeoutMs);
 
     const resolveOnce = (location: Location.LocationObject) => {
       if (settled) {
@@ -69,6 +69,51 @@ function watchForCurrentLocation(): Promise<Location.LocationObject> {
   });
 }
 
+type ResolvedLocationContext = {
+  countryCode: string;
+  label: string;
+};
+
+function resolveLocationContext(coordinates: {
+  latitude: number;
+  longitude: number;
+}): Promise<ResolvedLocationContext> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(
+      () => reject(new Error('Location country lookup timed out')),
+      DISCOVERY_TIMING.countryLookupTimeoutMs,
+    );
+
+    void Location.reverseGeocodeAsync(coordinates)
+      .then((addresses) => {
+        const address = addresses.find((candidate) => candidate.isoCountryCode);
+        const countryCode = address?.isoCountryCode?.trim().toUpperCase();
+
+        if (!countryCode || !/^[A-Z]{2}$/.test(countryCode)) {
+          throw new Error('Location country could not be determined');
+        }
+
+        const locality =
+          address?.city ?? address?.district ?? address?.subregion;
+        const region = address?.region;
+        const labelParts = [locality, region].filter(
+          (part, index, parts): part is string =>
+            Boolean(part) && parts.indexOf(part) === index,
+        );
+
+        resolve({
+          countryCode,
+          label:
+            labelParts.length > 0
+              ? labelParts.join(', ')
+              : (address?.country ?? `Ubicación actual · ${countryCode}`),
+        });
+      })
+      .catch(reject)
+      .finally(() => clearTimeout(timeoutId));
+  });
+}
+
 export function useCurrentLocation() {
   const [state, setState] = useState<CurrentLocationState>({ status: 'idle' });
   const requestInFlight = useRef(false);
@@ -95,16 +140,22 @@ export function useCurrentLocation() {
 
       const location =
         (await Location.getLastKnownPositionAsync({
-          maxAge: LAST_KNOWN_LOCATION_MAX_AGE_MS,
+          maxAge: DISCOVERY_TIMING.lastKnownLocationMaxAgeMs,
           requiredAccuracy: 200,
         })) ?? (await watchForCurrentLocation());
+      const coordinates = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+      const locationContext = await resolveLocationContext(coordinates);
 
       setState({
         status: 'granted',
         coordinates: {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
+          ...coordinates,
+          countryCode: locationContext.countryCode,
         },
+        label: locationContext.label,
       });
     } catch (error) {
       if (__DEV__) {

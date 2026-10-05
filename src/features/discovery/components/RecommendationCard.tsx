@@ -1,8 +1,10 @@
 import { Image } from 'expo-image';
 import {
+  ArrowLeft,
   ExternalLink,
   MapPin,
   RotateCw,
+  Sparkles,
   Star,
   Utensils,
 } from 'lucide-react-native';
@@ -12,8 +14,10 @@ import {
   Linking,
   Pressable,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { getApiResourceUrl } from '@/api/client';
 import {
@@ -22,9 +26,12 @@ import {
   RestaurantPhotoAuthorAttribution,
 } from '@/api/contracts/recommendations';
 import { Button } from '@/components/ui/Button';
+import { OpeningHoursSection } from '@/features/discovery/components/OpeningHoursSection';
+import colors from '@/theme/colors.json';
 
 type RecommendationCardProps = {
   isRerolling: boolean;
+  onBack: () => void;
   onReroll: () => void;
   result: RandomRecommendationResponse;
 };
@@ -37,77 +44,65 @@ const PRICE_LABELS: Record<PriceLevel, string> = {
   VERY_EXPENSIVE: '$$$$',
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  afghani_restaurant: 'Restaurante afgano',
-  african_restaurant: 'Restaurante africano',
-  american_restaurant: 'Restaurante estadounidense',
-  asian_restaurant: 'Restaurante asiático',
-  bakery: 'Panadería',
-  bar: 'Bar',
-  bar_and_grill: 'Bar y parrilla',
-  barbecue_restaurant: 'Parrilla',
-  brazilian_restaurant: 'Restaurante brasileño',
-  breakfast_restaurant: 'Restaurante de desayunos',
-  brunch_restaurant: 'Restaurante de brunch',
-  buffet_restaurant: 'Bufé',
-  cafe: 'Cafetería',
-  cafeteria: 'Cafetería',
-  chinese_restaurant: 'Restaurante chino',
-  coffee_shop: 'Cafetería',
-  deli: 'Delicatessen',
-  dessert_restaurant: 'Restaurante de postres',
-  dessert_shop: 'Tienda de postres',
-  diner: 'Restaurante informal',
-  fast_food_restaurant: 'Comida rápida',
-  fine_dining_restaurant: 'Alta cocina',
-  food_court: 'Patio de comidas',
-  french_restaurant: 'Restaurante francés',
-  greek_restaurant: 'Restaurante griego',
-  hamburger_restaurant: 'Hamburguesería',
-  ice_cream_shop: 'Heladería',
-  indian_restaurant: 'Restaurante indio',
-  indonesian_restaurant: 'Restaurante indonesio',
-  italian_restaurant: 'Restaurante italiano',
-  japanese_restaurant: 'Restaurante japonés',
-  juice_shop: 'Bar de jugos',
-  korean_restaurant: 'Restaurante coreano',
-  lebanese_restaurant: 'Restaurante libanés',
-  meal_delivery: 'Entrega de comida',
-  meal_takeaway: 'Comida para llevar',
-  mediterranean_restaurant: 'Restaurante mediterráneo',
-  mexican_restaurant: 'Restaurante mexicano',
-  middle_eastern_restaurant: 'Restaurante de Medio Oriente',
-  pizza_restaurant: 'Pizzería',
-  pub: 'Pub',
-  ramen_restaurant: 'Restaurante de ramen',
-  restaurant: 'Restaurante',
-  sandwich_shop: 'Tienda de sándwiches',
-  seafood_restaurant: 'Restaurante de mariscos',
-  spanish_restaurant: 'Restaurante español',
-  steak_house: 'Restaurante de carnes',
-  sushi_restaurant: 'Restaurante de sushi',
-  tea_house: 'Casa de té',
-  thai_restaurant: 'Restaurante tailandés',
-  turkish_restaurant: 'Restaurante turco',
-  vegan_restaurant: 'Restaurante vegano',
-  vegetarian_restaurant: 'Restaurante vegetariano',
-  vietnamese_restaurant: 'Restaurante vietnamita',
+type CategoryPresentation = {
+  icon?: string;
+  label: string;
+};
+
+const CATEGORY_PRESENTATIONS: Record<string, CategoryPresentation> = {
+  american_restaurant: { label: 'Estadounidense' },
+  asian_restaurant: { label: 'Asiática' },
+  bakery: { icon: '🥐', label: 'Panadería' },
+  bar: { icon: '🍸', label: 'Bar' },
+  bar_and_grill: { icon: '🍖', label: 'Bar y parrilla' },
+  barbecue_restaurant: { icon: '🍖', label: 'Parrilla' },
+  breakfast_restaurant: { icon: '🍳', label: 'Desayunos' },
+  brunch_restaurant: { icon: '🍳', label: 'Brunch' },
+  cafe: { icon: '☕', label: 'Cafetería' },
+  chinese_restaurant: { label: 'China' },
+  coffee_shop: { icon: '☕', label: 'Café' },
+  fast_food_restaurant: { icon: '🍔', label: 'Comida rápida' },
+  fine_dining_restaurant: { label: 'Alta cocina' },
+  french_restaurant: { label: 'Francesa' },
+  hamburger_restaurant: { icon: '🍔', label: 'Hamburguesas' },
+  indian_restaurant: { label: 'India' },
+  italian_restaurant: { label: 'Italiana' },
+  japanese_restaurant: { icon: '🍣', label: 'Japonesa' },
+  korean_restaurant: { label: 'Coreana' },
+  mediterranean_restaurant: { label: 'Mediterránea' },
+  mexican_restaurant: { icon: '🌮', label: 'Mexicana' },
+  pizza_restaurant: { icon: '🍕', label: 'Pizzería' },
+  ramen_restaurant: { icon: '🍜', label: 'Ramen' },
+  restaurant: { icon: '🍴', label: 'Restaurante' },
+  seafood_restaurant: { icon: '🦐', label: 'Mariscos' },
+  steak_house: { icon: '🥩', label: 'Cortes' },
+  sushi_restaurant: { icon: '🍣', label: 'Sushi' },
+  thai_restaurant: { label: 'Tailandesa' },
+  vegan_restaurant: { icon: '🥗', label: 'Vegana' },
+  vegetarian_restaurant: { icon: '🥗', label: 'Vegetariana' },
 };
 
 function formatDistance(distanceMeters: number): string {
   if (distanceMeters < 1_000) {
-    return `a ${Math.round(distanceMeters)} m`;
+    return `${Math.round(distanceMeters)} m`;
   }
 
-  return `a ${(distanceMeters / 1_000).toFixed(1)} km`;
+  return `${(distanceMeters / 1_000).toFixed(1)} km`;
 }
 
-function formatCategory(value: string | undefined): string {
-  if (!value) {
-    return 'Restaurante';
-  }
+function getCategoryPresentations(types: string[]): CategoryPresentation[] {
+  const labels = new Set<string>();
 
-  return CATEGORY_LABELS[value] ?? 'Restaurante';
+  return types.flatMap((type) => {
+    const presentation = CATEGORY_PRESENTATIONS[type];
+
+    if (!presentation || labels.has(presentation.label)) {
+      return [];
+    }
+
+    labels.add(presentation.label);
+    return [presentation];
+  });
 }
 
 function PhotoAttribution({
@@ -118,177 +113,211 @@ function PhotoAttribution({
   const label = attribution.displayName ?? 'Autor de la foto';
 
   return (
-    <View className="mt-2 flex-row items-center gap-2">
-      {attribution.photoUri ? (
-        <Image
-          accessibilityLabel={`Imagen de perfil de ${label}`}
-          source={{ uri: attribution.photoUri }}
-          style={{ borderRadius: 12, height: 24, width: 24 }}
-        />
-      ) : null}
-      <Pressable
-        accessibilityRole={attribution.uri ? 'link' : undefined}
-        disabled={!attribution.uri}
-        onPress={() => {
-          if (attribution.uri) {
-            void Linking.openURL(attribution.uri);
-          }
-        }}
-      >
-        <Text className="text-xs text-mutedForeground">Foto de {label}</Text>
-      </Pressable>
-    </View>
+    <Pressable
+      accessibilityRole={attribution.uri ? 'link' : undefined}
+      disabled={!attribution.uri}
+      onPress={() => {
+        if (attribution.uri) {
+          void Linking.openURL(attribution.uri);
+        }
+      }}
+    >
+      <Text className="text-xs text-mutedForeground">Foto de {label}</Text>
+    </Pressable>
   );
 }
 
 export function RecommendationCard({
   isRerolling,
+  onBack,
   onReroll,
   result,
 }: RecommendationCardProps) {
+  const { height } = useWindowDimensions();
   const { attribution, recommendation } = result;
   const photo = recommendation.photo;
   const mapsUri = recommendation.mapsUri;
   const [failedPhotoRestaurantId, setFailedPhotoRestaurantId] = useState<
     string | null
   >(null);
+  const [loadedPhotoKey, setLoadedPhotoKey] = useState<string | null>(null);
   const photoFailed = failedPhotoRestaurantId === recommendation.id;
   const photoUrl = useMemo(
     () => (photo ? getApiResourceUrl(photo.url) : null),
     [photo],
   );
-  const category = recommendation.primaryType ?? recommendation.types[0];
+  const photoKey = photoUrl ? `${recommendation.id}:${photoUrl}` : null;
+  const photoHeight = Math.min(390, Math.max(280, height * 0.38));
+  const categoryPresentations = getCategoryPresentations(
+    [recommendation.primaryType, ...recommendation.types].filter(
+      (type): type is string => Boolean(type),
+    ),
+  ).slice(0, 3);
 
   return (
-    <View className="relative overflow-hidden rounded-3xl border border-border bg-surface">
-      {isRerolling ? (
-        <View
-          accessibilityLabel="Buscando otra opción"
-          accessibilityRole="progressbar"
-          className="absolute inset-0 z-10 items-center justify-center px-8"
-          style={{ backgroundColor: 'rgba(255, 248, 243, 0.94)' }}
-        >
-          <View className="rounded-full bg-surface p-4">
-            <ActivityIndicator color="#E85D3F" size="large" />
-          </View>
-          <Text className="mt-4 text-center text-xl font-black text-foreground">
-            Buscando otra opción…
-          </Text>
-          <Text className="mt-2 text-center text-sm leading-5 text-mutedForeground">
-            Conservamos tu elección anterior hasta encontrar la siguiente.
-          </Text>
-        </View>
-      ) : null}
-
-      <View className="h-52 items-center justify-center bg-surfaceSecondary">
+    <Animated.View entering={FadeInUp.duration(380)}>
+      <View
+        className="relative items-center justify-center overflow-hidden bg-surfaceSecondary"
+        style={{ height: photoHeight }}
+      >
         {photoUrl && !photoFailed ? (
-          <Image
-            accessibilityLabel={`Foto de ${recommendation.name}`}
-            contentFit="cover"
-            onError={() => setFailedPhotoRestaurantId(recommendation.id)}
-            source={{ uri: photoUrl }}
-            style={{ height: '100%', width: '100%' }}
-            transition={200}
-          />
+          <>
+            <Image
+              accessibilityLabel={`Foto de ${recommendation.name}`}
+              contentFit="cover"
+              key={photoKey}
+              onError={() => setFailedPhotoRestaurantId(recommendation.id)}
+              onLoad={() => setLoadedPhotoKey(photoKey)}
+              recyclingKey={photoKey}
+              source={{ uri: photoUrl }}
+              style={{ height: '100%', width: '100%' }}
+              transition={250}
+            />
+            {loadedPhotoKey !== photoKey ? (
+              <View
+                accessibilityLabel={`Cargando foto de ${recommendation.name}`}
+                accessibilityRole="progressbar"
+                className="absolute inset-0 items-center justify-center gap-3 bg-surfaceSecondary"
+              >
+                <ActivityIndicator color={colors.primary} size="large" />
+                <Text className="text-sm font-semibold text-mutedForeground">
+                  Preparando tu elección…
+                </Text>
+              </View>
+            ) : null}
+          </>
         ) : (
           <View className="items-center gap-2">
-            <Utensils color="#75675E" size={34} />
+            <Utensils color={colors.mutedForeground} size={38} />
             <Text className="text-sm text-mutedForeground">
               No hay foto disponible
             </Text>
           </View>
         )}
+
+        <Pressable
+          accessibilityLabel="Volver a la ruleta"
+          accessibilityRole="button"
+          className="absolute left-5 top-5 h-12 w-12 items-center justify-center rounded-full bg-surface"
+          onPress={onBack}
+          style={({ pressed }) => ({ opacity: pressed ? 0.8 : 0.96 })}
+        >
+          <ArrowLeft color={colors.foreground} size={24} />
+        </Pressable>
       </View>
 
-      <View className="gap-4 p-5">
+      <View className="-mt-5 gap-4 rounded-t-3xl bg-background px-5 pb-10 pt-6">
         <View>
-          <Text className="text-sm font-bold uppercase tracking-widest text-primary">
-            Tu elección
-          </Text>
-          <Text className="mt-1 text-3xl font-black text-foreground">
+          <View className="flex-row items-center gap-2">
+            <Sparkles color={colors.primary} size={18} />
+            <Text className="text-sm font-extrabold uppercase tracking-wider text-primary">
+              La ruleta eligió
+            </Text>
+          </View>
+          <Text className="mt-2 text-3xl font-black leading-tight text-foreground">
             {recommendation.name}
           </Text>
-          {recommendation.formattedAddress ? (
-            <Text className="mt-2 text-sm leading-5 text-mutedForeground">
-              {recommendation.formattedAddress}
-            </Text>
-          ) : null}
         </View>
 
         <View className="flex-row flex-wrap gap-2">
-          <View className="flex-row items-center gap-1 rounded-full bg-surfaceSecondary px-3 py-2">
-            <Utensils color="#75675E" size={15} />
-            <Text className="text-sm font-semibold text-foreground">
-              {formatCategory(category)}
-            </Text>
-          </View>
           {recommendation.rating !== undefined ? (
-            <View className="flex-row items-center gap-1 rounded-full bg-surfaceSecondary px-3 py-2">
-              <Star color="#B76E00" fill="#B76E00" size={15} />
-              <Text className="text-sm font-semibold text-foreground">
+            <View className="flex-row items-center gap-1.5 rounded-full bg-surfaceSecondary px-3 py-2.5">
+              <Star color={colors.warning} fill={colors.warning} size={17} />
+              <Text className="font-bold text-foreground">
                 {recommendation.rating.toFixed(1)}
                 {recommendation.userRatingCount !== undefined
-                  ? ` (${recommendation.userRatingCount})`
+                  ? ` (${recommendation.userRatingCount.toLocaleString()})`
                   : ''}
               </Text>
             </View>
           ) : null}
           {recommendation.priceLevel ? (
-            <View className="rounded-full bg-surfaceSecondary px-3 py-2">
-              <Text className="text-sm font-semibold text-foreground">
+            <View className="rounded-full bg-surfaceSecondary px-4 py-2.5">
+              <Text className="font-bold text-foreground">
                 {PRICE_LABELS[recommendation.priceLevel]}
               </Text>
             </View>
           ) : null}
-          <View className="flex-row items-center gap-1 rounded-full bg-surfaceSecondary px-3 py-2">
-            <MapPin color="#75675E" size={15} />
-            <Text className="text-sm font-semibold text-foreground">
+          <View className="flex-row items-center gap-1.5 rounded-full bg-surfaceSecondary px-3 py-2.5">
+            <MapPin color={colors.mutedForeground} size={17} />
+            <Text className="font-bold text-foreground">
               {formatDistance(recommendation.distanceMeters)}
             </Text>
           </View>
         </View>
 
-        {attribution ? (
-          <Text className="text-xs text-mutedForeground">
-            Resultados de {attribution.displayText}
-          </Text>
+        {categoryPresentations.length > 0 ? (
+          <View className="flex-row flex-wrap gap-2">
+            {categoryPresentations.map((category) => (
+              <View
+                className="flex-row items-center gap-1.5 rounded-full bg-surfaceSecondary px-3 py-2"
+                key={category.label}
+              >
+                {category.icon ? <Text>{category.icon}</Text> : null}
+                <Text className="text-sm text-foreground">
+                  {category.label}
+                </Text>
+              </View>
+            ))}
+          </View>
         ) : null}
 
-        {photo?.authorAttributions.map((photoAttribution, index) => (
-          <PhotoAttribution
-            attribution={photoAttribution}
-            key={`${photoAttribution.uri ?? photoAttribution.displayName ?? 'author'}-${index}`}
-          />
-        ))}
+        {recommendation.openingHours ? (
+          <OpeningHoursSection openingHours={recommendation.openingHours} />
+        ) : null}
 
-        {photo ? (
-          <Pressable
-            accessibilityRole="link"
-            className="flex-row items-center gap-1"
-            onPress={() => void Linking.openURL(photo.googleMapsUri)}
-          >
-            <ExternalLink color="#75675E" size={13} />
-            <Text className="text-xs font-semibold text-mutedForeground">
-              Ver fuente de la foto
+        {recommendation.formattedAddress ? (
+          <View className="flex-row items-start gap-3 py-1">
+            <MapPin color={colors.mutedForeground} size={21} />
+            <Text className="flex-1 text-sm leading-5 text-mutedForeground">
+              {recommendation.formattedAddress}
             </Text>
-          </Pressable>
+          </View>
         ) : null}
 
-        {mapsUri ? (
+        <View className="gap-3">
+          {mapsUri ? (
+            <Button
+              icon={<MapPin color={colors.primaryForeground} size={19} />}
+              label="ABRIR EN MAPAS"
+              onPress={() => void Linking.openURL(mapsUri)}
+            />
+          ) : null}
           <Button
-            icon={<MapPin color="#2A211C" size={18} />}
-            label="ABRIR EN MAPAS"
-            onPress={() => void Linking.openURL(mapsUri)}
+            icon={<RotateCw color={colors.foreground} size={20} />}
+            label={isRerolling ? 'GIRANDO…' : 'GIRAR OTRA VEZ'}
+            loading={isRerolling}
+            onPress={onReroll}
             variant="secondary"
           />
-        ) : null}
-        <Button
-          icon={<RotateCw color="#FFFFFF" size={18} />}
-          label={isRerolling ? 'GIRANDO…' : 'VOLVER A GIRAR'}
-          loading={isRerolling}
-          onPress={onReroll}
-        />
+        </View>
+
+        <View className="gap-1 border-t border-border pt-4">
+          {attribution ? (
+            <Text className="text-xs text-mutedForeground">
+              Resultados de {attribution.displayText}
+            </Text>
+          ) : null}
+          {photo?.authorAttributions.map((photoAttribution, index) => (
+            <PhotoAttribution
+              attribution={photoAttribution}
+              key={`${photoAttribution.uri ?? photoAttribution.displayName ?? 'author'}-${index}`}
+            />
+          ))}
+          {photo ? (
+            <Pressable
+              accessibilityRole="link"
+              className="mt-1 flex-row items-center gap-1"
+              onPress={() => void Linking.openURL(photo.googleMapsUri)}
+            >
+              <ExternalLink color={colors.mutedForeground} size={13} />
+              <Text className="text-xs font-semibold text-mutedForeground">
+                Ver fuente de la foto
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }

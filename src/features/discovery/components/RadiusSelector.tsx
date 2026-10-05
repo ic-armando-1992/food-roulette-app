@@ -1,39 +1,41 @@
+import { ChevronRight, MapPin } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
-const RADIUS_OPTIONS = [
-  { label: '1 km', value: 1_000 },
-  { label: '3 km', value: 3_000 },
-  { label: '5 km', value: 5_000 },
-  { label: '10 km', value: 10_000 },
-] as const;
+import { RADIUS_OPTIONS } from '@/features/discovery/constants/discovery.constants';
+import colors from '@/theme/colors.json';
 
 type RadiusSelectorProps = {
+  disabled?: boolean;
   radiusMeters: number;
   onChange: (radiusMeters: number) => void;
 };
 
 export function RadiusSelector({
+  disabled = false,
   radiusMeters,
   onChange,
 }: RadiusSelectorProps) {
   return (
-    <View>
-      <Text className="mb-3 text-sm font-bold uppercase tracking-widest text-mutedForeground">
-        Radio de búsqueda
-      </Text>
-      <View className="flex-row flex-wrap gap-2">
+    <View className="rounded-3xl bg-surface p-4">
+      <View className="mb-4 flex-row items-center gap-2">
+        <MapPin color={colors.foreground} size={20} />
+        <Text className="flex-1 text-base font-extrabold text-foreground">
+          ¿Qué tan lejos?
+        </Text>
+        <ChevronRight color={colors.mutedForeground} size={20} />
+      </View>
+      <View className="flex-row gap-2">
         {RADIUS_OPTIONS.map((option) => {
           const isSelected = option.value === radiusMeters;
 
           return (
             <Pressable
               accessibilityRole="radio"
-              accessibilityState={{ selected: isSelected }}
-              className={`min-w-16 rounded-full border px-4 py-3 ${
-                isSelected
-                  ? 'border-primary bg-primary'
-                  : 'border-border bg-surface'
-              }`}
+              accessibilityState={{ disabled, selected: isSelected }}
+              className={`flex-1 rounded-full px-2 py-3 ${
+                isSelected ? 'bg-primary' : 'bg-surfaceSecondary'
+              } ${disabled ? 'opacity-50' : ''}`}
+              disabled={disabled}
               key={option.value}
               onPress={() => onChange(option.value)}
             >

@@ -1,0 +1,19 @@
+{
+  "background": "#FFF8F3",
+  "border": "#EEDFD6",
+  "error": "#B42318",
+  "foreground": "#241B18",
+  "mutedForeground": "#756964",
+  "primary": "#FF5A3C",
+  "primaryPressed": "#E94A30",
+  "primaryForeground": "#FFFFFF",
+  "rouletteCream": "#FFF1E7",
+  "rouletteGold": "#F6B94A",
+  "rouletteGreen": "#52B788",
+  "success": "#16A36A",
+  "successBorder": "#D5EDE0",
+  "successSurface": "#EFF8F3",
+  "surface": "#FFFFFF",
+  "surfaceSecondary": "#F8EFE9",
+  "warning": "#B76E00"
+}
