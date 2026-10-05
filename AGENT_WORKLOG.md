@@ -5,6 +5,235 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-05 — Roulette redesign checkpoint committed
+
+- Timestamp: 2026-10-05.
+- Command/action: reviewed the staged file set for whitespace and credential
+  patterns, then committed the country-scoped roulette redesign, opening-hours
+  UI and Expo emulator-host correction as `9f5ae2f` on `experimental`.
+- Result: success; the functional checkpoint is local and reviewable.
+- Relevant result summary: the commit includes the verified home/loading/result
+  flow, centralized design tokens and constants, deterministic photo loading,
+  domestic recommendation request, schedule UI and documented emulator command.
+- Current phase/status: product changes are committed and ready for remote
+  publication.
+- Blocker: GitHub rejected the configured SSH identity because the personal key
+  is not loaded in the current agent.
+- Next intended action: load the `github-personal` key and push `experimental`.
+
+### 2026-10-05 — Expo Go development-channel host corrected
+
+- Timestamp: 2026-10-05.
+- Command/action: traced Expo Go's “Cannot connect to Expo CLI” warning to Metro
+  advertising WSL/Docker address `172.19.0.1` while the emulator loaded the
+  bundle through Android host alias `10.0.2.2`; added an emulator-specific npm
+  script using Expo's supported `REACT_NATIVE_PACKAGER_HOSTNAME` override.
+- Result: configuration fix added without changing runtime application code;
+  formatting and package validation pass.
+- Relevant result summary: `npm run android:emulator -- --clear` now advertises
+  the same reachable host for the manifest, bundle, Fast Refresh and LogBox.
+  The standard Android script remains unchanged for other device topologies.
+- Current phase/status: WSL/Windows emulator startup has a documented stable
+  path; the currently running Metro process must be restarted with it.
+- Blocker: none after the user restarts Metro.
+- Next intended action: restart Metro with the emulator script and confirm the
+  yellow development warning disappears.
+
+### 2026-10-05 — Result hierarchy and brand accents refined
+
+- Timestamp: 2026-10-05.
+- Command/action: aligned roulette accent tokens with the second design
+  reference, added a primary pressed token, reduced wheel shadow depth, mapped
+  only recognized provider categories to optional food icons, refined open/
+  closed status surfaces, compacted result spacing and inverted the result
+  actions so Maps is primary and reroll secondary.
+- Result: success; format, lint, strict typecheck, whitespace checks and Android
+  Hermes export pass. The live result was captured and visually inspected on
+  the Pixel 10 Pro emulator.
+- Relevant result summary: the real Tijuana result fits photo, metadata,
+  category, closed status, address, both actions and Google attribution with the
+  intended hierarchy. The gray gear visible over the image belongs to Expo Go's
+  development overlay, not the result component.
+- Current phase/status: the requested second UI/UX pass is complete without API
+  or business-logic changes.
+- Blocker: none for Android UI; native iOS confirmation still requires macOS.
+- Next intended action: continue manual interaction testing and adjust only
+  device-specific issues if observed.
+
+### 2026-10-05 — Restaurant opening hours added to result reveal
+
+- Timestamp: 2026-10-05.
+- Command/action: extended the mobile recommendation contract with normalized
+  current hours and added a compact open/closed section, localized next
+  transition time and accessible expandable weekly schedule to the result.
+- Result: success; format, lint, strict typecheck, whitespace checks and Android
+  Hermes export pass.
+- Relevant result summary: hours appear only when supplied by the API; missing
+  data does not create an empty placeholder. The existing photo, Maps, reroll,
+  attribution and responsive result layout remain intact.
+- Current phase/status: mobile is ready to display the backend's new ephemeral
+  hours field.
+- Blocker: real schedule content requires one fresh live recommendation because
+  older in-memory candidates predate the field.
+- Next intended action: run a fresh recommendation in the emulator and verify
+  open/closed state, transition time and weekly expansion.
+
+### 2026-10-05 — Roulette-first discovery redesign implemented
+
+- Timestamp: 2026-10-05.
+- Command/action: refactored the discovery presentation into home, animated
+  search and result states; created a responsive food roulette, compact live
+  location pill and rotating search messages; redesigned distance controls and
+  the restaurant reveal while retaining current API/location/reroll behavior
+  and Google/photo attribution.
+- Result: success; the home state was rendered and visually inspected on the
+  Pixel 10 Pro emulator. Format, lint, strict typecheck, offline local Expo
+  dependency validation, whitespace checks and Android Hermes export pass.
+- Relevant result summary: the wheel is now the product hero; reverse geocoding
+  displays `Tijuana, Baja California` without hardcoding it; the search state
+  lasts exactly as long as the real request; the result gives photography,
+  restaurant identity and real actions stronger hierarchy. The settings icon
+  opens the real system app settings, while unsupported favorite/share/filter
+  actions were not added.
+- Current phase/status: the requested native UI/UX refactor is implemented and
+  bundle-verified without changing the backend contract.
+- Blocker: full live search/result/reroll visual verification remains manual to
+  avoid making unnecessary paid provider calls during automated checks.
+- Next intended action: exercise the complete live flow in the emulator and
+  refine only issues observed in that interaction.
+
+### 2026-10-05 — Stale recommendation photo reuse corrected
+
+- Timestamp: 2026-10-05.
+- Command/action: keyed each restaurant image by its resolved proxy URL, added
+  Expo Image's recycling key, and added a fixed-height accessible loading layer
+  that clears only after the current photo finishes loading.
+- Result: success; formatting, lint, strict typecheck and Android Hermes export
+  pass.
+- Relevant result summary: changing recommendations can no longer leave the
+  prior restaurant's photo beside the new name and description while the next
+  request loads. The card keeps its height, so the correction does not
+  reintroduce the reroll scroll jump; failed or missing photos retain the
+  existing fallback.
+- Current phase/status: image transitions are deterministic in code; emulator
+  visual confirmation remains.
+- Blocker: none for code.
+- Next intended action: reload Expo Go and confirm several consecutive rerolls
+  show the photo loader briefly and then the matching image.
+
+### 2026-10-05 — UI tokens and discovery constants centralized
+
+- Timestamp: 2026-10-05.
+- Command/action: created a shared semantic color source consumed by Tailwind
+  and runtime components, created one discovery constants module for radii,
+  location/reroll timing and roulette geometry, and replaced duplicated raw
+  colors/constants across current components and hooks.
+- Result: success; format, lint, strict typecheck, whitespace checks and Android
+  Hermes export pass.
+- Relevant result summary: the repository-wide audit finds hexadecimal colors
+  only in `src/theme/colors.json`; roulette dimensions and colors no longer live
+  in the component, and changing a semantic color now updates NativeWind classes
+  plus icons/SVG/native indicators from the same source.
+- Current phase/status: the initial design-token boundary is established and
+  documented without adding a competing styling system.
+- Blocker: none.
+- Next intended action: use the same token boundary during the planned visual
+  redesign instead of introducing screen-local color constants.
+
+### 2026-10-05 — Radius-change UI collapse corrected
+
+- Timestamp: 2026-10-05.
+- Command/action: checked API/Metro health, inspected provider usage and Android
+  logs, then stopped clearing the displayed card on radius selection; added a
+  stale-result notice and disabled radius controls during active searches.
+- Result: success; format, lint, strict typecheck, whitespace checks and Android
+  Hermes export pass.
+- Relevant result summary: the API stayed healthy and four recent Nearby Search
+  calls, including the 10 km attempt, succeeded; Android recorded no native or
+  JavaScript exception. The perceived failure was the intentional card removal
+  collapsing the scroll content. Radius changes now preserve the card and tell
+  the user to search again with the new value, without spending quota merely for
+  selecting a control.
+- Current phase/status: radius transitions are stable by construction and
+  automatically verified; emulator confirmation remains.
+- Blocker: none for code.
+- Next intended action: reload Expo Go, switch between 5 km and 10 km, then run
+  one deliberate search and verify the card/scroll remain stable.
+
+### 2026-10-05 — Reroll scroll jump removed
+
+- Timestamp: 2026-10-05.
+- Command/action: separated the last successful recommendation shown on screen
+  from TanStack Mutation's transient `data` lifecycle and kept that card mounted
+  throughout rerolls.
+- Result: success; format, lint, strict typecheck, whitespace checks and Android
+  Hermes export pass.
+- Relevant result summary: starting a mutation can no longer temporarily remove
+  the result card, collapse the `ScrollView` content and force Android to clamp
+  its offset upward. The visible card is replaced only after the request and
+  minimum roulette animation complete; radius changes still intentionally clear
+  the previous result.
+- Current phase/status: reroll layout and scroll are stable by construction;
+  emulator confirmation remains.
+- Blocker: none for code.
+- Next intended action: reload Expo Go and verify repeated rerolls remain at the
+  current card position.
+
+### 2026-10-05 — Always-visible animated reroll feedback implemented
+
+- Timestamp: 2026-10-05.
+- Command/action: replaced generic discovery spinners with a reusable
+  code-native roulette drawn with SVG and animated through Reanimated; added an
+  independent reroll-busy state and a 1.2-second minimum display window.
+- Result: success; format, lint, strict typecheck, whitespace checks and Android
+  Hermes export pass.
+- Relevant result summary: every “Volver a girar” action now immediately blocks
+  duplicates and shows the roulette even when the in-memory candidate pool
+  responds too quickly for TanStack Query's pending state to be perceptible. The
+  previous card remains behind the progress overlay, real slow requests stay
+  covered for their full duration, and reduced-motion preference is respected.
+- Current phase/status: dynamic reroll feedback is implemented and statically/
+  bundle verified; emulator visual confirmation remains.
+- Blocker: none for code.
+- Next intended action: reload Expo Go, observe several pool-backed rerolls and
+  adjust the 1.2-second duration only if it feels too short or too slow.
+
+### 2026-10-05 — Emulator API port mismatch corrected
+
+- Timestamp: 2026-10-05.
+- Command/action: diagnosed the visible recommendation network error, confirmed
+  the healthy Nest API was listening on port 3000 while mobile targeted stopped
+  port 3002, and aligned ignored/local example mobile configuration with
+  `http://10.0.2.2:3000`.
+- Result: configuration corrected; Metro reload/restart is required.
+- Relevant result summary: API `/health` returns HTTP 200 with PostGIS up; the
+  recommendation failure occurred before any provider response because the app
+  used the wrong port.
+- Current phase/status: backend connectivity configuration is aligned; emulator
+  confirmation remains.
+- Blocker: the currently loaded Metro bundle still contains the old public
+  environment value until restarted.
+- Next intended action: restart Metro, reload Expo Go and retry “Sorpréndeme”.
+
+### 2026-10-05 — Current-country recommendation context connected
+
+- Timestamp: 2026-10-05.
+- Command/action: extended the mobile recommendation contract with ISO country
+  context and an international opt-in flag; reverse-geocoded the accepted
+  foreground coordinates and sent `allowInternational: false` on initial and
+  reroll requests; updated the mobile README.
+- Result: success; format, lint, strict typecheck and whitespace checks pass.
+- Relevant result summary: the discovery flow does not become location-ready
+  until it has a valid two-letter country code, preventing a Tijuana search from
+  silently crossing into United States results. The backend independently
+  enforces the same country.
+- Current phase/status: domestic-only client integration is implemented and
+  statically verified; emulator confirmation remains.
+- Blocker: live validation still requires the stopped API and working Expo
+  Go/Metro connectivity.
+- Next intended action: run the full Tijuana location → Mexico-only
+  recommendation → photo → reroll flow on Android.
+
 ### 2026-09-19 — Mobile baseline checkpoint created locally
 
 - Timestamp: 2026-09-19.
