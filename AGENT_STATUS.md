@@ -2,42 +2,35 @@
 
 ## Current phase
 
-The first mobile discovery vertical slice is implemented in Spanish and has a
-roulette-first consumer UI. It now presents three focused states: a home with a
-large food roulette, compact live location and secondary distance selector; a
-dedicated animated search experience; and a photo-led restaurant reveal.
-Location acquisition reverse-geocodes coordinates to both a display label and
-the required ISO country code, while recommendation requests explicitly disable
-international results. Duplicate requests remain blocked and search animation
-ends when the real API request resolves, without an artificial minimum delay.
-The shared semantic palette now has one JSON source consumed by both NativeWind
-and runtime UI props; discovery radii, timing and roulette geometry are isolated
-in one feature constants module rather than individual components.
-Recommendation photos are keyed by restaurant and resolved API URL and clear
-the prior native image when a new restaurant arrives. A fixed-height loading
-placeholder now remains visible until that specific photo finishes loading, so
-an old restaurant photo cannot linger beside the new name and description.
-The result also renders current opening status and the next open/close time when
-available, with an accessible expandable weekly schedule and no placeholder for
-restaurants whose provider data lacks hours.
-The second visual refinement makes Maps the coral primary success action and
-reroll the bordered secondary rejection action, maps only reliable provider
-categories to food icons, gives live hours a restrained status treatment and
-reduces unnecessary roulette depth/spacing.
-The functional baseline remains captured locally in commit `632d514`; the
-country-scoped roulette redesign and Expo emulator-host correction are captured
-in local commit `9f5ae2f`. Format, lint, strict typecheck and Android Hermes
-export pass. Device confirmation of the result hierarchy is complete.
+Roadmap Phase 0 — Existing Core/UI Completion is complete. The Spanish
+roulette-first flow covers location acquisition, radius selection, initial
+spin, request-bound loading, normalized failure states, restaurant reveal,
+Maps and pool-aware reroll. Deterministic mobile tests now protect permission
+grant/denial, unavailable and timed-out location, successful/slow/failed API
+requests, retry and duplicate suppression, pool reuse, optional restaurant
+metadata, closed hours, attribution, Maps and responsive roulette sizing.
+When provider `mapsUri` is absent, the primary Maps action now falls back to a
+universal Google Maps coordinate URL rather than disappearing.
+
+Android inspection passes at the Pixel 10 Pro's physical 1280×2856 px at 480
+dpi (approximately 427×952 dp) and a temporary small 960×1704 px viewport at
+480 dpi (320×568 dp). The small viewport keeps all controls reachable through
+the existing ScrollView and respects top/bottom system areas. Format, lint,
+strict typecheck, 22 mobile tests, Expo dependency validation, Expo Doctor
+21/21 and Android Hermes export pass as of 2026-10-08. Phase 1 has not started.
 
 ## Current branch
 
-`experimental`, tracking `origin/experimental`; the baseline and redesign
-commits are local only. The branch is ready to push once the configured GitHub
-SSH identity is loaded. Nothing has been merged.
+`test/phase-0-core-closeout`, based on the synchronized
+`origin/experimental`. The earlier baseline and redesign checkpoints are
+already published on `origin/experimental`; the Phase 0 closeout is committed,
+published and tracking `origin/test/phase-0-core-closeout`. Its PR and
+integration into `experimental` remain pending. Nothing has been merged to
+`main`.
 
 ## Current environment status
 
-Expo SDK 57, React Native 0.86, React 19, TypeScript 6, Expo Router, NativeWind
+Expo SDK 57.0.27, React Native 0.86.3, React 19, TypeScript 6, Expo Router, NativeWind
 v4, TanStack Query, Zustand, Reanimated, Gesture Handler, Expo Location,
 Image, SecureStore and SQLite, Lucide, React Hook Form and Zod are installed.
 Node v20.20.2/npm 10.8.2 are available through NVM but are not loaded by the
@@ -52,6 +45,9 @@ passes 21/21, the Android Hermes export succeeds, and a generated SDK 36 debug
 APK compiled successfully before its managed-native tree was moved to `/tmp`.
 The `android:emulator` script also advertises `10.0.2.2` to Expo Go, keeping its
 bundle, Fast Refresh and LogBox channels on the same reachable host.
+`npm audit --omit=dev` still reports transitive denial-of-service advisories in
+the Expo/Metro/build graph whose suggested forced fixes downgrade or cross SDK
+boundaries; no forced audit mutation was applied during this Phase 0 closeout.
 
 ## Completed milestones
 
@@ -113,12 +109,26 @@ bundle, Fast Refresh and LogBox channels on the same reachable host.
   photo, branded reveal, metadata, icon-backed categories, status, address,
   primary Maps action, secondary reroll and subdued attribution fit cleanly on
   the Pixel 10 Pro viewport.
+- Jest Expo and React Native Testing Library provide focused, snapshot-free
+  regression coverage: 6 suites and 22 tests pass for the Phase 0 discovery
+  contract and edge states.
+- The result preserves the required primary Maps action without provider
+  `mapsUri` by opening a universal coordinate URL.
+- Responsive Android verification passes at approximately 427×952 dp and at
+  320×568 dp; the emulator was restored to its original physical resolution.
+- Expo SDK patch dependencies are aligned; Expo dependency validation, Doctor
+  21/21 and the Android Hermes export pass after the update.
 
 ## Active blocker(s)
 
-- No blocker remains for code, static, bundle or Android native-build checks.
-- Manual location/country → live API → domestic result/photo → reroll
-  verification remains pending. Native iOS verification requires a macOS host.
+Phase 0 implementation, validation and branch publication have no blocker. PR
+creation is temporarily blocked because GitHub CLI is authenticated as
+`vwaresol`, which is not a collaborator on this repository; the SSH identity
+for `ic-armando-1992` is loaded and push access works. Native iOS and
+physical-device validation still require the appropriate hardware/macOS host
+and remain release-readiness work, not a Phase 0 blocker. Transitive dependency
+advisories require a separately scoped security/dependency review rather than
+`npm audit fix --force`.
 
 ## Important current decisions
 
@@ -139,9 +149,11 @@ bundle, Fast Refresh and LogBox channels on the same reachable host.
   restaurant/provider traffic goes through `food-roulette-api`.
 - First vertical slice is location → Surprise me → API recommendation → result
   → reroll, without auth, achievements, sharing, ads, profiles or collections.
+- Phase 0 regression tests use Jest Expo plus React Native Testing Library and
+  favor visible behavior assertions over snapshots or implementation details.
 
 ## Next intended action
 
-Load the `github-personal` SSH identity and push `experimental`. Continue manual
-home → live search → Mexico-only result/photo/hours → reroll testing and tune
-the motion or spacing only if the real interaction exposes a visual issue.
+Authenticate GitHub CLI as `ic-armando-1992`, then create and merge the
+published Phase 0 closeout PR into `experimental`. Begin Phase 1 analytics and
+observability only when explicitly requested, in a separate scoped change.

@@ -294,6 +294,18 @@ Sensitive tokens → SecureStore.
 
 ## 🧪 Testing
 
+Run the deterministic Phase 0 regression suite with:
+
+```bash
+npm test
+```
+
+The Jest Expo + React Native Testing Library suite covers location permission
+and failure states, API success/failures/timeouts, loading/retry, duplicate-safe
+spin and pool reroll, optional restaurant metadata, opening hours, attribution,
+Maps and responsive roulette bounds. Tests use focused behavior assertions and
+do not call Google or the Food Roulette API.
+
 Prioritize:
 - stores
 - critical hooks
