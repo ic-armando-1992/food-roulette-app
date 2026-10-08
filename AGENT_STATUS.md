@@ -120,7 +120,10 @@ boundaries; no forced audit mutation was applied during this Phase 0 closeout.
 
 ## Active blocker(s)
 
-None for Phase 0. Native iOS and physical-device validation still require the
+Phase 0 implementation and validation have no blocker. Publishing the closeout
+branch is temporarily blocked because the configured GitHub SSH key is not
+loaded and the existing GitHub CLI session is invalid; no credential was copied
+or exposed. Native iOS and physical-device validation still require the
 appropriate hardware/macOS host and remain release-readiness work, not a Phase
 0 blocker. Transitive dependency advisories require a separately scoped
 security/dependency review rather than `npm audit fix --force`.
@@ -149,6 +152,7 @@ security/dependency review rather than `npm audit fix --force`.
 
 ## Next intended action
 
-Publish and integrate the Phase 0 closeout into `experimental`, then stop.
-Begin Phase 1 analytics and observability only when explicitly requested, in a
-separate scoped change.
+Authenticate GitHub through the suggested connector or unlock the configured
+`github-personal` SSH identity, then publish and integrate the Phase 0 closeout
+into `experimental`. Begin Phase 1 analytics and observability only when
+explicitly requested, in a separate scoped change.
