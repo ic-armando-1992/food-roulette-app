@@ -23,9 +23,10 @@ strict typecheck, 22 mobile tests, Expo dependency validation, Expo Doctor
 
 `test/phase-0-core-closeout`, based on the synchronized
 `origin/experimental`. The earlier baseline and redesign checkpoints are
-already published on `origin/experimental`; the Phase 0 closeout is ready for
-its final commit and integration into `experimental`. Nothing has been merged
-to `main`.
+already published on `origin/experimental`; the Phase 0 closeout is committed,
+published and tracking `origin/test/phase-0-core-closeout`. Its PR and
+integration into `experimental` remain pending. Nothing has been merged to
+`main`.
 
 ## Current environment status
 
@@ -120,13 +121,14 @@ boundaries; no forced audit mutation was applied during this Phase 0 closeout.
 
 ## Active blocker(s)
 
-Phase 0 implementation and validation have no blocker. Publishing the closeout
-branch is temporarily blocked because the configured GitHub SSH key is not
-loaded and the existing GitHub CLI session is invalid; no credential was copied
-or exposed. Native iOS and physical-device validation still require the
-appropriate hardware/macOS host and remain release-readiness work, not a Phase
-0 blocker. Transitive dependency advisories require a separately scoped
-security/dependency review rather than `npm audit fix --force`.
+Phase 0 implementation, validation and branch publication have no blocker. PR
+creation is temporarily blocked because GitHub CLI is authenticated as
+`vwaresol`, which is not a collaborator on this repository; the SSH identity
+for `ic-armando-1992` is loaded and push access works. Native iOS and
+physical-device validation still require the appropriate hardware/macOS host
+and remain release-readiness work, not a Phase 0 blocker. Transitive dependency
+advisories require a separately scoped security/dependency review rather than
+`npm audit fix --force`.
 
 ## Important current decisions
 
@@ -152,7 +154,6 @@ security/dependency review rather than `npm audit fix --force`.
 
 ## Next intended action
 
-Authenticate GitHub through the suggested connector or unlock the configured
-`github-personal` SSH identity, then publish and integrate the Phase 0 closeout
-into `experimental`. Begin Phase 1 analytics and observability only when
-explicitly requested, in a separate scoped change.
+Authenticate GitHub CLI as `ic-armando-1992`, then create and merge the
+published Phase 0 closeout PR into `experimental`. Begin Phase 1 analytics and
+observability only when explicitly requested, in a separate scoped change.
