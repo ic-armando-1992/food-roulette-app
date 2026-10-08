@@ -5,20 +5,19 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
-### 2026-10-08 — Branch published; PR reached GitHub CLI account boundary
+### 2026-10-08 — Phase 0 closeout published and merged
 
 - Timestamp: 2026-10-08.
-- Command/action: committed the validated closeout as `11959e2`, loaded the
-  configured personal SSH identity through the existing agent, and published
-  `test/phase-0-core-closeout`. GitHub CLI then attempted PR creation using its
-  separate `vwaresol` session, which lacks collaborator access.
-- Result: commits and branch publication succeeded; PR and integration remain
-  pending only on authenticating GitHub CLI as `ic-armando-1992`.
+- Command/action: committed and published `test/phase-0-core-closeout`, restored
+  GitHub CLI authentication as `ic-armando-1992`, created PR #1 and merged it
+  cleanly into `experimental` as `0d0e229`; the local branch was then
+  fast-forwarded to the remote merge.
+- Result: Phase 0 commits, branch publication, PR and integration succeeded.
 - Current phase/status: Roadmap Phase 0 remains complete; Phase 1 has not
   started.
-- Blocker: GitHub CLI must use the repository owner's account.
-- Next intended action: authenticate GitHub CLI as `ic-armando-1992`, then
-  create and merge the PR to `experimental`.
+- Blocker: none for Phase 0.
+- Next intended action: stop; begin Roadmap Phase 1 only when explicitly
+  requested.
 
 ### 2026-10-08 — Final Phase 0 closure validation passed
 

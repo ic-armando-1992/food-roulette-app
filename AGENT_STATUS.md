@@ -21,12 +21,9 @@ strict typecheck, 22 mobile tests, Expo dependency validation, Expo Doctor
 
 ## Current branch
 
-`test/phase-0-core-closeout`, based on the synchronized
-`origin/experimental`. The earlier baseline and redesign checkpoints are
-already published on `origin/experimental`; the Phase 0 closeout is committed,
-published and tracking `origin/test/phase-0-core-closeout`. Its PR and
-integration into `experimental` remain pending. Nothing has been merged to
-`main`.
+`experimental`, synchronized with `origin/experimental` after Phase 0 closeout
+PR #1 merged as `0d0e229`. The remote closeout branch remains available for
+history. Nothing has been merged to `main`.
 
 ## Current environment status
 
@@ -121,14 +118,10 @@ boundaries; no forced audit mutation was applied during this Phase 0 closeout.
 
 ## Active blocker(s)
 
-Phase 0 implementation, validation and branch publication have no blocker. PR
-creation is temporarily blocked because GitHub CLI is authenticated as
-`vwaresol`, which is not a collaborator on this repository; the SSH identity
-for `ic-armando-1992` is loaded and push access works. Native iOS and
-physical-device validation still require the appropriate hardware/macOS host
-and remain release-readiness work, not a Phase 0 blocker. Transitive dependency
-advisories require a separately scoped security/dependency review rather than
-`npm audit fix --force`.
+None for Phase 0. Native iOS and physical-device validation still require the
+appropriate hardware/macOS host and remain release-readiness work, not a Phase
+0 blocker. Transitive dependency advisories require a separately scoped
+security/dependency review rather than `npm audit fix --force`.
 
 ## Important current decisions
 
@@ -154,6 +147,5 @@ advisories require a separately scoped security/dependency review rather than
 
 ## Next intended action
 
-Authenticate GitHub CLI as `ic-armando-1992`, then create and merge the
-published Phase 0 closeout PR into `experimental`. Begin Phase 1 analytics and
-observability only when explicitly requested, in a separate scoped change.
+Stop after the Phase 0 closeout. Begin Phase 1 analytics and observability only
+when explicitly requested, in a separate scoped change.
