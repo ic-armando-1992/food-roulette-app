@@ -5,6 +5,57 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-08 — Final Phase 0 closure validation passed
+
+- Timestamp: 2026-10-08.
+- Command/action: audited the complete closeout diff for conflicts and secrets,
+  reran the cross-repository validation matrix, aligned five compatible Expo
+  SDK 57 patch dependencies detected by the live Doctor check, and repeated all
+  mobile checks after the dependency update.
+- Result: success; no Google request or quota use occurred.
+- Relevant result summary: mobile format, lint, strict typecheck, 6 suites/22
+  tests, Expo dependency validation, Doctor 21/21 and Android Hermes export
+  pass. API formatting, lint, strict typecheck, 4 suites/20 unit tests, 2
+  suites/4 Docker/PostGIS E2E tests and the Nest production build pass. The E2E
+  smoke test uses fake providers and exercises health, recommendation, exact
+  radius/country selection and pool-aware reroll behavior.
+- Current phase/status: Roadmap Phase 0 is complete and ready to integrate into
+  `experimental`; Roadmap Phase 1 analytics and observability has not started.
+- Blocker: none for Phase 0. Native iOS/physical-device checks remain Phase 13
+  release work. Existing transitive npm advisories remain deferred to a scoped
+  dependency/security review; no forced breaking fix was applied.
+- Next intended action: commit and integrate the Phase 0 closeout, then stop.
+
+### 2026-10-05 — Roadmap Phase 0 formally closed
+
+- Timestamp: 2026-10-05.
+- Command/action: added the Expo/Jest and React Native Testing Library harness,
+  built focused discovery regression suites, audited responsive Android
+  behavior, aligned SDK 57 patch dependencies and ran the full mobile/API
+  validation matrix.
+- Result: success; Phase 0 is complete with 6 mobile suites/22 tests, API 20
+  unit/4 E2E tests, format, lint, strict typecheck, Nest build, Expo dependency
+  validation, Doctor 21/21 and Android Hermes export passing.
+- Relevant result summary: deterministic coverage includes permission grant and
+  denial, unavailable/timed-out location, success/network/timeout/404/5xx,
+  slow loading, retry, duplicate prevention, initial spin, pool reroll,
+  optional metadata, closed hours, attribution and Maps. Testing exposed one
+  defect: missing provider `mapsUri` hid the required primary action; the card
+  now falls back to a universal coordinate URL.
+- Responsive verification: inspected the live Pixel 10 Pro at 1280×2856 px /480
+  dpi (~427×952 dp) and temporarily at 960×1704 px /480 dpi (320×568 dp); all
+  actions and radii remain reachable by scrolling, safe areas remain clear, and
+  the original resolution was restored.
+- Current phase/status: Phase 0 complete; Phase 1 not started. Earlier baseline
+  commits are already on `origin/experimental`; this closeout remains on
+  `test/phase-0-core-closeout` pending review.
+- Blocker: none for Phase 0. Native iOS/physical-device validation is deferred
+  to release readiness because this host has no macOS/iOS environment. A
+  read-only production dependency audit reports transitive DoS advisories in
+  Expo/Metro/build tooling; forced fixes propose breaking SDK changes and were
+  intentionally deferred to a scoped security/dependency review.
+- Next intended action: stop and wait for explicit authorization for Phase 1.
+
 ### 2026-10-05 — Roulette redesign checkpoint committed
 
 - Timestamp: 2026-10-05.

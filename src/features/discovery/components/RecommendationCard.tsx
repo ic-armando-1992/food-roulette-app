@@ -136,7 +136,9 @@ export function RecommendationCard({
   const { height } = useWindowDimensions();
   const { attribution, recommendation } = result;
   const photo = recommendation.photo;
-  const mapsUri = recommendation.mapsUri;
+  const mapsUri =
+    recommendation.mapsUri ??
+    `https://www.google.com/maps/search/?api=1&query=${recommendation.latitude},${recommendation.longitude}`;
   const [failedPhotoRestaurantId, setFailedPhotoRestaurantId] = useState<
     string | null
   >(null);
@@ -276,13 +278,11 @@ export function RecommendationCard({
         ) : null}
 
         <View className="gap-3">
-          {mapsUri ? (
-            <Button
-              icon={<MapPin color={colors.primaryForeground} size={19} />}
-              label="ABRIR EN MAPAS"
-              onPress={() => void Linking.openURL(mapsUri)}
-            />
-          ) : null}
+          <Button
+            icon={<MapPin color={colors.primaryForeground} size={19} />}
+            label="ABRIR EN MAPAS"
+            onPress={() => void Linking.openURL(mapsUri)}
+          />
           <Button
             icon={<RotateCw color={colors.foreground} size={20} />}
             label={isRerolling ? 'GIRANDO…' : 'GIRAR OTRA VEZ'}
