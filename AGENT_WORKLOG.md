@@ -24,6 +24,8 @@ Rolling log of recent meaningful activity. Archive older entries under
 - Blocker: none.
 - Publication: implementation commit `06d38d1` is published through mobile PR
   #2 to `experimental`, dependent on API PR #2.
+- Configuration follow-up: `EXPO_PUBLIC_API_BASE_URL` now has a direct comment
+  explaining device reachability and the Android emulator host alias.
 - Next intended action: review/integrate both Phase 1 PRs, then begin Phase 2
   only after the integration decision.
 
