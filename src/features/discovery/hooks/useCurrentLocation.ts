@@ -110,6 +110,7 @@ function resolveLocationContext(
 export function useCurrentLocation() {
   const [state, setState] = useState<CurrentLocationState>({ status: 'idle' });
   const requestInFlight = useRef(false);
+  const lastTrackedPermission = useRef<boolean | undefined>(undefined);
 
   const requestLocation = useCallback(async () => {
     if (requestInFlight.current) {
@@ -127,12 +128,18 @@ export function useCurrentLocation() {
       }
 
       if (!permission.granted) {
-        trackProductEvent(TELEMETRY_EVENTS.locationDenied, {});
+        if (lastTrackedPermission.current !== false) {
+          trackProductEvent(TELEMETRY_EVENTS.locationDenied, {});
+          lastTrackedPermission.current = false;
+        }
         setState({ status: 'denied' });
         return;
       }
 
-      trackProductEvent(TELEMETRY_EVENTS.locationGranted, {});
+      if (lastTrackedPermission.current !== true) {
+        trackProductEvent(TELEMETRY_EVENTS.locationGranted, {});
+        lastTrackedPermission.current = true;
+      }
 
       const location =
         (await Location.getLastKnownPositionAsync({

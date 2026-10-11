@@ -19,6 +19,20 @@ export const TELEMETRY_DEFAULTS = {
   errorName: 'Error',
 } as const;
 
+export const TELEMETRY_ERROR_KINDS = [
+  'configuration',
+  'http',
+  'invalid-response',
+  'network',
+  'timeout',
+  'unexpected',
+] as const;
+
+export const TELEMETRY_RECOMMENDATION_SOURCES = [
+  'catalog',
+  'provider',
+] as const;
+
 export const TELEMETRY_TEXT_LIMITS = {
   componentStack: 8_000,
   errorName: 100,
@@ -27,8 +41,21 @@ export const TELEMETRY_TEXT_LIMITS = {
 } as const;
 
 export const TELEMETRY_REDACTION = {
-  coordinatePairPattern: /-?\d{1,3}\.\d{4,}\s*[,;]\s*-?\d{1,3}\.\d{4,}/g,
+  bearerCredentialPattern: /(\bbearer\s+)[^"',;\s}\]]+/gi,
+  coordinatePairPattern: /[+-]?\d{1,3}\.\d{4,}\s*[,;]\s*[+-]?\d{1,3}\.\d{4,}/g,
+  labeledCoordinatePattern:
+    /((?:"|')?\b(?:lat(?:itude)?|lon(?:gitude)?|lng)\b(?:"|')?\s*[:=]\s*)[+-]?\d{1,3}(?:\.\d+)?/gi,
   secretPattern:
-    /\b(api[_-]?key|authorization|bearer|password|secret|token)\b\s*[:=]\s*[^\s,;]+/gi,
+    /((?:"|')?\b(?:api[_-]?key|authorization|password|secret|token|access[_-]?token|refresh[_-]?token|id[_-]?token)\b(?:"|')?\s*[:=]\s*(?:"|')?)(?:bearer\s+)?[^"',;\s}\]]+/gi,
   urlQueryPattern: /(https?:\/\/[^\s?]+)\?[^\s)]+/g,
+} as const;
+
+export const TELEMETRY_REDACTION_TEXT = {
+  coordinates: '[redacted-coordinates]',
+  secret: '[redacted]',
+} as const;
+
+export const TELEMETRY_OUTBOX = {
+  databaseName: 'telemetry.db',
+  maximumPendingReports: 10,
 } as const;

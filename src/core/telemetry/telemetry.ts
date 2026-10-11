@@ -6,9 +6,16 @@ import {
   TELEMETRY_DEFAULTS,
   TELEMETRY_PATHS,
   TELEMETRY_REDACTION,
+  TELEMETRY_REDACTION_TEXT,
   TELEMETRY_TEXT_LIMITS,
 } from '@/core/telemetry/constants/telemetry.constants';
 import {
+  getPendingClientErrors,
+  persistPendingClientError,
+  removePendingClientError,
+} from '@/core/telemetry/telemetry-outbox';
+import {
+  ClientErrorReport,
   ClientErrorReportOptions,
   ClientErrorSource,
   ProductEventName,
@@ -37,6 +44,18 @@ function sendBestEffort(path: string, body: unknown): void {
   }).catch(() => {
     // Telemetry must never interrupt the product flow or trigger user retries.
   });
+}
+
+function isPermanentClientError(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.kind === 'http' &&
+    error.status !== undefined &&
+    error.status >= 400 &&
+    error.status < 500 &&
+    error.status !== 408 &&
+    error.status !== 429
+  );
 }
 
 export function createTelemetryId(): string {
@@ -75,11 +94,52 @@ export function sanitizeErrorText(value: string, maxLength: number): string {
   return value
     .replace(
       TELEMETRY_REDACTION.coordinatePairPattern,
-      '[redacted-coordinates]',
+      TELEMETRY_REDACTION_TEXT.coordinates,
     )
-    .replace(TELEMETRY_REDACTION.urlQueryPattern, '$1?[redacted]')
-    .replace(TELEMETRY_REDACTION.secretPattern, '$1=[redacted]')
+    .replace(
+      TELEMETRY_REDACTION.labeledCoordinatePattern,
+      `$1${TELEMETRY_REDACTION_TEXT.coordinates}`,
+    )
+    .replace(
+      TELEMETRY_REDACTION.urlQueryPattern,
+      `$1?${TELEMETRY_REDACTION_TEXT.secret}`,
+    )
+    .replace(
+      TELEMETRY_REDACTION.secretPattern,
+      `$1${TELEMETRY_REDACTION_TEXT.secret}`,
+    )
+    .replace(
+      TELEMETRY_REDACTION.bearerCredentialPattern,
+      `$1${TELEMETRY_REDACTION_TEXT.secret}`,
+    )
     .slice(0, maxLength);
+}
+
+function sendClientError(report: ClientErrorReport): void {
+  void apiRequest<TelemetryAcceptedResponse>(TELEMETRY_PATHS.errors, {
+    body: report,
+    method: 'POST',
+  })
+    .then(() => removePendingClientError(report.reportId))
+    .catch(() => {
+      // The durable outbox retries fatal JavaScript errors on the next launch.
+    });
+}
+
+export async function flushPendingClientErrors(): Promise<void> {
+  for (const report of getPendingClientErrors()) {
+    try {
+      await apiRequest<TelemetryAcceptedResponse>(TELEMETRY_PATHS.errors, {
+        body: report,
+        method: 'POST',
+      });
+      removePendingClientError(report.reportId);
+    } catch (error) {
+      if (isPermanentClientError(error)) {
+        removePendingClientError(report.reportId);
+      }
+    }
+  }
 }
 
 export function reportClientError(
@@ -89,7 +149,7 @@ export function reportClientError(
 ): void {
   const normalized = error instanceof Error ? error : new Error(String(error));
 
-  sendBestEffort(TELEMETRY_PATHS.errors, {
+  const report: ClientErrorReport = {
     reportId: createUuid(),
     sessionId,
     source,
@@ -114,5 +174,13 @@ export function reportClientError(
     occurredAt: new Date().toISOString(),
     appPlatform,
     appVersion,
-  });
+  };
+
+  if (report.fatal) {
+    persistPendingClientError(report);
+    sendClientError(report);
+    return;
+  }
+
+  sendBestEffort(TELEMETRY_PATHS.errors, report);
 }

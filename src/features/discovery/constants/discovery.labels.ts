@@ -59,6 +59,8 @@ export const DISCOVERY_LABELS = {
       'No pudimos completar la búsqueda. Ajusta tus opciones e inténtalo de nuevo.',
     network:
       'No pudimos conectarnos al servicio de restaurantes. Revisa tu conexión e inténtalo de nuevo.',
+    mapsUnavailable:
+      'No pudimos abrir Maps. Revisa que tengas una aplicación de mapas disponible e inténtalo de nuevo.',
     noResults:
       'No encontramos restaurantes cercanos con esas opciones. Prueba con un radio más amplio.',
     serviceUnavailable:

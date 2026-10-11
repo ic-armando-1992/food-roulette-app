@@ -1,10 +1,22 @@
 import { apiRequest } from '@/api/client';
 import {
+  getPendingClientErrors,
+  persistPendingClientError,
+  removePendingClientError,
+} from '@/core/telemetry/telemetry-outbox';
+import {
+  flushPendingClientErrors,
   getTelemetryErrorProperties,
   reportClientError,
   sanitizeErrorText,
   trackProductEvent,
 } from '@/core/telemetry/telemetry';
+
+jest.mock('@/core/telemetry/telemetry-outbox', () => ({
+  getPendingClientErrors: jest.fn(),
+  persistPendingClientError: jest.fn(),
+  removePendingClientError: jest.fn(),
+}));
 
 jest.mock('@/api/client', () => {
   class MockApiError extends Error {
@@ -25,9 +37,16 @@ jest.mock('@/api/client', () => {
 });
 
 const mockApiRequest = jest.mocked(apiRequest);
+const mockGetPendingClientErrors = jest.mocked(getPendingClientErrors);
+const mockPersistPendingClientError = jest.mocked(persistPendingClientError);
+const mockRemovePendingClientError = jest.mocked(removePendingClientError);
 
 describe('telemetry', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockApiRequest.mockResolvedValue({ accepted: true });
+    mockGetPendingClientErrors.mockReturnValue([]);
+  });
 
   it('sends an event envelope without location data', () => {
     trackProductEvent('roulette_spin_started', {
@@ -66,6 +85,17 @@ describe('telemetry', () => {
     );
   });
 
+  it('redacts JSON secrets, bearer credentials and labeled coordinates', () => {
+    expect(
+      sanitizeErrorText(
+        'Authorization: Bearer topsecret {"token":"jsonsecret","latitude":32.5149,"longitude":-117.0382}',
+        500,
+      ),
+    ).toBe(
+      'Authorization: [redacted] {"token":"[redacted]","latitude":[redacted-coordinates],"longitude":[redacted-coordinates]}',
+    );
+  });
+
   it('reports sanitized errors through the API boundary', () => {
     reportClientError(
       new Error('Failure at 32.5149,-117.0382 token=secret'),
@@ -83,6 +113,36 @@ describe('telemetry', () => {
           source: 'global',
         }),
       }),
+    );
+    expect(mockPersistPendingClientError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fatal: true,
+        message: 'Failure at [redacted-coordinates] token=[redacted]',
+      }),
+    );
+  });
+
+  it('retries durable fatal reports and removes them after delivery', async () => {
+    const pendingReport = {
+      reportId: '11111111-1111-4111-8111-111111111111',
+      sessionId: '22222222-2222-4222-8222-222222222222',
+      source: 'global' as const,
+      errorName: 'Error',
+      message: 'Sanitized failure',
+      fatal: true,
+      occurredAt: '2026-10-11T12:00:00.000Z',
+      appPlatform: 'android' as const,
+    };
+    mockGetPendingClientErrors.mockReturnValue([pendingReport]);
+
+    await flushPendingClientErrors();
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/v1/telemetry/errors', {
+      body: pendingReport,
+      method: 'POST',
+    });
+    expect(mockRemovePendingClientError).toHaveBeenCalledWith(
+      pendingReport.reportId,
     );
   });
 

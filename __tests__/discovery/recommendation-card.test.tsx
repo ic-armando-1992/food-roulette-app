@@ -108,4 +108,29 @@ describe('RecommendationCard', () => {
       'https://www.google.com/maps/search/?api=1&query=32.5149,-117.0382',
     );
   });
+
+  it('shows recovery guidance and does not track Maps when opening fails', async () => {
+    jest
+      .mocked(Linking.openURL)
+      .mockRejectedValue(new Error('Maps unavailable'));
+
+    render(
+      <RecommendationCard
+        isRerolling={false}
+        onBack={jest.fn()}
+        onMapsOpened={onMapsOpened}
+        onReroll={jest.fn()}
+        result={buildRecommendation()}
+      />,
+    );
+
+    fireEvent.press(screen.getByText('ABRIR EN MAPAS'));
+
+    expect(
+      await screen.findByText(
+        'No pudimos abrir Maps. Revisa que tengas una aplicación de mapas disponible e inténtalo de nuevo.',
+      ),
+    ).toBeOnTheScreen();
+    expect(onMapsOpened).not.toHaveBeenCalled();
+  });
 });

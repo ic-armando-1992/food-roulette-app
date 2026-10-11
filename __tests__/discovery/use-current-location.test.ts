@@ -66,16 +66,22 @@ describe('useCurrentLocation', () => {
   });
 
   it('resolves granted coordinates, country and display label', async () => {
-    locationMock.getForegroundPermissionsAsync.mockResolvedValue({
-      granted: false,
-      status: Location.PermissionStatus.UNDETERMINED,
-    } as Location.LocationPermissionResponse);
+    locationMock.getForegroundPermissionsAsync
+      .mockResolvedValueOnce({
+        granted: false,
+        status: Location.PermissionStatus.UNDETERMINED,
+      } as Location.LocationPermissionResponse)
+      .mockResolvedValue({
+        granted: true,
+        status: Location.PermissionStatus.GRANTED,
+      } as Location.LocationPermissionResponse);
     locationMock.requestForegroundPermissionsAsync.mockResolvedValue({
       granted: true,
       status: Location.PermissionStatus.GRANTED,
     } as Location.LocationPermissionResponse);
     const { result } = renderHook(() => useCurrentLocation());
 
+    await act(async () => result.current.requestLocation());
     await act(async () => result.current.requestLocation());
 
     expect(
@@ -90,6 +96,7 @@ describe('useCurrentLocation', () => {
       },
       label: 'Tijuana, Baja California',
     });
+    expect(mockTrackProductEvent).toHaveBeenCalledTimes(1);
     expect(mockTrackProductEvent).toHaveBeenCalledWith('location_granted', {});
   });
 
@@ -101,11 +108,13 @@ describe('useCurrentLocation', () => {
     const { result } = renderHook(() => useCurrentLocation());
 
     await act(async () => result.current.requestLocation());
+    await act(async () => result.current.requestLocation());
 
     expect(result.current.state).toEqual({ status: 'denied' });
     expect(
       locationMock.requestForegroundPermissionsAsync,
     ).not.toHaveBeenCalled();
+    expect(mockTrackProductEvent).toHaveBeenCalledTimes(1);
     expect(mockTrackProductEvent).toHaveBeenCalledWith('location_denied', {});
   });
 

@@ -1,3 +1,12 @@
+import {
+  TELEMETRY_ERROR_KINDS,
+  TELEMETRY_RECOMMENDATION_SOURCES,
+} from '@/core/telemetry/constants/telemetry.constants';
+
+export type TelemetryErrorKind = (typeof TELEMETRY_ERROR_KINDS)[number];
+export type TelemetryRecommendationSource =
+  (typeof TELEMETRY_RECOMMENDATION_SOURCES)[number];
+
 export type ProductEventProperties = {
   app_opened: Record<string, never>;
   location_granted: Record<string, never>;
@@ -13,14 +22,14 @@ export type ProductEventProperties = {
     radiusMeters: number;
     durationMs: number;
     restaurantId: string;
-    source: string;
+    source: TelemetryRecommendationSource;
   };
   roulette_spin_failed: {
     spinId: string;
     reroll: boolean;
     radiusMeters: number;
     durationMs: number;
-    errorKind: string;
+    errorKind: TelemetryErrorKind;
     httpStatus?: number;
   };
   roulette_spin_again: { restaurantId: string };
@@ -37,8 +46,27 @@ export type ClientErrorReportOptions = {
 };
 
 export type TelemetryErrorProperties = {
-  errorKind: string;
+  errorKind: TelemetryErrorKind;
   httpStatus?: number;
+};
+
+export type ClientErrorReport = {
+  reportId: string;
+  sessionId: string;
+  source: ClientErrorSource;
+  errorName: string;
+  message: string;
+  stack?: string;
+  componentStack?: string;
+  fatal: boolean;
+  occurredAt: string;
+  appPlatform: 'android' | 'ios';
+  appVersion?: string;
+};
+
+export type PendingClientErrorRow = {
+  reportId: string;
+  payload: string;
 };
 
 export type GlobalErrorHandler = (error: Error, isFatal?: boolean) => void;

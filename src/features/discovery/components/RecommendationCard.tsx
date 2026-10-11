@@ -99,6 +99,9 @@ export function RecommendationCard({
     string | null
   >(null);
   const [loadedPhotoKey, setLoadedPhotoKey] = useState<string | null>(null);
+  const [failedMapsRestaurantId, setFailedMapsRestaurantId] = useState<
+    string | null
+  >(null);
   const photoFailed = failedPhotoRestaurantId === recommendation.id;
   const photoUrl = useMemo(
     () => (photo ? getApiResourceUrl(photo.url) : null),
@@ -117,6 +120,17 @@ export function RecommendationCard({
       (type): type is string => Boolean(type),
     ),
   ).slice(0, DISCOVERY_RESULT_LAYOUT.maximumCategoryTags);
+
+  const handleOpenMaps = async () => {
+    setFailedMapsRestaurantId(null);
+
+    try {
+      await Linking.openURL(mapsUri);
+      onMapsOpened();
+    } catch {
+      setFailedMapsRestaurantId(recommendation.id);
+    }
+  };
 
   return (
     <Animated.View entering={FadeInUp.duration(380)}>
@@ -247,10 +261,13 @@ export function RecommendationCard({
           <Button
             icon={<MapPin color={colors.primaryForeground} size={19} />}
             label={DISCOVERY_LABELS.actions.openMaps}
-            onPress={() => {
-              void Linking.openURL(mapsUri).then(onMapsOpened);
-            }}
+            onPress={() => void handleOpenMaps()}
           />
+          {failedMapsRestaurantId === recommendation.id ? (
+            <Text accessibilityRole="alert" className="text-sm text-error">
+              {DISCOVERY_LABELS.error.mapsUnavailable}
+            </Text>
+          ) : null}
           <Button
             icon={<RotateCw color={colors.foreground} size={20} />}
             label={

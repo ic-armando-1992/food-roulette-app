@@ -8,8 +8,10 @@ import {
 
 const mockReportClientError = jest.fn();
 const mockTrackProductEvent = jest.fn();
+const mockFlushPendingClientErrors = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('@/core/telemetry/telemetry', () => ({
+  flushPendingClientErrors: () => mockFlushPendingClientErrors(),
   reportClientError: (...args: unknown[]) => mockReportClientError(...args),
   trackProductEvent: (...args: unknown[]) => mockTrackProductEvent(...args),
 }));
@@ -26,6 +28,7 @@ describe('TelemetryProvider', () => {
 
     expect(screen.getByText('Aplicación lista')).toBeOnTheScreen();
     expect(mockTrackProductEvent).toHaveBeenCalledWith('app_opened', {});
+    expect(mockFlushPendingClientErrors).toHaveBeenCalledTimes(1);
   });
 
   it('shows a fallback and reports render errors', async () => {

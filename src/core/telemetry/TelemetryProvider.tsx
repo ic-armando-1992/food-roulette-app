@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 import { APP_LABELS } from '@/core/constants/app.labels';
 import { TELEMETRY_EVENTS } from '@/core/telemetry/constants/telemetry.constants';
 import {
+  flushPendingClientErrors,
   reportClientError,
   trackProductEvent,
 } from '@/core/telemetry/telemetry';
@@ -21,6 +22,7 @@ function getErrorUtils(): ErrorUtilsApi | undefined {
 export function TelemetryProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     trackProductEvent(TELEMETRY_EVENTS.appOpened, {});
+    void flushPendingClientErrors();
 
     const errorUtils = getErrorUtils();
     const previousHandler = errorUtils?.getGlobalHandler?.();

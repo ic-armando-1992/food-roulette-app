@@ -332,16 +332,20 @@ The app records only behavior that exists in the current roulette flow:
 - spin started, result, failure and explicit reroll
 - restaurant opened in Maps
 
-Delivery to the API is best effort and never blocks location, recommendations
-or navigation. A random session UUID exists only for the current JavaScript
-process; persistent guest identity belongs to the later authentication phase.
-The payload does not include coordinates, city/region labels, addresses or raw
-provider responses.
+Product-event delivery to the API is best effort and never blocks location,
+recommendations or navigation. A random session UUID exists only for the
+current JavaScript process; persistent guest identity belongs to the later
+authentication phase. The payload does not include coordinates, city/region
+labels, addresses or raw provider responses.
 
 The root layout also installs a React error boundary and a global JavaScript
-error handler. Reports are sent through the same API boundary. Coordinate pairs,
-URL query strings and common secrets/tokens are redacted, and telemetry failures
-remain invisible to the product flow.
+error handler. Sanitized fatal JavaScript reports are written synchronously to a
+bounded SQLite outbox before the previous fatal handler runs and are retried on
+the next launch; successful delivery removes them. This does not capture native
+crashes, so the Phase 1 capability is JavaScript error reporting rather than a
+complete native crash reporter. Coordinate pairs, labeled latitude/longitude,
+URL query strings, JSON secrets and bearer credentials are redacted, and
+telemetry failures remain invisible to the product flow.
 
 ---
 
