@@ -2,19 +2,17 @@ import * as Location from 'expo-location';
 import { useCallback, useRef, useState } from 'react';
 
 import { DISCOVERY_TIMING } from '@/features/discovery/constants/discovery.constants';
-
-export type Coordinates = {
-  latitude: number;
-  longitude: number;
-  countryCode: string;
-};
-
-export type CurrentLocationState =
-  | { status: 'idle' }
-  | { status: 'requesting' }
-  | { status: 'granted'; coordinates: Coordinates; label: string }
-  | { status: 'denied' }
-  | { status: 'error' };
+import {
+  DISCOVERY_LABELS,
+  LOCATION_ERROR_MESSAGES,
+} from '@/features/discovery/constants/discovery.labels';
+import {
+  CurrentLocationState,
+  GeographicCoordinates,
+  ResolvedLocationContext,
+} from '@/features/discovery/types/discovery.types';
+import { trackProductEvent } from '@/core/telemetry/telemetry';
+import { TELEMETRY_EVENTS } from '@/core/telemetry/constants/telemetry.constants';
 
 function watchForCurrentLocation(): Promise<Location.LocationObject> {
   return new Promise((resolve, reject) => {
@@ -24,7 +22,7 @@ function watchForCurrentLocation(): Promise<Location.LocationObject> {
     const timeoutId = setTimeout(() => {
       settled = true;
       subscription?.remove();
-      reject(new Error('Location request timed out'));
+      reject(new Error(LOCATION_ERROR_MESSAGES.requestTimedOut));
     }, DISCOVERY_TIMING.locationRequestTimeoutMs);
 
     const resolveOnce = (location: Location.LocationObject) => {
@@ -69,18 +67,12 @@ function watchForCurrentLocation(): Promise<Location.LocationObject> {
   });
 }
 
-type ResolvedLocationContext = {
-  countryCode: string;
-  label: string;
-};
-
-function resolveLocationContext(coordinates: {
-  latitude: number;
-  longitude: number;
-}): Promise<ResolvedLocationContext> {
+function resolveLocationContext(
+  coordinates: GeographicCoordinates,
+): Promise<ResolvedLocationContext> {
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(
-      () => reject(new Error('Location country lookup timed out')),
+      () => reject(new Error(LOCATION_ERROR_MESSAGES.countryLookupTimedOut)),
       DISCOVERY_TIMING.countryLookupTimeoutMs,
     );
 
@@ -90,7 +82,7 @@ function resolveLocationContext(coordinates: {
         const countryCode = address?.isoCountryCode?.trim().toUpperCase();
 
         if (!countryCode || !/^[A-Z]{2}$/.test(countryCode)) {
-          throw new Error('Location country could not be determined');
+          throw new Error(LOCATION_ERROR_MESSAGES.countryUnavailable);
         }
 
         const locality =
@@ -106,7 +98,8 @@ function resolveLocationContext(coordinates: {
           label:
             labelParts.length > 0
               ? labelParts.join(', ')
-              : (address?.country ?? `Ubicación actual · ${countryCode}`),
+              : (address?.country ??
+                DISCOVERY_LABELS.location.currentFallback(countryCode)),
         });
       })
       .catch(reject)
@@ -134,9 +127,12 @@ export function useCurrentLocation() {
       }
 
       if (!permission.granted) {
+        trackProductEvent(TELEMETRY_EVENTS.locationDenied, {});
         setState({ status: 'denied' });
         return;
       }
+
+      trackProductEvent(TELEMETRY_EVENTS.locationGranted, {});
 
       const location =
         (await Location.getLastKnownPositionAsync({
@@ -159,7 +155,7 @@ export function useCurrentLocation() {
       });
     } catch (error) {
       if (__DEV__) {
-        console.warn('No fue posible obtener la ubicación.', error);
+        console.warn(LOCATION_ERROR_MESSAGES.warning, error);
       }
 
       setState({ status: 'error' });

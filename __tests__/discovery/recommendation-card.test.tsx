@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { Linking } from 'react-native';
 
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
@@ -6,7 +11,10 @@ import { RecommendationCard } from '@/features/discovery/components/Recommendati
 import { buildRecommendation } from '../../test-support/recommendation.fixture';
 
 describe('RecommendationCard', () => {
+  const onMapsOpened = jest.fn();
+
   beforeEach(() => {
+    onMapsOpened.mockClear();
     jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
   });
 
@@ -14,11 +22,12 @@ describe('RecommendationCard', () => {
     jest.restoreAllMocks();
   });
 
-  it('presents a complete closed result, attribution and Maps action', () => {
+  it('presents a complete closed result, attribution and Maps action', async () => {
     render(
       <RecommendationCard
         isRerolling={false}
         onBack={jest.fn()}
+        onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
         result={buildRecommendation()}
       />,
@@ -38,6 +47,7 @@ describe('RecommendationCard', () => {
     expect(Linking.openURL).toHaveBeenCalledWith(
       'https://maps.google.com/?cid=restaurant-1',
     );
+    await waitFor(() => expect(onMapsOpened).toHaveBeenCalledTimes(1));
 
     fireEvent.press(screen.getByText('Foto de Fotógrafa de prueba'));
     expect(Linking.openURL).toHaveBeenCalledWith('https://example.test/author');
@@ -53,6 +63,7 @@ describe('RecommendationCard', () => {
       <RecommendationCard
         isRerolling={false}
         onBack={jest.fn()}
+        onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
         result={buildRecommendation()}
       />,
@@ -68,6 +79,7 @@ describe('RecommendationCard', () => {
       <RecommendationCard
         isRerolling={false}
         onBack={jest.fn()}
+        onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
         result={buildRecommendation({
           formattedAddress: undefined,

@@ -1,9 +1,6 @@
+import { DEFAULT_API_TIMEOUT_MS } from '@/api/constants/client.constants';
+import { ApiErrorKind, ApiRequestOptions } from '@/api/types/client.types';
 import { env } from '@/core/config/env';
-
-const DEFAULT_TIMEOUT_MS = 15_000;
-
-export type ApiErrorKind =
-  'configuration' | 'http' | 'invalid-response' | 'network' | 'timeout';
 
 export class ApiError extends Error {
   constructor(
@@ -14,13 +11,6 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 }
-
-type ApiRequestOptions = {
-  body?: unknown;
-  method?: 'GET' | 'POST';
-  signal?: AbortSignal;
-  timeoutMs?: number;
-};
 
 export function getApiResourceUrl(path: string): string | null {
   if (!env.apiBaseUrl) {
@@ -43,7 +33,7 @@ export async function apiRequest<T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(
     () => controller.abort(),
-    options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    options.timeoutMs ?? DEFAULT_API_TIMEOUT_MS,
   );
   const abortRequest = () => controller.abort();
   options.signal?.addEventListener('abort', abortRequest, { once: true });

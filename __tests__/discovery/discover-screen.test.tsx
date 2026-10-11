@@ -16,6 +16,7 @@ const mockRecommend = jest.fn<
   [unknown]
 >();
 const mockReset = jest.fn();
+const mockTrackProductEvent = jest.fn();
 let mockLocationState: unknown;
 let mockRecommendationState: Record<string, unknown>;
 
@@ -28,6 +29,12 @@ jest.mock('@/features/discovery/hooks/useCurrentLocation', () => ({
 
 jest.mock('@/features/discovery/hooks/useRandomRecommendation', () => ({
   useRandomRecommendation: () => mockRecommendationState,
+}));
+
+jest.mock('@/core/telemetry/telemetry', () => ({
+  createTelemetryId: () => '33333333-3333-4333-8333-333333333333',
+  getTelemetryErrorProperties: () => ({ errorKind: 'network' }),
+  trackProductEvent: (...args: unknown[]) => mockTrackProductEvent(...args),
 }));
 
 jest.mock('@/features/discovery/components/RouletteSpinner', () => {
@@ -121,6 +128,17 @@ describe('DiscoverScreen', () => {
       longitude: -117.0382,
       radiusMeters: 3_000,
     });
+    expect(mockTrackProductEvent).toHaveBeenCalledWith(
+      'roulette_spin_started',
+      expect.objectContaining({ reroll: false, radiusMeters: 3_000 }),
+    );
+    expect(mockTrackProductEvent).toHaveBeenCalledWith(
+      'roulette_spin_result',
+      expect.objectContaining({
+        restaurantId: 'restaurant-1',
+        reroll: false,
+      }),
+    );
   });
 
   it('keeps the loading state visible for the duration of a slow request', async () => {
@@ -178,6 +196,9 @@ describe('DiscoverScreen', () => {
       longitude: -117.0382,
       radiusMeters: 3_000,
     });
+    expect(mockTrackProductEvent).toHaveBeenCalledWith('roulette_spin_again', {
+      restaurantId: 'restaurant-1',
+    });
   });
 
   it('allows retry after a failed recommendation', async () => {
@@ -192,6 +213,10 @@ describe('DiscoverScreen', () => {
 
     fireEvent.press(screen.getByText('GIRAR RULETA'));
     await waitFor(() => expect(mockRecommend).toHaveBeenCalledTimes(1));
+    expect(mockTrackProductEvent).toHaveBeenCalledWith(
+      'roulette_spin_failed',
+      expect.objectContaining({ errorKind: 'network', reroll: false }),
+    );
     await waitFor(() => expect(screen.getByText('GIRAR RULETA')).toBeEnabled());
     fireEvent.press(screen.getByText('GIRAR RULETA'));
 

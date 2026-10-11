@@ -1,20 +1,17 @@
 import { ChevronDown, LocateFixed } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 
-import { CurrentLocationState } from '@/features/discovery/hooks/useCurrentLocation';
+import { DISCOVERY_LABELS } from '@/features/discovery/constants/discovery.labels';
+import { LocationPillProps } from '@/features/discovery/types/discovery.types';
 import colors from '@/theme/colors.json';
-
-type LocationPillProps = {
-  state: CurrentLocationState;
-};
 
 export function LocationPill({ state }: LocationPillProps) {
   const label =
     state.status === 'granted'
       ? state.label
       : state.status === 'requesting'
-        ? 'Buscando ubicación…'
-        : 'Ubicación no disponible';
+        ? DISCOVERY_LABELS.location.searching
+        : DISCOVERY_LABELS.location.unavailable;
 
   return (
     <View className="max-w-full flex-row items-center gap-2 self-center rounded-full bg-surfaceSecondary px-4 py-2.5">

@@ -1,7 +1,5 @@
-type EnvironmentConfig = {
-  apiBaseUrl: string | null;
-  apiConfigurationError: string | null;
-};
+import { EnvironmentConfig } from '@/core/config/types/environment.types';
+import { APP_ERROR_MESSAGES } from '@/core/constants/app.constants';
 
 function readApiBaseUrl(value: string | undefined): EnvironmentConfig {
   const candidate = value?.trim().replace(/\/+$/, '');
@@ -9,7 +7,7 @@ function readApiBaseUrl(value: string | undefined): EnvironmentConfig {
   if (!candidate) {
     return {
       apiBaseUrl: null,
-      apiConfigurationError: 'EXPO_PUBLIC_API_BASE_URL is not configured.',
+      apiConfigurationError: APP_ERROR_MESSAGES.missingApiUrl,
     };
   }
 
@@ -17,7 +15,7 @@ function readApiBaseUrl(value: string | undefined): EnvironmentConfig {
     const url = new URL(candidate);
 
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-      throw new Error('Unsupported API URL protocol.');
+      throw new Error(APP_ERROR_MESSAGES.unsupportedApiProtocol);
     }
 
     return {
@@ -27,8 +25,7 @@ function readApiBaseUrl(value: string | undefined): EnvironmentConfig {
   } catch {
     return {
       apiBaseUrl: null,
-      apiConfigurationError:
-        'EXPO_PUBLIC_API_BASE_URL must be a valid HTTP(S) URL.',
+      apiConfigurationError: APP_ERROR_MESSAGES.invalidApiUrl,
     };
   }
 }

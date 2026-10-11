@@ -64,6 +64,11 @@ food-roulette-app/
 
 Do not create empty folders in advance.
 
+Feature folders may add `types/` and `constants/` only when used. Visible and
+accessibility text goes in `*.labels.ts`; mappings, limits and other reusable
+values go in `*.constants.ts`. React components/screens/hooks import named
+production types rather than declaring prop or domain shapes inline.
+
 ---
 
 ## `/app`
@@ -147,8 +152,11 @@ discovery/
 │   └── useRandomRecommendation.ts
 ├── store/
 │   └── discovery.store.ts
-├── models/
+├── types/
 │   └── discovery.types.ts
+├── constants/
+│   ├── discovery.constants.ts
+│   └── discovery.labels.ts
 └── utils/
 ```
 

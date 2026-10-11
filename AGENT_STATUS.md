@@ -2,7 +2,7 @@
 
 ## Current phase
 
-Roadmap Phase 0 — Existing Core/UI Completion is complete. The Spanish
+Roadmap Phases 0 and 1 are complete. The Spanish
 roulette-first flow covers location acquisition, radius selection, initial
 spin, request-bound loading, normalized failure states, restaurant reveal,
 Maps and pool-aware reroll. Deterministic mobile tests now protect permission
@@ -12,18 +12,30 @@ metadata, closed hours, attribution, Maps and responsive roulette sizing.
 When provider `mapsUri` is absent, the primary Maps action now falls back to a
 universal Google Maps coordinate URL rather than disappearing.
 
+Phase 1 instruments app open, location grant/denial, spin start/result/failure,
+explicit reroll and successful Maps open. Delivery is non-blocking and uses an
+ephemeral app-process session rather than anticipating Phase 2 identity. The
+root layout captures React render errors and global JavaScript errors through a
+privacy-redacted API contract. No precise coordinates, location labels,
+addresses or raw provider responses enter analytics.
+The post-Phase 1 organization pass is complete: component/hook props and domain
+shapes are feature-local types, visible/accessibility copy is centralized in
+scoped label files, and reusable mappings, paths, limits and event names live in
+constants files. Both repository instruction files now require this convention.
+
 Android inspection passes at the Pixel 10 Pro's physical 1280×2856 px at 480
 dpi (approximately 427×952 dp) and a temporary small 960×1704 px viewport at
 480 dpi (320×568 dp). The small viewport keeps all controls reachable through
 the existing ScrollView and respects top/bottom system areas. Format, lint,
-strict typecheck, 22 mobile tests, Expo dependency validation, Expo Doctor
-21/21 and Android Hermes export pass as of 2026-10-08. Phase 1 has not started.
+strict typecheck, 28 mobile tests, Expo dependency validation, Expo Doctor
+21/21 and Android Hermes export pass as of 2026-10-10. Phase 2 has not started.
 
 ## Current branch
 
-`experimental`, synchronized with `origin/experimental` after Phase 0 closeout
-PR #1 merged as `0d0e229`. The remote closeout branch remains available for
-history. Nothing has been merged to `main`.
+`feature/phase-1-analytics-observability`, created from local `experimental` at
+`63183a1` after Phase 0 PR #1 merged. Phase 1 and the organization pass are
+prepared locally for a PR to `experimental`. The earlier emulator documentation
+remains an unrelated working-tree change and will not be included in that PR.
 
 ## Current environment status
 
@@ -115,10 +127,21 @@ boundaries; no forced audit mutation was applied during this Phase 0 closeout.
   320×568 dp; the emulator was restored to its original physical resolution.
 - Expo SDK patch dependencies are aligned; Expo dependency validation, Doctor
   21/21 and the Android Hermes export pass after the update.
+- Product telemetry is centralized under `src/core/telemetry`, is best effort
+  and covers only the existing funnel through successful Maps open.
+- A root React error boundary provides a visible recovery state, while both it
+  and the global JavaScript handler report sanitized errors through the API.
+- Phase 1 regression coverage brings the mobile suite to 8 suites and 28 tests;
+  format, lint, strict typecheck, dependency validation, Doctor 21/21 and the
+  Android Hermes export pass without a new dependency.
+- Production props and domain shapes formerly embedded in components, screens,
+  hooks and infrastructure are now feature-local named types. Visible copy,
+  accessibility text, formatting templates, mappings, paths, limits and event
+  names are centralized without changing the rendered Spanish text.
 
 ## Active blocker(s)
 
-None for Phase 0. Native iOS and physical-device validation still require the
+None for Phase 1. Native iOS and physical-device validation still require the
 appropriate hardware/macOS host and remain release-readiness work, not a Phase
 0 blocker. Transitive dependency advisories require a separately scoped
 security/dependency review rather than `npm audit fix --force`.
@@ -144,8 +167,16 @@ security/dependency review rather than `npm audit fix --force`.
   → reroll, without auth, achievements, sharing, ads, profiles or collections.
 - Phase 0 regression tests use Jest Expo plus React Native Testing Library and
   favor visible behavior assertions over snapshots or implementation details.
+- Analytics uses a random session UUID only for the current JavaScript process;
+  durable guest identity and account linking remain Phase 2 responsibilities.
+- Telemetry failures are swallowed at the boundary and never block location,
+  roulette, retry, Maps or other product behavior.
+- New UI must source visible/accessibility copy from scoped `*.labels.ts` files,
+  types from the nearest feature `types/` boundary and reusable values from
+  `*.constants.ts`, as required by `AGENTS.md`.
 
 ## Next intended action
 
-Stop after the Phase 0 closeout. Begin Phase 1 analytics and observability only
-when explicitly requested, in a separate scoped change.
+Commit and publish the Phase 1 branch, then open its PR to `experimental`.
+Begin Phase 2 guest identity and authentication only after the Phase 1
+integration decision, in a separate scoped change.

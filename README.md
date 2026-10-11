@@ -143,6 +143,12 @@ values that are not global design tokens belong in their feature constants
 module; discovery radii, timing and roulette geometry live in
 `src/features/discovery/constants/discovery.constants.ts`.
 
+User-visible and accessibility copy belongs in scoped `*.labels.ts` files;
+components do not own prose. Component props and domain shapes belong in the
+nearest `types/`, `contracts/` or model file, while reusable mappings, limits,
+paths and other behavior constants belong in `*.constants.ts`. Keep these files
+feature-local unless the definition is genuinely application-wide.
+
 Expected base components:
 
 ```text
@@ -315,6 +321,27 @@ Prioritize:
 - API errors
 
 Mobile tests never call Google directly.
+
+---
+
+## 📊 Analytics and error reporting
+
+The app records only behavior that exists in the current roulette flow:
+
+- app opened and location granted/denied
+- spin started, result, failure and explicit reroll
+- restaurant opened in Maps
+
+Delivery to the API is best effort and never blocks location, recommendations
+or navigation. A random session UUID exists only for the current JavaScript
+process; persistent guest identity belongs to the later authentication phase.
+The payload does not include coordinates, city/region labels, addresses or raw
+provider responses.
+
+The root layout also installs a React error boundary and a global JavaScript
+error handler. Reports are sent through the same API boundary. Coordinate pairs,
+URL query strings and common secrets/tokens are redacted, and telemetry failures
+remain invisible to the product flow.
 
 ---
 

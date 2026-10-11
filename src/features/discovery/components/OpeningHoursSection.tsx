@@ -2,12 +2,9 @@ import { ChevronDown, ChevronUp, Clock3 } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { RestaurantOpeningHours } from '@/api/contracts/recommendations';
+import { DISCOVERY_LABELS } from '@/features/discovery/constants/discovery.labels';
+import { OpeningHoursSectionProps } from '@/features/discovery/types/discovery.types';
 import colors from '@/theme/colors.json';
-
-type OpeningHoursSectionProps = {
-  openingHours: RestaurantOpeningHours;
-};
 
 function isSameLocalDay(first: Date, second: Date): boolean {
   return (
@@ -32,9 +29,9 @@ function formatTransition(timestamp: string | undefined, verb: string) {
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
   const day = isSameLocalDay(transition, now)
-    ? 'hoy'
+    ? DISCOVERY_LABELS.hours.today
     : isSameLocalDay(transition, tomorrow)
-      ? 'mañana'
+      ? DISCOVERY_LABELS.hours.tomorrow
       : new Intl.DateTimeFormat('es-MX', { weekday: 'long' }).format(
           transition,
         );
@@ -43,7 +40,7 @@ function formatTransition(timestamp: string | undefined, verb: string) {
     minute: '2-digit',
   }).format(transition);
 
-  return `${verb} ${day} a las ${time}`;
+  return DISCOVERY_LABELS.hours.transition(verb, day, time);
 }
 
 export function OpeningHoursSection({
@@ -53,14 +50,20 @@ export function OpeningHoursSection({
   const hasWeeklyHours = openingHours.weekdayDescriptions.length > 0;
   const statusLabel =
     openingHours.openNow === true
-      ? 'Abierto ahora'
+      ? DISCOVERY_LABELS.hours.openNow
       : openingHours.openNow === false
-        ? 'Cerrado ahora'
-        : 'Horario disponible';
+        ? DISCOVERY_LABELS.hours.closedNow
+        : DISCOVERY_LABELS.hours.available;
   const transitionLabel =
     openingHours.openNow === true
-      ? formatTransition(openingHours.nextCloseTime, 'Cierra')
-      : formatTransition(openingHours.nextOpenTime, 'Abre');
+      ? formatTransition(
+          openingHours.nextCloseTime,
+          DISCOVERY_LABELS.hours.closeVerb,
+        )
+      : formatTransition(
+          openingHours.nextOpenTime,
+          DISCOVERY_LABELS.hours.openVerb,
+        );
   const statusColor =
     openingHours.openNow === true ? colors.success : colors.error;
   const containerColor =
@@ -90,14 +93,18 @@ export function OpeningHoursSection({
         {hasWeeklyHours ? (
           <Pressable
             accessibilityLabel={
-              expanded ? 'Ocultar horario semanal' : 'Mostrar horario semanal'
+              expanded
+                ? DISCOVERY_LABELS.accessibility.weeklyHoursHide
+                : DISCOVERY_LABELS.accessibility.weeklyHoursShow
             }
             accessibilityRole="button"
             accessibilityState={{ expanded }}
             className="flex-row items-center gap-1"
             onPress={() => setExpanded((current) => !current)}
           >
-            <Text className="text-sm font-bold text-foreground">Horario</Text>
+            <Text className="text-sm font-bold text-foreground">
+              {DISCOVERY_LABELS.hours.schedule}
+            </Text>
             {expanded ? (
               <ChevronUp color={colors.foreground} size={17} />
             ) : (

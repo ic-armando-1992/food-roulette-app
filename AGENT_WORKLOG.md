@@ -5,6 +5,43 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-10 — Types, labels and constants structure standardized
+
+- Timestamp: 2026-10-10.
+- Command/action: moved production prop/domain/API/telemetry shapes out of
+  components and hooks, centralized all current visible and accessibility copy,
+  extracted reusable mappings/paths/limits/events, and added mandatory rules to
+  both repositories' `AGENTS.md` files.
+- Result: success; the rendered Spanish experience and API contracts remain
+  unchanged while future AI/code work now has explicit organization rules.
+- Relevant result summary: discovery uses feature-scoped types, labels and
+  constants; core/UI/API-client infrastructure follows the same pattern; API
+  repositories/services/providers received the corresponding model/message
+  organization. Mobile format, lint, strict typecheck and 28 tests pass; API
+  independently passes format, lint, typecheck, 24 unit tests, 7 E2E and build.
+- Current phase/status: Roadmap Phase 1 remains complete; structural hardening
+  complete; Phase 2 has not started.
+- Blocker: none.
+- Next intended action: commit/publish the Phase 1 feature branch and open its
+  PR to `experimental`; begin Phase 2 only after the integration decision.
+
+### 2026-10-10 — Roadmap Phase 1 analytics and observability completed
+
+- Timestamp: 2026-10-10.
+- Command/action: instrumented the existing roulette funnel, added non-blocking
+  API telemetry delivery, installed React/global JavaScript error capture and
+  extended behavior tests without adding a dependency or external SaaS.
+- Result: success; Phase 1 is complete across mobile and API.
+- Relevant result summary: events contain an ephemeral session, flow IDs and
+  allowlisted non-location metadata only. Render errors show a recovery screen;
+  error payloads redact coordinates, URL queries and common secrets. Mobile
+  passes format, lint, strict typecheck, 8 suites/28 tests, Expo dependency
+  validation, Doctor 21/21 and Android Hermes export. API passes its complete
+  unit/E2E/build matrix and the telemetry migration is applied.
+- Current phase/status: Roadmap Phase 1 complete; Phase 2 has not started.
+- Blocker: none.
+- Next intended action: stop and begin Phase 2 only when explicitly requested.
+
 ### 2026-10-08 — Phase 0 closeout published and merged
 
 - Timestamp: 2026-10-08.

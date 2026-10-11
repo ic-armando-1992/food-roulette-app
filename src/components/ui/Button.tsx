@@ -1,32 +1,12 @@
-import { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import {
+  BUTTON_CLASSES,
+  BUTTON_LABEL_CLASSES,
+  BUTTON_LOADING_COLORS,
+} from '@/components/ui/constants/button.constants';
+import { ButtonProps } from '@/components/ui/types/button.types';
 import colors from '@/theme/colors.json';
-
-type ButtonProps = {
-  label: string;
-  onPress: () => void;
-  accessibilityLabel?: string;
-  disabled?: boolean;
-  icon?: ReactNode;
-  loading?: boolean;
-  variant?: 'primary' | 'secondary';
-};
-
-const buttonClasses = {
-  primary: 'bg-primary',
-  secondary: 'border border-border bg-surface',
-} as const;
-
-const labelClasses = {
-  primary: 'text-primaryForeground',
-  secondary: 'text-foreground',
-} as const;
-
-const loadingColors = {
-  primary: colors.primaryForeground,
-  secondary: colors.primary,
-} as const;
 
 export function Button({
   accessibilityLabel,
@@ -44,7 +24,7 @@ export function Button({
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
       accessibilityState={{ busy: loading, disabled: isDisabled }}
-      className={`min-h-14 items-center justify-center rounded-full px-5 ${buttonClasses[variant]} ${isDisabled ? 'opacity-60' : ''}`}
+      className={`min-h-14 items-center justify-center rounded-full px-5 ${BUTTON_CLASSES[variant]} ${isDisabled ? 'opacity-60' : ''}`}
       disabled={isDisabled}
       onPress={onPress}
       style={({ pressed }) => ({
@@ -58,12 +38,15 @@ export function Button({
     >
       <View className="flex-row items-center gap-2">
         {loading ? (
-          <ActivityIndicator color={loadingColors[variant]} size="small" />
+          <ActivityIndicator
+            color={BUTTON_LOADING_COLORS[variant]}
+            size="small"
+          />
         ) : (
           icon
         )}
         <Text
-          className={`text-base font-extrabold tracking-wider ${labelClasses[variant]}`}
+          className={`text-base font-extrabold tracking-wider ${BUTTON_LABEL_CLASSES[variant]}`}
         >
           {label}
         </Text>

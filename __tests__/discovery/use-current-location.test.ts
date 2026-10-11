@@ -4,6 +4,12 @@ import * as Location from 'expo-location';
 import { DISCOVERY_TIMING } from '@/features/discovery/constants/discovery.constants';
 import { useCurrentLocation } from '@/features/discovery/hooks/useCurrentLocation';
 
+const mockTrackProductEvent = jest.fn();
+
+jest.mock('@/core/telemetry/telemetry', () => ({
+  trackProductEvent: (...args: unknown[]) => mockTrackProductEvent(...args),
+}));
+
 jest.mock('expo-location', () => ({
   Accuracy: { High: 4 },
   PermissionStatus: {
@@ -84,6 +90,7 @@ describe('useCurrentLocation', () => {
       },
       label: 'Tijuana, Baja California',
     });
+    expect(mockTrackProductEvent).toHaveBeenCalledWith('location_granted', {});
   });
 
   it('exposes denied without repeatedly requesting determined permission', async () => {
@@ -99,6 +106,7 @@ describe('useCurrentLocation', () => {
     expect(
       locationMock.requestForegroundPermissionsAsync,
     ).not.toHaveBeenCalled();
+    expect(mockTrackProductEvent).toHaveBeenCalledWith('location_denied', {});
   });
 
   it('exposes unavailable location as a recoverable error', async () => {

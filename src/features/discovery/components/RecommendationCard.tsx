@@ -20,74 +20,30 @@ import {
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { getApiResourceUrl } from '@/api/client';
-import {
-  PriceLevel,
-  RandomRecommendationResponse,
-  RestaurantPhotoAuthorAttribution,
-} from '@/api/contracts/recommendations';
 import { Button } from '@/components/ui/Button';
 import { OpeningHoursSection } from '@/features/discovery/components/OpeningHoursSection';
+import {
+  CATEGORY_PRESENTATIONS,
+  DISCOVERY_RESULT_LAYOUT,
+  GOOGLE_MAPS_SEARCH_BASE_URL,
+  PRICE_LABELS,
+} from '@/features/discovery/constants/discovery.constants';
+import { DISCOVERY_LABELS } from '@/features/discovery/constants/discovery.labels';
+import {
+  CategoryPresentation,
+  PhotoAttributionProps,
+  RecommendationCardProps,
+} from '@/features/discovery/types/discovery.types';
 import colors from '@/theme/colors.json';
-
-type RecommendationCardProps = {
-  isRerolling: boolean;
-  onBack: () => void;
-  onReroll: () => void;
-  result: RandomRecommendationResponse;
-};
-
-const PRICE_LABELS: Record<PriceLevel, string> = {
-  FREE: 'Gratis',
-  INEXPENSIVE: '$',
-  MODERATE: '$$',
-  EXPENSIVE: '$$$',
-  VERY_EXPENSIVE: '$$$$',
-};
-
-type CategoryPresentation = {
-  icon?: string;
-  label: string;
-};
-
-const CATEGORY_PRESENTATIONS: Record<string, CategoryPresentation> = {
-  american_restaurant: { label: 'Estadounidense' },
-  asian_restaurant: { label: 'Asiática' },
-  bakery: { icon: '🥐', label: 'Panadería' },
-  bar: { icon: '🍸', label: 'Bar' },
-  bar_and_grill: { icon: '🍖', label: 'Bar y parrilla' },
-  barbecue_restaurant: { icon: '🍖', label: 'Parrilla' },
-  breakfast_restaurant: { icon: '🍳', label: 'Desayunos' },
-  brunch_restaurant: { icon: '🍳', label: 'Brunch' },
-  cafe: { icon: '☕', label: 'Cafetería' },
-  chinese_restaurant: { label: 'China' },
-  coffee_shop: { icon: '☕', label: 'Café' },
-  fast_food_restaurant: { icon: '🍔', label: 'Comida rápida' },
-  fine_dining_restaurant: { label: 'Alta cocina' },
-  french_restaurant: { label: 'Francesa' },
-  hamburger_restaurant: { icon: '🍔', label: 'Hamburguesas' },
-  indian_restaurant: { label: 'India' },
-  italian_restaurant: { label: 'Italiana' },
-  japanese_restaurant: { icon: '🍣', label: 'Japonesa' },
-  korean_restaurant: { label: 'Coreana' },
-  mediterranean_restaurant: { label: 'Mediterránea' },
-  mexican_restaurant: { icon: '🌮', label: 'Mexicana' },
-  pizza_restaurant: { icon: '🍕', label: 'Pizzería' },
-  ramen_restaurant: { icon: '🍜', label: 'Ramen' },
-  restaurant: { icon: '🍴', label: 'Restaurante' },
-  seafood_restaurant: { icon: '🦐', label: 'Mariscos' },
-  steak_house: { icon: '🥩', label: 'Cortes' },
-  sushi_restaurant: { icon: '🍣', label: 'Sushi' },
-  thai_restaurant: { label: 'Tailandesa' },
-  vegan_restaurant: { icon: '🥗', label: 'Vegana' },
-  vegetarian_restaurant: { icon: '🥗', label: 'Vegetariana' },
-};
 
 function formatDistance(distanceMeters: number): string {
   if (distanceMeters < 1_000) {
-    return `${Math.round(distanceMeters)} m`;
+    return DISCOVERY_LABELS.result.distanceMeters(Math.round(distanceMeters));
   }
 
-  return `${(distanceMeters / 1_000).toFixed(1)} km`;
+  return DISCOVERY_LABELS.result.distanceKilometers(
+    (distanceMeters / 1_000).toFixed(1),
+  );
 }
 
 function getCategoryPresentations(types: string[]): CategoryPresentation[] {
@@ -105,12 +61,9 @@ function getCategoryPresentations(types: string[]): CategoryPresentation[] {
   });
 }
 
-function PhotoAttribution({
-  attribution,
-}: {
-  attribution: RestaurantPhotoAuthorAttribution;
-}) {
-  const label = attribution.displayName ?? 'Autor de la foto';
+function PhotoAttribution({ attribution }: PhotoAttributionProps) {
+  const label =
+    attribution.displayName ?? DISCOVERY_LABELS.photo.authorFallback;
 
   return (
     <Pressable
@@ -122,7 +75,9 @@ function PhotoAttribution({
         }
       }}
     >
-      <Text className="text-xs text-mutedForeground">Foto de {label}</Text>
+      <Text className="text-xs text-mutedForeground">
+        {DISCOVERY_LABELS.photo.authorPrefix} {label}
+      </Text>
     </Pressable>
   );
 }
@@ -130,6 +85,7 @@ function PhotoAttribution({
 export function RecommendationCard({
   isRerolling,
   onBack,
+  onMapsOpened,
   onReroll,
   result,
 }: RecommendationCardProps) {
@@ -138,7 +94,7 @@ export function RecommendationCard({
   const photo = recommendation.photo;
   const mapsUri =
     recommendation.mapsUri ??
-    `https://www.google.com/maps/search/?api=1&query=${recommendation.latitude},${recommendation.longitude}`;
+    `${GOOGLE_MAPS_SEARCH_BASE_URL}${recommendation.latitude},${recommendation.longitude}`;
   const [failedPhotoRestaurantId, setFailedPhotoRestaurantId] = useState<
     string | null
   >(null);
@@ -149,12 +105,18 @@ export function RecommendationCard({
     [photo],
   );
   const photoKey = photoUrl ? `${recommendation.id}:${photoUrl}` : null;
-  const photoHeight = Math.min(390, Math.max(280, height * 0.38));
+  const photoHeight = Math.min(
+    DISCOVERY_RESULT_LAYOUT.maximumPhotoHeight,
+    Math.max(
+      DISCOVERY_RESULT_LAYOUT.minimumPhotoHeight,
+      height * DISCOVERY_RESULT_LAYOUT.photoHeightRatio,
+    ),
+  );
   const categoryPresentations = getCategoryPresentations(
     [recommendation.primaryType, ...recommendation.types].filter(
       (type): type is string => Boolean(type),
     ),
-  ).slice(0, 3);
+  ).slice(0, DISCOVERY_RESULT_LAYOUT.maximumCategoryTags);
 
   return (
     <Animated.View entering={FadeInUp.duration(380)}>
@@ -165,7 +127,9 @@ export function RecommendationCard({
         {photoUrl && !photoFailed ? (
           <>
             <Image
-              accessibilityLabel={`Foto de ${recommendation.name}`}
+              accessibilityLabel={DISCOVERY_LABELS.accessibility.photo(
+                recommendation.name,
+              )}
               contentFit="cover"
               key={photoKey}
               onError={() => setFailedPhotoRestaurantId(recommendation.id)}
@@ -177,13 +141,15 @@ export function RecommendationCard({
             />
             {loadedPhotoKey !== photoKey ? (
               <View
-                accessibilityLabel={`Cargando foto de ${recommendation.name}`}
+                accessibilityLabel={DISCOVERY_LABELS.accessibility.loadingPhoto(
+                  recommendation.name,
+                )}
                 accessibilityRole="progressbar"
                 className="absolute inset-0 items-center justify-center gap-3 bg-surfaceSecondary"
               >
                 <ActivityIndicator color={colors.primary} size="large" />
                 <Text className="text-sm font-semibold text-mutedForeground">
-                  Preparando tu elección…
+                  {DISCOVERY_LABELS.photo.preparing}
                 </Text>
               </View>
             ) : null}
@@ -192,13 +158,13 @@ export function RecommendationCard({
           <View className="items-center gap-2">
             <Utensils color={colors.mutedForeground} size={38} />
             <Text className="text-sm text-mutedForeground">
-              No hay foto disponible
+              {DISCOVERY_LABELS.photo.unavailable}
             </Text>
           </View>
         )}
 
         <Pressable
-          accessibilityLabel="Volver a la ruleta"
+          accessibilityLabel={DISCOVERY_LABELS.actions.backToRoulette}
           accessibilityRole="button"
           className="absolute left-5 top-5 h-12 w-12 items-center justify-center rounded-full bg-surface"
           onPress={onBack}
@@ -213,7 +179,7 @@ export function RecommendationCard({
           <View className="flex-row items-center gap-2">
             <Sparkles color={colors.primary} size={18} />
             <Text className="text-sm font-extrabold uppercase tracking-wider text-primary">
-              La ruleta eligió
+              {DISCOVERY_LABELS.result.selected}
             </Text>
           </View>
           <Text className="mt-2 text-3xl font-black leading-tight text-foreground">
@@ -280,12 +246,18 @@ export function RecommendationCard({
         <View className="gap-3">
           <Button
             icon={<MapPin color={colors.primaryForeground} size={19} />}
-            label="ABRIR EN MAPAS"
-            onPress={() => void Linking.openURL(mapsUri)}
+            label={DISCOVERY_LABELS.actions.openMaps}
+            onPress={() => {
+              void Linking.openURL(mapsUri).then(onMapsOpened);
+            }}
           />
           <Button
             icon={<RotateCw color={colors.foreground} size={20} />}
-            label={isRerolling ? 'GIRANDO…' : 'GIRAR OTRA VEZ'}
+            label={
+              isRerolling
+                ? DISCOVERY_LABELS.actions.spinning
+                : DISCOVERY_LABELS.actions.spinAgain
+            }
             loading={isRerolling}
             onPress={onReroll}
             variant="secondary"
@@ -295,7 +267,8 @@ export function RecommendationCard({
         <View className="gap-1 border-t border-border pt-4">
           {attribution ? (
             <Text className="text-xs text-mutedForeground">
-              Resultados de {attribution.displayText}
+              {DISCOVERY_LABELS.result.attributionPrefix}{' '}
+              {attribution.displayText}
             </Text>
           ) : null}
           {photo?.authorAttributions.map((photoAttribution, index) => (
@@ -312,7 +285,7 @@ export function RecommendationCard({
             >
               <ExternalLink color={colors.mutedForeground} size={13} />
               <Text className="text-xs font-semibold text-mutedForeground">
-                Ver fuente de la foto
+                {DISCOVERY_LABELS.photo.source}
               </Text>
             </Pressable>
           ) : null}
