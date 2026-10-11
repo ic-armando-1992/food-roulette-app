@@ -22,8 +22,10 @@ Rolling log of recent meaningful activity. Archive older entries under
 - Current phase/status: Roadmap Phase 1 remains complete; structural hardening
   complete; Phase 2 has not started.
 - Blocker: none.
-- Next intended action: commit/publish the Phase 1 feature branch and open its
-  PR to `experimental`; begin Phase 2 only after the integration decision.
+- Publication: implementation commit `06d38d1` is published through mobile PR
+  #2 to `experimental`, dependent on API PR #2.
+- Next intended action: review/integrate both Phase 1 PRs, then begin Phase 2
+  only after the integration decision.
 
 ### 2026-10-10 — Roadmap Phase 1 analytics and observability completed
 

@@ -32,10 +32,10 @@ strict typecheck, 28 mobile tests, Expo dependency validation, Expo Doctor
 
 ## Current branch
 
-`feature/phase-1-analytics-observability`, created from local `experimental` at
-`63183a1` after Phase 0 PR #1 merged. Phase 1 and the organization pass are
-prepared locally for a PR to `experimental`. The earlier emulator documentation
-remains an unrelated working-tree change and will not be included in that PR.
+`feature/phase-1-analytics-observability`, created from `experimental` at
+`63183a1` after Phase 0 PR #1 merged. Commit `06d38d1` is published and PR #2 is
+open against `experimental`. The earlier emulator documentation remains an
+unrelated working-tree change and is not included in that PR.
 
 ## Current environment status
 
@@ -177,6 +177,6 @@ security/dependency review rather than `npm audit fix --force`.
 
 ## Next intended action
 
-Commit and publish the Phase 1 branch, then open its PR to `experimental`.
-Begin Phase 2 guest identity and authentication only after the Phase 1
-integration decision, in a separate scoped change.
+Review and integrate mobile PR #2 together with the API PR #2. Begin Phase 2
+guest identity and authentication only after the Phase 1 integration decision,
+in a separate scoped change.
