@@ -84,8 +84,7 @@ describe('telemetry outbox', () => {
       now - 7 * 24 * 60 * 60 * 1_000,
     );
     expect(mockDatabase.getAllSync).toHaveBeenCalledWith(
-      expect.stringContaining('WHERE created_at > ?'),
-      now - 7 * 24 * 60 * 60 * 1_000,
+      expect.stringContaining('ORDER BY created_at'),
     );
     expect(mockDatabase.runSync).toHaveBeenCalledWith(
       'DELETE FROM pending_client_error_reports WHERE report_id = ?',

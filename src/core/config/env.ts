@@ -1,12 +1,5 @@
-import {
-  EnvironmentConfig,
-  PublicEnvironment,
-} from '@/core/config/types/environment.types';
-import {
-  APP_CONFIG_DEFAULTS,
-  APP_CONFIG_LIMITS,
-  APP_ERROR_MESSAGES,
-} from '@/core/constants/app.constants';
+import { EnvironmentConfig } from '@/core/config/types/environment.types';
+import { APP_CONFIG, APP_ERROR_MESSAGES } from '@/core/constants/app.constants';
 
 function readApiBaseUrl(
   value: string | undefined,
@@ -39,23 +32,20 @@ function readApiBaseUrl(
   }
 }
 
-function readTelemetryErrorOutboxTtlDays(value: string | undefined): number {
-  const candidate = Number(value);
-  const { maximum, minimum } = APP_CONFIG_LIMITS.telemetryErrorOutboxTtlDays;
+export function readEnvironment(
+  values: Record<string, string | undefined>,
+): EnvironmentConfig {
+  const ttl = Number(values.EXPO_PUBLIC_TELEMETRY_ERROR_OUTBOX_TTL_DAYS);
+  const ttlConfig = APP_CONFIG.errorOutboxTtlDays;
 
-  return Number.isInteger(candidate) &&
-    candidate >= minimum &&
-    candidate <= maximum
-    ? candidate
-    : APP_CONFIG_DEFAULTS.telemetryErrorOutboxTtlDays;
-}
-
-export function readEnvironment(values: PublicEnvironment): EnvironmentConfig {
   return {
     ...readApiBaseUrl(values.EXPO_PUBLIC_API_BASE_URL),
-    telemetryErrorOutboxTtlDays: readTelemetryErrorOutboxTtlDays(
-      values.EXPO_PUBLIC_TELEMETRY_ERROR_OUTBOX_TTL_DAYS,
-    ),
+    telemetryErrorOutboxTtlDays:
+      Number.isInteger(ttl) &&
+      ttl >= ttlConfig.minimum &&
+      ttl <= ttlConfig.maximum
+        ? ttl
+        : ttlConfig.defaultValue,
   };
 }
 

@@ -10,16 +10,10 @@ import {
 
 let database: SQLiteDatabase | undefined;
 
-function getExpirationCutoff(now: number): number {
-  return (
-    now - env.telemetryErrorOutboxTtlDays * TELEMETRY_OUTBOX.millisecondsPerDay
-  );
-}
-
 function deleteExpiredReports(outbox: SQLiteDatabase, now: number): void {
   outbox.runSync(
     'DELETE FROM pending_client_error_reports WHERE created_at <= ?',
-    getExpirationCutoff(now),
+    now - env.telemetryErrorOutboxTtlDays * TELEMETRY_OUTBOX.millisecondsPerDay,
   );
 }
 
@@ -77,7 +71,6 @@ export function getPendingClientErrors(): ClientErrorReport[] {
   try {
     const outbox = getDatabase();
     const now = Date.now();
-    const expirationCutoff = getExpirationCutoff(now);
     deleteExpiredReports(outbox, now);
 
     return outbox
@@ -85,10 +78,8 @@ export function getPendingClientErrors(): ClientErrorReport[] {
         `
           SELECT report_id AS "reportId", payload
           FROM pending_client_error_reports
-          WHERE created_at > ?
           ORDER BY created_at
         `,
-        expirationCutoff,
       )
       .flatMap((row) => {
         try {

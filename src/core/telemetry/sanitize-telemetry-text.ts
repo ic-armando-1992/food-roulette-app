@@ -1,199 +1,116 @@
 import {
   TELEMETRY_REDACTION,
   TELEMETRY_REDACTION_TEXT,
-  TELEMETRY_SENSITIVE_KEYS,
   TELEMETRY_TEXT_LIMITS,
 } from '@/core/telemetry/constants/telemetry.constants';
-import {
-  ClientErrorReport,
-  TelemetryRedactionSpan,
-} from '@/core/telemetry/types/telemetry.types';
+import { ClientErrorReport } from '@/core/telemetry/types/telemetry.types';
 
-function isIdentifierCharacter(character: string | undefined): boolean {
-  return character !== undefined && /[A-Za-z0-9_-]/.test(character);
-}
-
-function skipHorizontalWhitespace(value: string, start: number): number {
-  let cursor = start;
-  while (value[cursor] === ' ' || value[cursor] === '\t') {
-    cursor += 1;
-  }
-  return cursor;
-}
-
-function findQuotedValueEnd(
-  value: string,
-  start: number,
-  quote: string,
-): number {
-  let cursor = start;
-  while (cursor < value.length) {
-    if (value[cursor] === '\\') {
-      cursor += 2;
-      continue;
+function findQuotedEnd(value: string, start: number, quote: string): number {
+  let end = start + 1;
+  while (end < value.length) {
+    if (value[end] === '\\') {
+      end += 2;
+    } else if (value[end] === quote) {
+      return end;
+    } else {
+      end += 1;
     }
-    if (value[cursor] === quote) {
-      return cursor;
-    }
-    cursor += 1;
   }
   return value.length;
 }
 
-function findLineEnd(value: string, start: number): number {
-  let cursor = start;
-  while (
-    cursor < value.length &&
-    value[cursor] !== '\r' &&
-    value[cursor] !== '\n'
-  ) {
-    cursor += 1;
-  }
-  return cursor;
-}
-
-function findHeaderValueEnd(value: string, start: number): number {
-  let end = findLineEnd(value, start);
+function findHeaderEnd(value: string, start: number): number {
+  let end = start;
 
   while (end < value.length) {
-    const nextLineStart =
+    while (end < value.length && value[end] !== '\r' && value[end] !== '\n') {
+      end += 1;
+    }
+
+    const nextLine =
       value[end] === '\r' && value[end + 1] === '\n' ? end + 2 : end + 1;
-    if (value[nextLineStart] !== ' ' && value[nextLineStart] !== '\t') {
+    if (value[nextLine] !== ' ' && value[nextLine] !== '\t') {
       break;
     }
-    end = findLineEnd(value, nextLineStart);
+    end = nextLine;
   }
 
   return end;
 }
 
-function findUnquotedValueEnd(value: string, start: number): number {
-  let cursor = start;
-  while (cursor < value.length && !/[\s,;}\]]/.test(value[cursor] ?? '')) {
-    cursor += 1;
-  }
-  return cursor;
-}
-
-function findSensitiveValueAt(
+function findValueEnd(
   value: string,
   start: number,
-): TelemetryRedactionSpan | undefined {
-  if (isIdentifierCharacter(value[start - 1])) {
-    return undefined;
+  separator: string,
+  wholeHeader: boolean,
+): number {
+  if (wholeHeader) {
+    return findHeaderEnd(value, start);
   }
 
-  let cursor = start;
-  let key: string;
-  const keyQuote = value[cursor] === '"' || value[cursor] === "'";
-
-  if (keyQuote) {
-    const quote = value[cursor];
-    const keyStart = cursor + 1;
-    const keyEnd = findQuotedValueEnd(value, keyStart, quote);
-    if (keyEnd >= value.length) {
-      return undefined;
-    }
-    key = value.slice(keyStart, keyEnd);
-    cursor = keyEnd + 1;
-  } else {
-    const keyStart = cursor;
-    while (isIdentifierCharacter(value[cursor])) {
-      cursor += 1;
-    }
-    if (cursor === keyStart) {
-      return undefined;
-    }
-    key = value.slice(keyStart, cursor);
+  const quote = value[start];
+  if (quote === '"' || quote === "'") {
+    return findQuotedEnd(value, start, quote);
   }
 
-  const normalizedKey = key.toLowerCase().replace(/[-_]/g, '');
-  cursor = skipHorizontalWhitespace(value, cursor);
-
-  if (normalizedKey === 'bearer' && cursor > start + key.length) {
-    const valueStart = cursor;
-    if (value.startsWith(TELEMETRY_REDACTION_TEXT.secret, valueStart)) {
-      return undefined;
-    }
-    return {
-      end: findUnquotedValueEnd(value, valueStart),
-      start: valueStart,
-    };
+  if (separator === ':') {
+    return findHeaderEnd(value, start);
   }
 
-  if (!TELEMETRY_SENSITIVE_KEYS.has(normalizedKey)) {
-    return undefined;
+  let end = start;
+  while (end < value.length && !/[\s,;}\]]/.test(value[end] ?? '')) {
+    end += 1;
   }
-
-  const separator = value[cursor];
-  if (separator !== ':' && separator !== '=') {
-    return undefined;
-  }
-  cursor = skipHorizontalWhitespace(value, cursor + 1);
-
-  if (normalizedKey === 'authorization' && !keyQuote) {
-    if (value.startsWith(TELEMETRY_REDACTION_TEXT.secret, cursor)) {
-      return undefined;
-    }
-    return {
-      end: findHeaderValueEnd(value, cursor),
-      start: cursor,
-    };
-  }
-
-  if (value[cursor] === '"' || value[cursor] === "'") {
-    const quote = value[cursor];
-    if (value.startsWith(TELEMETRY_REDACTION_TEXT.secret, cursor + 1)) {
-      return undefined;
-    }
-    return {
-      end: findQuotedValueEnd(value, cursor + 1, quote),
-      start: cursor + 1,
-    };
-  }
-
-  if (value.startsWith(TELEMETRY_REDACTION_TEXT.secret, cursor)) {
-    return undefined;
-  }
-
-  return {
-    end:
-      separator === ':' || normalizedKey === 'authorization'
-        ? findHeaderValueEnd(value, cursor)
-        : findUnquotedValueEnd(value, cursor),
-    start: cursor,
-  };
+  return end;
 }
 
-function redactSensitiveValues(value: string): string {
-  const result: string[] = [];
-  let copyFrom = 0;
-  let cursor = 0;
+function redactAssignments(value: string): string {
+  const pattern = TELEMETRY_REDACTION.sensitiveAssignmentPattern;
+  const chunks: string[] = [];
+  let copiedUntil = 0;
+  let match: RegExpExecArray | null;
 
-  while (cursor < value.length) {
-    const span = findSensitiveValueAt(value, cursor);
-    if (!span || span.end <= span.start) {
-      cursor += 1;
+  pattern.lastIndex = 0;
+  while ((match = pattern.exec(value)) !== null) {
+    const valueStart = pattern.lastIndex;
+    const key = match[3].toLowerCase().replace(/[-_]/g, '');
+    const quote = value[valueStart];
+    const wholeHeader = key === 'authorization' && match[2] === '';
+    const quotedValue = quote === '"' || quote === "'";
+    const redactionStart =
+      quotedValue && !wholeHeader ? valueStart + 1 : valueStart;
+
+    if (value.startsWith(TELEMETRY_REDACTION_TEXT.secret, redactionStart)) {
       continue;
     }
 
-    result.push(
-      value.slice(copyFrom, span.start),
+    const valueEnd = findValueEnd(value, valueStart, match[4], wholeHeader);
+    if (valueEnd <= redactionStart) {
+      continue;
+    }
+
+    chunks.push(
+      value.slice(copiedUntil, redactionStart),
       TELEMETRY_REDACTION_TEXT.secret,
     );
-    copyFrom = span.end;
-    cursor = span.end + 1;
+    copiedUntil = valueEnd;
+    pattern.lastIndex = valueEnd;
   }
+  pattern.lastIndex = 0;
 
-  result.push(value.slice(copyFrom));
-  return result.join('');
+  chunks.push(value.slice(copiedUntil));
+  return chunks.join('');
 }
 
 export function sanitizeTelemetryText(
   value: string,
   maxLength: number,
 ): string {
-  return redactSensitiveValues(value)
+  return redactAssignments(value)
+    .replace(
+      TELEMETRY_REDACTION.bearerCredentialPattern,
+      `$1${TELEMETRY_REDACTION_TEXT.secret}`,
+    )
     .replace(
       TELEMETRY_REDACTION.coordinatePairPattern,
       TELEMETRY_REDACTION_TEXT.coordinates,

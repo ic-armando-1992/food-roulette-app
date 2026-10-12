@@ -4,12 +4,9 @@ export const APP_ERROR_MESSAGES = {
   unsupportedApiProtocol: 'Unsupported API URL protocol.',
 } as const;
 
-export const APP_CONFIG_DEFAULTS = {
-  telemetryErrorOutboxTtlDays: 7,
-} as const;
-
-export const APP_CONFIG_LIMITS = {
-  telemetryErrorOutboxTtlDays: {
+export const APP_CONFIG = {
+  errorOutboxTtlDays: {
+    defaultValue: 7,
     maximum: 30,
     minimum: 1,
   },
