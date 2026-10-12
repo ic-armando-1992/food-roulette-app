@@ -1,12 +1,27 @@
 import { openDatabaseSync, SQLiteDatabase } from 'expo-sqlite';
 
+import { env } from '@/core/config/env';
 import { TELEMETRY_OUTBOX } from '@/core/telemetry/constants/telemetry.constants';
+import { sanitizeClientErrorReport } from '@/core/telemetry/sanitize-telemetry-text';
 import {
   ClientErrorReport,
   PendingClientErrorRow,
 } from '@/core/telemetry/types/telemetry.types';
 
 let database: SQLiteDatabase | undefined;
+
+function getExpirationCutoff(now: number): number {
+  return (
+    now - env.telemetryErrorOutboxTtlDays * TELEMETRY_OUTBOX.millisecondsPerDay
+  );
+}
+
+function deleteExpiredReports(outbox: SQLiteDatabase, now: number): void {
+  outbox.runSync(
+    'DELETE FROM pending_client_error_reports WHERE created_at <= ?',
+    getExpirationCutoff(now),
+  );
+}
 
 function getDatabase(): SQLiteDatabase {
   if (!database) {
@@ -26,6 +41,9 @@ function getDatabase(): SQLiteDatabase {
 export function persistPendingClientError(report: ClientErrorReport): void {
   try {
     const outbox = getDatabase();
+    const now = Date.now();
+    const sanitizedReport = sanitizeClientErrorReport(report);
+    deleteExpiredReports(outbox, now);
     outbox.runSync(
       `
         INSERT OR REPLACE INTO pending_client_error_reports (
@@ -34,9 +52,9 @@ export function persistPendingClientError(report: ClientErrorReport): void {
           created_at
         ) VALUES (?, ?, ?)
       `,
-      report.reportId,
-      JSON.stringify(report),
-      Date.now(),
+      sanitizedReport.reportId,
+      JSON.stringify(sanitizedReport),
+      now,
     );
     outbox.runSync(
       `
@@ -57,17 +75,35 @@ export function persistPendingClientError(report: ClientErrorReport): void {
 
 export function getPendingClientErrors(): ClientErrorReport[] {
   try {
-    return getDatabase()
+    const outbox = getDatabase();
+    const now = Date.now();
+    const expirationCutoff = getExpirationCutoff(now);
+    deleteExpiredReports(outbox, now);
+
+    return outbox
       .getAllSync<PendingClientErrorRow>(
         `
           SELECT report_id AS "reportId", payload
           FROM pending_client_error_reports
+          WHERE created_at > ?
           ORDER BY created_at
         `,
+        expirationCutoff,
       )
       .flatMap((row) => {
         try {
-          return [JSON.parse(row.payload) as ClientErrorReport];
+          const report = sanitizeClientErrorReport(
+            JSON.parse(row.payload) as ClientErrorReport,
+          );
+          const sanitizedPayload = JSON.stringify(report);
+          if (sanitizedPayload !== row.payload) {
+            outbox.runSync(
+              'UPDATE pending_client_error_reports SET payload = ? WHERE report_id = ?',
+              sanitizedPayload,
+              row.reportId,
+            );
+          }
+          return [report];
         } catch {
           removePendingClientError(row.reportId);
           return [];

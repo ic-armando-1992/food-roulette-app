@@ -41,12 +41,9 @@ export const TELEMETRY_TEXT_LIMITS = {
 } as const;
 
 export const TELEMETRY_REDACTION = {
-  bearerCredentialPattern: /(\bbearer\s+)[^"',;\s}\]]+/gi,
   coordinatePairPattern: /[+-]?\d{1,3}\.\d{4,}\s*[,;]\s*[+-]?\d{1,3}\.\d{4,}/g,
   labeledCoordinatePattern:
     /((?:"|')?\b(?:lat(?:itude)?|lon(?:gitude)?|lng)\b(?:"|')?\s*[:=]\s*)[+-]?\d{1,3}(?:\.\d+)?/gi,
-  secretPattern:
-    /((?:"|')?\b(?:api[_-]?key|authorization|password|secret|token|access[_-]?token|refresh[_-]?token|id[_-]?token)\b(?:"|')?\s*[:=]\s*(?:"|')?)(?:bearer\s+)?[^"',;\s}\]]+/gi,
   urlQueryPattern: /(https?:\/\/[^\s?]+)\?[^\s)]+/g,
 } as const;
 
@@ -55,7 +52,22 @@ export const TELEMETRY_REDACTION_TEXT = {
   secret: '[redacted]',
 } as const;
 
+export const TELEMETRY_SENSITIVE_KEYS = new Set([
+  'apikey',
+  'authorization',
+  'accesstoken',
+  'clientsecret',
+  'idtoken',
+  'password',
+  'privatekey',
+  'refreshtoken',
+  'secret',
+  'sessiontoken',
+  'token',
+]);
+
 export const TELEMETRY_OUTBOX = {
   databaseName: 'telemetry.db',
+  millisecondsPerDay: 24 * 60 * 60 * 1_000,
   maximumPendingReports: 10,
 } as const;

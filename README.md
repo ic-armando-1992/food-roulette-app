@@ -187,7 +187,11 @@ Conceptual variable:
 
 ```env
 EXPO_PUBLIC_API_BASE_URL=http://<host>:3000
+EXPO_PUBLIC_TELEMETRY_ERROR_OUTBOX_TTL_DAYS=7
 ```
+
+The outbox TTL must stay between 1 and 30 days and must not exceed the API's
+configured `TELEMETRY_ERROR_RETENTION_DAYS`.
 
 Do not hardcode DEV/PROD URLs.
 
@@ -341,11 +345,16 @@ labels, addresses or raw provider responses.
 The root layout also installs a React error boundary and a global JavaScript
 error handler. Sanitized fatal JavaScript reports are written synchronously to a
 bounded SQLite outbox before the previous fatal handler runs and are retried on
-the next launch; successful delivery removes them. This does not capture native
+the next launch; successful delivery removes them. Stored reports expire after
+the configured TTL. A transient network error, timeout or HTTP 429 stops the
+current flush so one outage cannot generate a retry burst; safe permanent 4xx
+failures are discarded and flushing continues. This does not capture native
 crashes, so the Phase 1 capability is JavaScript error reporting rather than a
 complete native crash reporter. Coordinate pairs, labeled latitude/longitude,
-URL query strings, JSON secrets and bearer credentials are redacted, and
-telemetry failures remain invisible to the product flow.
+URL query strings, structured secrets and complete Authorization values are
+redacted before local persistence and again at the network boundary. The API
+performs the same sanitization before storage, and telemetry failures remain
+invisible to the product flow.
 
 ---
 

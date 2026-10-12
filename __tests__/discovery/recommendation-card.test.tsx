@@ -45,7 +45,7 @@ describe('RecommendationCard', () => {
 
     fireEvent.press(screen.getByText('ABRIR EN MAPAS'));
     expect(Linking.openURL).toHaveBeenCalledWith(
-      'https://maps.google.com/?cid=restaurant-1',
+      'https://maps.google.com/?cid=55555555-5555-4555-8555-555555555555',
     );
     await waitFor(() => expect(onMapsOpened).toHaveBeenCalledTimes(1));
 

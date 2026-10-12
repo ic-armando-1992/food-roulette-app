@@ -9,7 +9,7 @@ export function buildRecommendation(
 ): RandomRecommendationResponse {
   return {
     recommendation: {
-      id: 'restaurant-1',
+      id: '55555555-5555-4555-8555-555555555555',
       name: 'La Cocina de Prueba',
       formattedAddress: '123 Avenida Revolución, Tijuana, B.C.',
       latitude: 32.5149,
@@ -20,14 +20,15 @@ export function buildRecommendation(
       priceLevel: 'MODERATE',
       rating: 4.6,
       userRatingCount: 321,
-      mapsUri: 'https://maps.google.com/?cid=restaurant-1',
+      mapsUri:
+        'https://maps.google.com/?cid=55555555-5555-4555-8555-555555555555',
       openingHours: {
         openNow: false,
         nextOpenTime: '2030-01-02T17:00:00.000Z',
         weekdayDescriptions: ['lunes: 9:00–22:00'],
       },
       photo: {
-        url: '/v1/restaurants/restaurant-1/photos/photo-1',
+        url: '/v1/restaurants/55555555-5555-4555-8555-555555555555/photos/photo-1',
         authorAttributions: [
           {
             displayName: 'Fotógrafa de prueba',
@@ -39,7 +40,7 @@ export function buildRecommendation(
       ...recommendationOverrides,
     },
     candidatePool: {
-      id: 'pool-1',
+      id: '77777777-7777-4777-8777-777777777777',
       expiresAt: '2030-01-01T00:15:00.000Z',
       remainingCandidates: 4,
     },

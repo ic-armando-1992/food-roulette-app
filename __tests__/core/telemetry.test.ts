@@ -1,4 +1,4 @@
-import { apiRequest } from '@/api/client';
+import { ApiError, apiRequest } from '@/api/client';
 import {
   getPendingClientErrors,
   persistPendingClientError,
@@ -91,9 +91,7 @@ describe('telemetry', () => {
         'Authorization: Bearer topsecret {"token":"jsonsecret","latitude":32.5149,"longitude":-117.0382}',
         500,
       ),
-    ).toBe(
-      'Authorization: [redacted] {"token":"[redacted]","latitude":[redacted-coordinates],"longitude":[redacted-coordinates]}',
-    );
+    ).toBe('Authorization: [redacted]');
   });
 
   it('reports sanitized errors through the API boundary', () => {
@@ -122,27 +120,94 @@ describe('telemetry', () => {
     );
   });
 
-  it('retries durable fatal reports and removes them after delivery', async () => {
-    const pendingReport = {
-      reportId: '11111111-1111-4111-8111-111111111111',
-      sessionId: '22222222-2222-4222-8222-222222222222',
-      source: 'global' as const,
-      errorName: 'Error',
-      message: 'Sanitized failure',
-      fatal: true,
-      occurredAt: '2026-10-11T12:00:00.000Z',
-      appPlatform: 'android' as const,
-    };
-    mockGetPendingClientErrors.mockReturnValue([pendingReport]);
+  it('sanitizes a queued legacy report again at the network boundary', async () => {
+    mockGetPendingClientErrors.mockReturnValue([
+      {
+        reportId: '11111111-1111-4111-8111-111111111111',
+        sessionId: '22222222-2222-4222-8222-222222222222',
+        source: 'global',
+        errorName: 'Error',
+        message: 'Authorization: Custom secret with spaces',
+        fatal: true,
+        occurredAt: '2026-10-11T12:00:00.000Z',
+        appPlatform: 'android',
+      },
+    ]);
 
     await flushPendingClientErrors();
 
     expect(mockApiRequest).toHaveBeenCalledWith('/v1/telemetry/errors', {
-      body: pendingReport,
+      body: expect.objectContaining({ message: 'Authorization: [redacted]' }),
       method: 'POST',
     });
+  });
+
+  const pendingReport = {
+    reportId: '11111111-1111-4111-8111-111111111111',
+    sessionId: '22222222-2222-4222-8222-222222222222',
+    source: 'global' as const,
+    errorName: 'Error',
+    message: 'Sanitized failure',
+    fatal: true,
+    occurredAt: '2026-10-11T12:00:00.000Z',
+    appPlatform: 'android' as const,
+  };
+  const secondPendingReport = {
+    ...pendingReport,
+    reportId: '33333333-3333-4333-8333-333333333333',
+  };
+
+  it('delivers all pending fatal reports and removes them after success', async () => {
+    mockGetPendingClientErrors.mockReturnValue([
+      pendingReport,
+      secondPendingReport,
+    ]);
+
+    await flushPendingClientErrors();
+
+    expect(mockApiRequest).toHaveBeenCalledTimes(2);
     expect(mockRemovePendingClientError).toHaveBeenCalledWith(
       pendingReport.reportId,
+    );
+    expect(mockRemovePendingClientError).toHaveBeenCalledWith(
+      secondPendingReport.reportId,
+    );
+  });
+
+  it.each([
+    ['network failure', new ApiError('network')],
+    ['timeout', new ApiError('timeout')],
+    ['HTTP 429', new ApiError('http', 429)],
+  ])('stops flushing after the first transient %s', async (_name, error) => {
+    mockGetPendingClientErrors.mockReturnValue([
+      pendingReport,
+      secondPendingReport,
+    ]);
+    mockApiRequest.mockRejectedValueOnce(error);
+
+    await flushPendingClientErrors();
+
+    expect(mockApiRequest).toHaveBeenCalledTimes(1);
+    expect(mockRemovePendingClientError).not.toHaveBeenCalled();
+  });
+
+  it('discards a safe permanent failure and continues flushing', async () => {
+    mockGetPendingClientErrors.mockReturnValue([
+      pendingReport,
+      secondPendingReport,
+    ]);
+    mockApiRequest.mockRejectedValueOnce(new ApiError('http', 400));
+
+    await flushPendingClientErrors();
+
+    expect(mockApiRequest).toHaveBeenCalledTimes(2);
+    expect(mockRemovePendingClientError).toHaveBeenNthCalledWith(
+      1,
+      pendingReport.reportId,
+    );
+    expect(mockRemovePendingClientError).toHaveBeenNthCalledWith(
+      2,
+      secondPendingReport.reportId,
     );
   });
 

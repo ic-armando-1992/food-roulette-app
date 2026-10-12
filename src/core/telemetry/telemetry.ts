@@ -5,10 +5,11 @@ import { ApiError, apiRequest } from '@/api/client';
 import {
   TELEMETRY_DEFAULTS,
   TELEMETRY_PATHS,
-  TELEMETRY_REDACTION,
-  TELEMETRY_REDACTION_TEXT,
-  TELEMETRY_TEXT_LIMITS,
 } from '@/core/telemetry/constants/telemetry.constants';
+import {
+  sanitizeClientErrorReport,
+  sanitizeTelemetryText,
+} from '@/core/telemetry/sanitize-telemetry-text';
 import {
   getPendingClientErrors,
   persistPendingClientError,
@@ -91,33 +92,12 @@ export function getTelemetryErrorProperties(
 }
 
 export function sanitizeErrorText(value: string, maxLength: number): string {
-  return value
-    .replace(
-      TELEMETRY_REDACTION.coordinatePairPattern,
-      TELEMETRY_REDACTION_TEXT.coordinates,
-    )
-    .replace(
-      TELEMETRY_REDACTION.labeledCoordinatePattern,
-      `$1${TELEMETRY_REDACTION_TEXT.coordinates}`,
-    )
-    .replace(
-      TELEMETRY_REDACTION.urlQueryPattern,
-      `$1?${TELEMETRY_REDACTION_TEXT.secret}`,
-    )
-    .replace(
-      TELEMETRY_REDACTION.secretPattern,
-      `$1${TELEMETRY_REDACTION_TEXT.secret}`,
-    )
-    .replace(
-      TELEMETRY_REDACTION.bearerCredentialPattern,
-      `$1${TELEMETRY_REDACTION_TEXT.secret}`,
-    )
-    .slice(0, maxLength);
+  return sanitizeTelemetryText(value, maxLength);
 }
 
 function sendClientError(report: ClientErrorReport): void {
   void apiRequest<TelemetryAcceptedResponse>(TELEMETRY_PATHS.errors, {
-    body: report,
+    body: sanitizeClientErrorReport(report),
     method: 'POST',
   })
     .then(() => removePendingClientError(report.reportId))
@@ -130,14 +110,17 @@ export async function flushPendingClientErrors(): Promise<void> {
   for (const report of getPendingClientErrors()) {
     try {
       await apiRequest<TelemetryAcceptedResponse>(TELEMETRY_PATHS.errors, {
-        body: report,
+        body: sanitizeClientErrorReport(report),
         method: 'POST',
       });
       removePendingClientError(report.reportId);
     } catch (error) {
       if (isPermanentClientError(error)) {
         removePendingClientError(report.reportId);
+        continue;
       }
+
+      break;
     }
   }
 }
@@ -149,32 +132,19 @@ export function reportClientError(
 ): void {
   const normalized = error instanceof Error ? error : new Error(String(error));
 
-  const report: ClientErrorReport = {
+  const report = sanitizeClientErrorReport({
     reportId: createUuid(),
     sessionId,
     source,
-    errorName: sanitizeErrorText(
-      normalized.name || TELEMETRY_DEFAULTS.errorName,
-      TELEMETRY_TEXT_LIMITS.errorName,
-    ),
-    message: sanitizeErrorText(
-      normalized.message || TELEMETRY_DEFAULTS.errorMessage,
-      TELEMETRY_TEXT_LIMITS.message,
-    ),
-    stack: normalized.stack
-      ? sanitizeErrorText(normalized.stack, TELEMETRY_TEXT_LIMITS.stack)
-      : undefined,
-    componentStack: options.componentStack
-      ? sanitizeErrorText(
-          options.componentStack,
-          TELEMETRY_TEXT_LIMITS.componentStack,
-        )
-      : undefined,
+    errorName: normalized.name || TELEMETRY_DEFAULTS.errorName,
+    message: normalized.message || TELEMETRY_DEFAULTS.errorMessage,
+    stack: normalized.stack,
+    componentStack: options.componentStack ?? undefined,
     fatal: options.fatal ?? false,
     occurredAt: new Date().toISOString(),
     appPlatform,
     appVersion,
-  };
+  });
 
   if (report.fatal) {
     persistPendingClientError(report);

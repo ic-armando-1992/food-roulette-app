@@ -77,3 +77,8 @@ export type ErrorUtilsApi = {
 };
 
 export type AppErrorBoundaryState = { hasError: boolean };
+
+export type TelemetryRedactionSpan = {
+  end: number;
+  start: number;
+};
