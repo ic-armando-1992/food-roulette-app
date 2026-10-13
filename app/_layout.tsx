@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { AppProviders } from '@/core/providers/AppProviders';
+import { AuthProvider } from '@/features/auth/providers/AuthProvider';
 import {
   AppErrorBoundary,
   TelemetryProvider,
@@ -13,12 +14,14 @@ import {
 export default function RootLayout() {
   return (
     <AppErrorBoundary>
-      <TelemetryProvider>
-        <AppProviders>
-          <StatusBar style="dark" />
-          <Stack screenOptions={{ headerShown: false }} />
-        </AppProviders>
-      </TelemetryProvider>
+      <AppProviders>
+        <AuthProvider>
+          <TelemetryProvider>
+            <StatusBar style="dark" />
+            <Stack screenOptions={{ headerShown: false }} />
+          </TelemetryProvider>
+        </AuthProvider>
+      </AppProviders>
     </AppErrorBoundary>
   );
 }

@@ -286,19 +286,29 @@ The image must be delivered through a secure backend contract.
 
 ## 🔐 Auth
 
-Do not block first use.
+Phase 2 preserves first use without login. At startup the app creates or
+restores a stable guest owner through the API while rendering the roulette
+immediately. A cryptographically random installation credential and rotating
+refresh token are stored in Expo SecureStore; the short-lived access token
+exists only in memory.
 
-Plan:
+The shared API client attaches the bearer token centrally. A 401 for a request
+that carried an access token triggers one coordinated refresh and one retry.
+Network/bootstrap failures leave the existing roulette flow available and can
+be retried without replacing the stored guest identity.
+
+Current progression:
 
 ```text
-guest
+secure guest bootstrap / restore
 → roulette
-→ later sync/share/account
-→ Google / Apple
+→ Google / Apple upgrade (next Phase 2 increment)
+→ later sync/share/account ownership
 → Facebook optional later
 ```
 
-Sensitive tokens → SecureStore.
+The API remains authoritative for user identity and future owned data. The app
+does not persist an authoritative balance, provider subject or provider profile.
 
 ---
 
@@ -339,8 +349,9 @@ The app records only behavior that exists in the current roulette flow:
 Product-event delivery to the API is best effort and never blocks location,
 recommendations or navigation. A random session UUID exists only for the
 current JavaScript process; persistent guest identity belongs to the later
-authentication phase. The payload does not include coordinates, city/region
-labels, addresses or raw provider responses.
+authentication boundary and is not copied into client-supplied telemetry
+properties. The payload does not include coordinates, city/region labels,
+addresses or raw provider responses.
 
 The root layout also installs a React error boundary and a global JavaScript
 error handler. Sanitized fatal JavaScript reports are written synchronously to a

@@ -1,5 +1,6 @@
 import { DEFAULT_API_TIMEOUT_MS } from '@/api/constants/client.constants';
 import { ApiErrorKind, ApiRequestOptions } from '@/api/types/client.types';
+import { getApiAccessToken, refreshApiAccessToken } from '@/api/auth';
 import { env } from '@/core/config/env';
 
 export class ApiError extends Error {
@@ -24,6 +25,14 @@ export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
+  return executeApiRequest(path, options, false);
+}
+
+async function executeApiRequest<T>(
+  path: string,
+  options: ApiRequestOptions,
+  retriedAfterRefresh: boolean,
+): Promise<T> {
   const url = getApiResourceUrl(path);
 
   if (!url) {
@@ -37,6 +46,7 @@ export async function apiRequest<T>(
   );
   const abortRequest = () => controller.abort();
   options.signal?.addEventListener('abort', abortRequest, { once: true });
+  const accessToken = options.auth === 'none' ? null : getApiAccessToken();
 
   try {
     const response = await fetch(url, {
@@ -44,6 +54,7 @@ export async function apiRequest<T>(
         options.body === undefined ? undefined : JSON.stringify(options.body),
       headers: {
         Accept: 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         ...(options.body === undefined
           ? {}
           : { 'Content-Type': 'application/json' }),
@@ -53,6 +64,19 @@ export async function apiRequest<T>(
     });
 
     if (!response.ok) {
+      if (
+        response.status === 401 &&
+        accessToken &&
+        !retriedAfterRefresh &&
+        options.auth !== 'none'
+      ) {
+        const refreshedToken = await refreshApiAccessToken();
+
+        if (refreshedToken) {
+          return executeApiRequest(path, options, true);
+        }
+      }
+
       throw new ApiError('http', response.status);
     }
 

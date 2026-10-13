@@ -1,4 +1,5 @@
 import { apiRequest } from '@/api/client';
+import { configureApiTokenRefresh, setApiAccessToken } from '@/api/auth';
 import { env } from '@/core/config/env';
 
 describe('apiRequest', () => {
@@ -6,6 +7,8 @@ describe('apiRequest', () => {
 
   beforeEach(() => {
     env.apiBaseUrl = 'https://api.example.test';
+    setApiAccessToken(null);
+    configureApiTokenRefresh(async () => null);
   });
 
   afterEach(() => {
@@ -41,6 +44,51 @@ describe('apiRequest', () => {
     await expect(
       apiRequest('/v1/recommendations/random'),
     ).rejects.toMatchObject({ kind: 'http', status: 503 });
+  });
+
+  it('attaches the access token centrally', async () => {
+    setApiAccessToken('access-token');
+    const fetchMock = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValue(new Response(JSON.stringify({ ok: true })));
+
+    await apiRequest('/v1/auth/me');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.test/v1/auth/me',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer access-token',
+        }),
+      }),
+    );
+  });
+
+  it('coordinates one refresh and retries a rejected authenticated request once', async () => {
+    setApiAccessToken('expired-token');
+    const refresh = jest.fn(async () => {
+      setApiAccessToken('refreshed-token');
+      return 'refreshed-token';
+    });
+    configureApiTokenRefresh(refresh);
+    const fetchMock = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true })));
+
+    await expect(apiRequest<{ ok: boolean }>('/protected')).resolves.toEqual({
+      ok: true,
+    });
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      'https://api.example.test/protected',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer refreshed-token',
+        }),
+      }),
+    );
   });
 
   it('aborts and normalizes a slow request as a timeout', async () => {
