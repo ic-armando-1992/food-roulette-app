@@ -57,7 +57,9 @@ function findValueEnd(
     return findHeaderEnd(value, start);
   }
 
-  let end = start;
+  let end = value.startsWith(TELEMETRY_REDACTION_TEXT.secret, start)
+    ? start + TELEMETRY_REDACTION_TEXT.secret.length
+    : start;
   while (end < value.length && !/[\s,;}\]]/.test(value[end] ?? '')) {
     end += 1;
   }
@@ -79,10 +81,6 @@ function redactAssignments(value: string): string {
     const quotedValue = quote === '"' || quote === "'";
     const redactionStart =
       quotedValue && !wholeHeader ? valueStart + 1 : valueStart;
-
-    if (value.startsWith(TELEMETRY_REDACTION_TEXT.secret, redactionStart)) {
-      continue;
-    }
 
     const valueEnd = findValueEnd(value, valueStart, match[4], wholeHeader);
     if (valueEnd <= redactionStart) {

@@ -41,12 +41,13 @@ export const TELEMETRY_TEXT_LIMITS = {
 } as const;
 
 export const TELEMETRY_REDACTION = {
-  bearerCredentialPattern: /(\bbearer[ \t]+)(?!\[redacted\])[^"',;\s}\]]+/gi,
-  coordinatePairPattern: /[+-]?\d{1,3}\.\d{4,}\s*[,;]\s*[+-]?\d{1,3}\.\d{4,}/g,
+  bearerCredentialPattern: /(\bbearer[ \t]+)(?:\[redacted\])?[^"',;\s}\]]*/gi,
+  coordinatePairPattern:
+    /[+-]?\d{1,3}\.\d{3,}\s*(?:[,;]|\s)\s*[+-]?\d{1,3}\.\d{3,}/g,
   labeledCoordinatePattern:
-    /((?:"|')?\b(?:lat(?:itude)?|lon(?:gitude)?|lng)\b(?:"|')?\s*[:=]\s*)[+-]?\d{1,3}(?:\.\d+)?/gi,
+    /((?:"|')?\b(?:lat(?:itude)?|lon(?:gitude)?|lng)\b(?:"|')?\s*(?:[:=]\s*|\s+))[+-]?\d{1,3}(?:\.\d+)?/gi,
   sensitiveAssignmentPattern:
-    /(^|[^A-Za-z0-9_-])(["']?)(authorization|api[_-]?key|access[_-]?token|client[_-]?secret|id[_-]?token|password|private[_-]?key|refresh[_-]?token|secret|session[_-]?token|token)\2\s*([:=])\s*/gi,
+    /(^|[^A-Za-z0-9_-])(["']?)(authorization|proxy[_-]?authorization|(?:x[_-]?)?api[_-]?key|access[_-]?token|client[_-]?secret|cookie|id[_-]?token|password|private[_-]?key|refresh[_-]?token|secret|session[_-]?token|set[_-]?cookie|token)\2\s*([:=])\s*/gi,
   urlQueryPattern: /(https?:\/\/[^\s?]+)\?[^\s)]+/g,
 } as const;
 

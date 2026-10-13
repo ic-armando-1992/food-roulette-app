@@ -350,11 +350,11 @@ the configured TTL. A transient network error, timeout or HTTP 429 stops the
 current flush so one outage cannot generate a retry burst; safe permanent 4xx
 failures are discarded and flushing continues. This does not capture native
 crashes, so the Phase 1 capability is JavaScript error reporting rather than a
-complete native crash reporter. Coordinate pairs, labeled latitude/longitude,
-URL query strings, structured secrets and complete Authorization values are
-redacted before local persistence and again at the network boundary. The API
-performs the same sanitization before storage, and telemetry failures remain
-invisible to the product flow.
+complete native crash reporter. Decimal coordinate pairs, labeled
+latitude/longitude, URL query strings, structured secrets and common credential
+headers are redacted before local persistence and again at the network
+boundary. The API performs the same sanitization before storage, and telemetry
+failures remain invisible to the product flow.
 
 ---
 
