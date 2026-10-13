@@ -5,6 +5,23 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-12 — App CI patch alignment verified
+
+- Timestamp: 2026-10-12.
+- Result: success; commit `dc2738b` is published and GitHub Actions run
+  `38327788118` passed.
+- Relevant result summary: the first CI run exposed online Expo compatibility
+  metadata unavailable during the earlier offline check. Updated only the five
+  expected SDK 57 patch releases and kept `jest-expo` solely in
+  `devDependencies`.
+- Validation: reproducible `npm ci`, format, lint, strict typecheck, 12
+  suites/66 tests, online Expo dependency validation, Android Hermes export and
+  the critical audit threshold pass. Existing noncritical transitive advisories
+  still require breaking dependency changes and were not force-fixed.
+- Publication: the correction was pushed to app PR #2 without merging or
+  approving it.
+- Next intended action: await explicit merge approval.
+
 ### 2026-10-12 — Final review fixes published
 
 - Timestamp: 2026-10-12.

@@ -46,11 +46,12 @@ strict typecheck, 66 mobile tests, Expo dependency validation, Expo Doctor
 
 `feature/phase-1-analytics-observability`, created from `experimental` at
 `63183a1` after Phase 0 PR #1 merged. Final review fixes are committed as
-`c2f1994` and published to PR #2 against `experimental`.
+`c2f1994` and published to PR #2 against `experimental`. Expo patch
+alignment commit `dc2738b` passes the repository CI workflow.
 
 ## Current environment status
 
-Expo SDK 57.0.27, React Native 0.86.3, React 19, TypeScript 6, Expo Router, NativeWind
+Expo SDK 57.0.28, React Native 0.86.3, React 19, TypeScript 6, Expo Router, NativeWind
 v4, TanStack Query, Zustand, Reanimated, Gesture Handler, Expo Location,
 Image, SecureStore and SQLite, Lucide, React Hook Form and Zod are installed.
 Node v20.20.2/npm 10.8.2 are available through NVM but are not loaded by the
@@ -199,6 +200,5 @@ security/dependency review rather than `npm audit fix --force`.
 
 ## Next intended action
 
-Monitor the PR #2 CI run and address only verified failures. Do not merge before
-explicit approval; begin Phase 2 guest identity and authentication only after
-the Phase 1 integration decision.
+Await explicit merge approval for PR #2. Begin Phase 2 guest identity and
+authentication only after the Phase 1 integration decision.
