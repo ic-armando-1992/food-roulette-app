@@ -5,6 +5,86 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-12 — Final review fixes published
+
+- Timestamp: 2026-10-12.
+- Result: success; implementation commit `c2f1994` is published to app PR #2.
+- Relevant result summary: published the verified sanitizer hardening, shared
+  regression corpus, compatible dependency resolutions and GitHub Actions
+  workflow without merging or approving the PR.
+- Validation before publication: format, lint, strict typecheck, 12 suites/66
+  tests, Expo Doctor 21/21, Android Hermes export, reproducible `npm ci` and
+  dependency validation passed without Google traffic.
+- Next intended action: monitor CI and wait for explicit merge approval.
+
+### 2026-10-11 — Final independent-review fixes verified locally
+
+- Timestamp: 2026-10-11.
+- Result: success; changes remain uncommitted and unpublished.
+- Relevant result summary: closed the redaction-marker bypass, covered common
+  credential headers and additional coordinate formats in the shared corpus,
+  refreshed only compatible dependency resolutions and added a repository-native
+  CI workflow.
+- Maintainability: reused the existing scanner and constants, removed the unsafe
+  early exit, added no runtime dependency or new production layer, and kept the
+  app/API corpus identical.
+- Validation: format, lint, strict typecheck, 12 suites/66 tests, Expo Doctor
+  21/21, Android Hermes export, reproducible `npm ci` and dependency validation
+  pass. The critical audit advisory is removed; remaining reports require
+  breaking Expo/Jest/Tailwind changes and stay tracked for a compatible SDK
+  update. No Google request was made.
+- Next intended action: await explicit approval to commit and publish.
+
+### 2026-10-11 — Telemetry hardening simplified
+
+- Timestamp: 2026-10-11.
+- Result: success; `994bc70` is pushed to app PR #2.
+- Relevant result summary: the sanitizer and TTL parsing were reduced to their
+  essential paths, redundant SQLite filtering and an internal exported type
+  were removed, and all required behavior stayed covered.
+- Impact: 127 net lines removed from app production/test code relative to the
+  previous stabilization commit.
+- Validation: format, lint, typecheck, 58 tests, Expo Doctor 21/21 and Android
+  Hermes export pass.
+- Next intended action: await independent review and explicit merge approval.
+
+### 2026-10-11 — Final Phase 1 stabilization published
+
+- Timestamp: 2026-10-11.
+- Command/action: hardened structured redaction at storage/network boundaries,
+  added configurable outbox TTL and transient backoff, corrected fixture UUIDs,
+  and added shared app/API contract coverage.
+- Result: success; commit `d3b4ba5` is pushed to existing app PR #2.
+- Relevant result summary: format, lint, strict typecheck, 12 suites/58 tests,
+  Expo Doctor 21/21, Android Hermes export and identical cross-repository
+  redaction/event corpora pass.
+- Current phase/status: ready for final independent verification.
+- Blocker: native iOS/physical-device release checks remain environment work;
+  no Phase 1 code blocker.
+- Publication: commit-linked thread replies and a PR summary were posted; no PR
+  was merged or approved.
+- Next intended action: await explicit merge approval.
+
+### 2026-10-11 — PR #2 review corrections implemented and verified
+
+- Timestamp: 2026-10-11.
+- Command/action: hardened telemetry redaction, added a bounded synchronous
+  SQLite outbox for fatal JavaScript errors, handled Maps launch failures and
+  deduplicated permission-result events per observed transition.
+- Result: success; all confirmed frontend review findings are corrected in
+  commit `05535bc` without adding a dependency or external crash SaaS.
+- Relevant result summary: fatal JavaScript reports survive process restart;
+  native crashes remain explicitly outside the Phase 1 capability. Format,
+  lint, strict typecheck, 33 tests, Expo Doctor 21/21, Android Hermes export and
+  cross-repository telemetry contract validation pass.
+- Current phase/status: Phase 1 review remediation is complete locally.
+- Blocker: none for another independent review; native crash reporting remains
+  a future release-readiness decision rather than an implied current feature.
+- Publication: `05535bc` is pushed to the existing PR #2; all four threads have
+  commit-linked replies and are resolved after verification.
+- Next intended action: await independent review and user approval; do not
+  merge.
+
 ### 2026-10-10 — Types, labels and constants structure standardized
 
 - Timestamp: 2026-10-10.
@@ -28,6 +108,25 @@ Rolling log of recent meaningful activity. Archive older entries under
   explaining device reachability and the Android emulator host alias.
 - Next intended action: review/integrate both Phase 1 PRs, then begin Phase 2
   only after the integration decision.
+
+### 2026-10-09 — Expo emulator black screen isolated and recovered
+
+- Timestamp: 2026-10-09.
+- Command/action: verified API/Metro/device connectivity, inspected Android's
+  internal framebuffer and UI tree, restarted only the Pixel 10 Pro AVD with a
+  cold boot and the software GPU renderer, then relaunched Expo Go.
+- Result: success; Food Roulette renders normally and remains connected to
+  Metro at `10.0.2.2:8081` and the API at `10.0.2.2:3000`.
+- Relevant result summary: React Native had rendered the complete discovery UI
+  while the emulator returned a black framebuffer. No application exception,
+  source defect, database failure or API-network failure caused the symptom.
+  The AVD's automatic GPU/quick-boot state was the cause; no product code or
+  environment file changed.
+- Current phase/status: Phase 0 remains complete; the local Android runtime is
+  healthy under a one-session software-GPU override.
+- Blocker: none. A normal `auto` GPU/quick-boot launch may reproduce the issue.
+- Next intended action: use a cold boot/software graphics again, or persist the
+  AVD Graphics setting through Android Studio, if the black screen returns.
 
 ### 2026-10-10 — Roadmap Phase 1 analytics and observability completed
 
