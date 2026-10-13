@@ -10,14 +10,15 @@ non-blocking mobile guest bootstrap. Phase 3 has not started.
 ## Current branch
 
 `feature/phase-2-guest-identity`, created from synchronized `experimental` at
-merge commit `74294a8`.
+merge commit `74294a8` and published through PR #3.
 
 ## Current environment status
 
 Expo SDK 57.0.28, React Native 0.86.3 and Node.js 20.20.2 remain active. The app
 passes reproducible install, format, lint, strict typecheck, 15 suites/76 tests,
 Expo dependency validation, Doctor 21/21 and Android Hermes export. Native iOS
-builds remain unavailable on this Linux/WSL host.
+builds remain unavailable on this Linux/WSL host. GitHub Actions run
+`38351620164` passed for the implementation commit.
 
 ## Completed milestones
 
@@ -50,6 +51,6 @@ requires macOS and a physical iOS device before release.
 
 ## Next intended action
 
-Publish the verified guest-bootstrap increment as a PR to `experimental`,
-dependent on the API guest-identity PR, then obtain the conflict-handling
-decision before Phase 2 provider upgrades.
+Review API PR #3 before this dependent App PR #3. Obtain the conflict-handling
+decision before Phase 2 provider upgrades; do not merge or begin Phase 3
+automatically.

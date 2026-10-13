@@ -9,18 +9,19 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 - Timestamp: 2026-10-12.
 - Result: first Phase 2 mobile increment is implemented and locally verified on
-  `feature/phase-2-guest-identity`; publication is pending.
+  `feature/phase-2-guest-identity` and published through App PR #3.
 - Relevant result summary: confirmed Phase 1 PR #2 is merged, synchronized
   `experimental`, added cryptographic guest identity in SecureStore, rotating
   refresh, memory-only access tokens, centralized bearer/refresh handling and a
   non-blocking auth provider. Roulette behavior stays available on auth failure.
 - Validation: reproducible install, format, lint, strict typecheck, 15
   suites/76 tests, Expo dependency validation, Doctor 21/21 and Android Hermes
-  export pass; Phase 0/1 behavior remains green.
+  export pass; Phase 0/1 behavior remains green. GitHub Actions run
+  `38351620164` also passed.
 - Blocker: provider-linking UX awaits the product decision for an external
   identity already owned by another internal user.
-- Next intended action: publish the app PR to `experimental`, dependent on the
-  API guest foundation, then await the conflict-handling decision.
+- Next intended action: review API PR #3 before this dependent App PR #3, then
+  await the conflict-handling decision.
 
 ### 2026-10-12 — App CI patch alignment verified
 
