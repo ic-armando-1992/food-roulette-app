@@ -15,17 +15,18 @@ import {
   DISCOVERY_TIMING,
   ROULETTE_APPEARANCE,
 } from '@/features/discovery/constants/discovery.constants';
+import { DISCOVERY_LABELS } from '@/features/discovery/constants/discovery.labels';
+import {
+  CartesianPoint,
+  RouletteSpinnerProps,
+} from '@/features/discovery/types/discovery.types';
 import colors from '@/theme/colors.json';
-
-type RouletteSpinnerProps = {
-  spinning?: boolean;
-};
 
 function pointOnCircle(
   center: number,
   radius: number,
   angleDegrees: number,
-): { x: number; y: number } {
+): CartesianPoint {
   const angleRadians = (angleDegrees * Math.PI) / 180;
 
   return {
@@ -91,7 +92,11 @@ export function RouletteSpinner({ spinning = true }: RouletteSpinnerProps) {
 
   return (
     <View
-      accessibilityLabel={spinning ? 'Ruleta girando' : 'Ruleta de comida'}
+      accessibilityLabel={
+        spinning
+          ? DISCOVERY_LABELS.accessibility.rouletteSpinning
+          : DISCOVERY_LABELS.accessibility.rouletteIdle
+      }
       accessibilityRole={spinning ? 'progressbar' : 'image'}
       className="items-center"
       style={{ height: size + 20, width: size }}

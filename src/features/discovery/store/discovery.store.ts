@@ -1,9 +1,6 @@
 import { create } from 'zustand';
 
-type DiscoveryStore = {
-  radiusMeters: number;
-  setRadiusMeters: (radiusMeters: number) => void;
-};
+import { DiscoveryStore } from '@/features/discovery/types/discovery.types';
 
 export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
   radiusMeters: 3_000,

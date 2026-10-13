@@ -2,13 +2,9 @@ import { ChevronRight, MapPin } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
 import { RADIUS_OPTIONS } from '@/features/discovery/constants/discovery.constants';
+import { DISCOVERY_LABELS } from '@/features/discovery/constants/discovery.labels';
+import { RadiusSelectorProps } from '@/features/discovery/types/discovery.types';
 import colors from '@/theme/colors.json';
-
-type RadiusSelectorProps = {
-  disabled?: boolean;
-  radiusMeters: number;
-  onChange: (radiusMeters: number) => void;
-};
 
 export function RadiusSelector({
   disabled = false,
@@ -20,7 +16,7 @@ export function RadiusSelector({
       <View className="mb-4 flex-row items-center gap-2">
         <MapPin color={colors.foreground} size={20} />
         <Text className="flex-1 text-base font-extrabold text-foreground">
-          ¿Qué tan lejos?
+          {DISCOVERY_LABELS.radius.title}
         </Text>
         <ChevronRight color={colors.mutedForeground} size={20} />
       </View>

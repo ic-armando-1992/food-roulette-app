@@ -16,6 +16,7 @@ const mockRecommend = jest.fn<
   [unknown]
 >();
 const mockReset = jest.fn();
+const mockTrackProductEvent = jest.fn();
 let mockLocationState: unknown;
 let mockRecommendationState: Record<string, unknown>;
 
@@ -28,6 +29,12 @@ jest.mock('@/features/discovery/hooks/useCurrentLocation', () => ({
 
 jest.mock('@/features/discovery/hooks/useRandomRecommendation', () => ({
   useRandomRecommendation: () => mockRecommendationState,
+}));
+
+jest.mock('@/core/telemetry/telemetry', () => ({
+  createTelemetryId: () => '33333333-3333-4333-8333-333333333333',
+  getTelemetryErrorProperties: () => ({ errorKind: 'network' }),
+  trackProductEvent: (...args: unknown[]) => mockTrackProductEvent(...args),
 }));
 
 jest.mock('@/features/discovery/components/RouletteSpinner', () => {
@@ -121,6 +128,17 @@ describe('DiscoverScreen', () => {
       longitude: -117.0382,
       radiusMeters: 3_000,
     });
+    expect(mockTrackProductEvent).toHaveBeenCalledWith(
+      'roulette_spin_started',
+      expect.objectContaining({ reroll: false, radiusMeters: 3_000 }),
+    );
+    expect(mockTrackProductEvent).toHaveBeenCalledWith(
+      'roulette_spin_result',
+      expect.objectContaining({
+        restaurantId: '55555555-5555-4555-8555-555555555555',
+        reroll: false,
+      }),
+    );
   });
 
   it('keeps the loading state visible for the duration of a slow request', async () => {
@@ -150,10 +168,13 @@ describe('DiscoverScreen', () => {
 
   it('rerolls with the existing pool and excludes the previous restaurant', async () => {
     const secondResult = buildRecommendation(
-      { id: 'restaurant-2', name: 'Segundo Restaurante' },
+      {
+        id: '66666666-6666-4666-8666-666666666666',
+        name: 'Segundo Restaurante',
+      },
       {
         candidatePool: {
-          id: 'pool-1',
+          id: '77777777-7777-4777-8777-777777777777',
           expiresAt: '2030-01-01T00:15:00.000Z',
           remainingCandidates: 3,
         },
@@ -171,12 +192,15 @@ describe('DiscoverScreen', () => {
 
     expect(mockRecommend).toHaveBeenNthCalledWith(2, {
       allowInternational: false,
-      candidatePoolId: 'pool-1',
+      candidatePoolId: '77777777-7777-4777-8777-777777777777',
       countryCode: 'MX',
-      excludedRestaurantIds: ['restaurant-1'],
+      excludedRestaurantIds: ['55555555-5555-4555-8555-555555555555'],
       latitude: 32.5149,
       longitude: -117.0382,
       radiusMeters: 3_000,
+    });
+    expect(mockTrackProductEvent).toHaveBeenCalledWith('roulette_spin_again', {
+      restaurantId: '55555555-5555-4555-8555-555555555555',
     });
   });
 
@@ -192,6 +216,10 @@ describe('DiscoverScreen', () => {
 
     fireEvent.press(screen.getByText('GIRAR RULETA'));
     await waitFor(() => expect(mockRecommend).toHaveBeenCalledTimes(1));
+    expect(mockTrackProductEvent).toHaveBeenCalledWith(
+      'roulette_spin_failed',
+      expect.objectContaining({ errorKind: 'network', reroll: false }),
+    );
     await waitFor(() => expect(screen.getByText('GIRAR RULETA')).toBeEnabled());
     fireEvent.press(screen.getByText('GIRAR RULETA'));
 

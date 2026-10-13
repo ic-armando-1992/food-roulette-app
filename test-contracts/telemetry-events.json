@@ -1,0 +1,57 @@
+[
+  {
+    "eventName": "app_opened",
+    "properties": {}
+  },
+  {
+    "eventName": "location_granted",
+    "properties": {}
+  },
+  {
+    "eventName": "location_denied",
+    "properties": {}
+  },
+  {
+    "eventName": "roulette_spin_started",
+    "properties": {
+      "spinId": "33333333-3333-4333-8333-333333333333",
+      "reroll": false,
+      "radiusMeters": 3000
+    }
+  },
+  {
+    "eventName": "roulette_spin_result",
+    "properties": {
+      "spinId": "33333333-3333-4333-8333-333333333333",
+      "reroll": false,
+      "radiusMeters": 3000,
+      "durationMs": 1250,
+      "restaurantId": "55555555-5555-4555-8555-555555555555",
+      "source": "provider"
+    }
+  },
+  {
+    "eventName": "roulette_spin_failed",
+    "properties": {
+      "spinId": "33333333-3333-4333-8333-333333333333",
+      "reroll": true,
+      "radiusMeters": 3000,
+      "durationMs": 5000,
+      "errorKind": "http",
+      "httpStatus": 503
+    }
+  },
+  {
+    "eventName": "roulette_spin_again",
+    "properties": {
+      "restaurantId": "55555555-5555-4555-8555-555555555555"
+    }
+  },
+  {
+    "eventName": "restaurant_maps_opened",
+    "properties": {
+      "restaurantId": "55555555-5555-4555-8555-555555555555",
+      "spinId": "33333333-3333-4333-8333-333333333333"
+    }
+  }
+]

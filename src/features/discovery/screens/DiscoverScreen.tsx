@@ -10,23 +10,33 @@ import { RadiusSelector } from '@/features/discovery/components/RadiusSelector';
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
 import { RouletteLoadingState } from '@/features/discovery/components/RouletteLoadingState';
 import { RouletteSpinner } from '@/features/discovery/components/RouletteSpinner';
+import { DISCOVERY_LABELS } from '@/features/discovery/constants/discovery.labels';
 import { useCurrentLocation } from '@/features/discovery/hooks/useCurrentLocation';
 import { useRandomRecommendation } from '@/features/discovery/hooks/useRandomRecommendation';
 import { useDiscoveryStore } from '@/features/discovery/store/discovery.store';
+import {
+  BrandHeaderProps,
+  DiscoveryView,
+  ErrorMessageProps,
+} from '@/features/discovery/types/discovery.types';
 import { getRecommendationErrorMessage } from '@/features/discovery/utils/getRecommendationErrorMessage';
+import {
+  createTelemetryId,
+  getTelemetryErrorProperties,
+  trackProductEvent,
+} from '@/core/telemetry/telemetry';
+import { TELEMETRY_EVENTS } from '@/core/telemetry/constants/telemetry.constants';
 import colors from '@/theme/colors.json';
 
-type DiscoveryView = 'home' | 'result';
-
-function BrandHeader({ showSettings = false }: { showSettings?: boolean }) {
+function BrandHeader({ showSettings = false }: BrandHeaderProps) {
   return (
     <View className="flex-row items-center justify-between px-5 py-3">
       <Text className="text-sm font-extrabold uppercase tracking-widest text-primary">
-        Food Roulette
+        {DISCOVERY_LABELS.brandName}
       </Text>
       {showSettings ? (
         <Pressable
-          accessibilityLabel="Abrir ajustes de la aplicación"
+          accessibilityLabel={DISCOVERY_LABELS.accessibility.settings}
           accessibilityRole="button"
           className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
           onPress={() => void Linking.openSettings()}
@@ -41,12 +51,14 @@ function BrandHeader({ showSettings = false }: { showSettings?: boolean }) {
   );
 }
 
-function ErrorMessage({ message }: { message: string }) {
+function ErrorMessage({ message }: ErrorMessageProps) {
   return (
     <View className="mx-5 mb-4 flex-row gap-3 rounded-2xl bg-surface px-4 py-3">
       <AlertCircle color={colors.error} size={20} />
       <View className="flex-1">
-        <Text className="font-bold text-error">No pudimos elegir un lugar</Text>
+        <Text className="font-bold text-error">
+          {DISCOVERY_LABELS.error.title}
+        </Text>
         <Text className="mt-1 text-sm leading-5 text-mutedForeground">
           {message}
         </Text>
@@ -65,6 +77,7 @@ export function DiscoverScreen() {
   );
   const [displayedResult, setDisplayedResult] =
     useState<RandomRecommendationResponse | null>(null);
+  const [displayedSpinId, setDisplayedSpinId] = useState<string | null>(null);
   const [view, setView] = useState<DiscoveryView>('home');
   const [isSpinning, setIsSpinning] = useState(false);
   const requestedLocationOnMount = useRef(false);
@@ -88,6 +101,8 @@ export function DiscoverScreen() {
 
     const previousResult = displayedResult;
     const exclusions = isReroll ? excludedRestaurantIds : [];
+    const spinId = createTelemetryId();
+    const startedAt = Date.now();
     requestInFlight.current = true;
     setIsSpinning(true);
     recommendation.reset();
@@ -95,6 +110,17 @@ export function DiscoverScreen() {
     if (!isReroll) {
       setExcludedRestaurantIds([]);
     }
+
+    if (isReroll && previousResult) {
+      trackProductEvent(TELEMETRY_EVENTS.spinAgain, {
+        restaurantId: previousResult.recommendation.id,
+      });
+    }
+    trackProductEvent(TELEMETRY_EVENTS.spinStarted, {
+      spinId,
+      reroll: isReroll,
+      radiusMeters,
+    });
 
     try {
       const result = await recommendation.recommend({
@@ -108,11 +134,27 @@ export function DiscoverScreen() {
       });
 
       if (result) {
+        trackProductEvent(TELEMETRY_EVENTS.spinResult, {
+          spinId,
+          reroll: isReroll,
+          radiusMeters,
+          durationMs: Date.now() - startedAt,
+          restaurantId: result.recommendation.id,
+          source: result.source,
+        });
         setExcludedRestaurantIds([...exclusions, result.recommendation.id]);
         setDisplayedResult(result);
+        setDisplayedSpinId(spinId);
         setView('result');
       }
-    } catch {
+    } catch (error) {
+      trackProductEvent(TELEMETRY_EVENTS.spinFailed, {
+        spinId,
+        reroll: isReroll,
+        radiusMeters,
+        durationMs: Date.now() - startedAt,
+        ...getTelemetryErrorProperties(error),
+      });
       // TanStack Query retains the normalized error for the visible error state.
     } finally {
       requestInFlight.current = false;
@@ -158,6 +200,14 @@ export function DiscoverScreen() {
               recommendation.reset();
               setView('home');
             }}
+            onMapsOpened={() => {
+              if (displayedSpinId) {
+                trackProductEvent(TELEMETRY_EVENTS.mapsOpened, {
+                  restaurantId: displayedResult.recommendation.id,
+                  spinId: displayedSpinId,
+                });
+              }
+            }}
             onReroll={() => void requestRecommendation(true)}
             result={displayedResult}
           />
@@ -175,10 +225,10 @@ export function DiscoverScreen() {
       >
         <View className="items-center pt-1">
           <Text className="text-center text-4xl font-black leading-tight text-foreground">
-            ¿Qué vamos a{`\n`}comer? 🍴
+            {DISCOVERY_LABELS.home.title}
           </Text>
           <Text className="mt-2 text-center text-base text-mutedForeground">
-            Deja que el azar decida por ti.
+            {DISCOVERY_LABELS.home.subtitle}
           </Text>
           <View className="mt-4">
             <LocationPill state={locationState} />
@@ -192,7 +242,7 @@ export function DiscoverScreen() {
         <Button
           disabled={!locationReady}
           icon={<Sparkles color={colors.primaryForeground} size={21} />}
-          label="GIRAR RULETA"
+          label={DISCOVERY_LABELS.actions.spin}
           onPress={() => void requestRecommendation(false)}
         />
 
@@ -216,17 +266,17 @@ export function DiscoverScreen() {
         locationState.status === 'error' ? (
           <View className="mt-5 gap-3 rounded-3xl bg-surface p-4">
             <Text className="font-bold text-foreground">
-              Necesitamos tu ubicación para buscar cerca de ti.
+              {DISCOVERY_LABELS.home.locationRequired}
             </Text>
             {locationState.status === 'denied' ? (
               <Button
-                label="ABRIR AJUSTES"
+                label={DISCOVERY_LABELS.actions.openSettings}
                 onPress={() => void Linking.openSettings()}
                 variant="secondary"
               />
             ) : null}
             <Button
-              label="INTENTAR DE NUEVO"
+              label={DISCOVERY_LABELS.actions.retry}
               onPress={() => void requestLocation()}
               variant="secondary"
             />

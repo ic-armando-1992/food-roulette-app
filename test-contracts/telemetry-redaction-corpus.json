@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Basic authorization header",
+    "input": "Authorization: Basic dXNlcjpwYXNz==",
+    "expected": "Authorization: [redacted]"
+  },
+  {
+    "name": "Digest authorization header with quoted parameters",
+    "input": "Authorization: Digest username=\"Mufasa\", realm=\"test realm\", nonce=\"a\\\\\\\"b, c\", response=\"deadbeef\"",
+    "expected": "Authorization: [redacted]"
+  },
+  {
+    "name": "Bearer authorization header",
+    "input": "authorization: Bearer eyJhbGciOi.test.signature",
+    "expected": "authorization: [redacted]"
+  },
+  {
+    "name": "ApiKey authorization header",
+    "input": "AUTHORIZATION=ApiKey key/with+special==",
+    "expected": "AUTHORIZATION=[redacted]"
+  },
+  {
+    "name": "Unknown authorization scheme",
+    "input": "Authorization: Custom-Scheme value with spaces !@#$%^&*()",
+    "expected": "Authorization: [redacted]"
+  },
+  {
+    "name": "Quoted complete authorization header",
+    "input": "Authorization: \"Basic value with spaces\" trailing-parameter",
+    "expected": "Authorization: [redacted]"
+  },
+  {
+    "name": "Quoted JSON token with spaces and escaped quotes",
+    "input": "{\"token\":\"value with spaces, punctuation !@#$%^&*() and \\\"escaped\\\" quote\",\"safe\":\"visible\"}",
+    "expected": "{\"token\":\"[redacted]\",\"safe\":\"visible\"}"
+  },
+  {
+    "name": "Single quoted secret",
+    "input": "api_key='value with spaces; commas, and \\'quotes\\'' next=visible",
+    "expected": "api_key='[redacted]' next=visible"
+  },
+  {
+    "name": "CRLF separated sensitive headers",
+    "input": "Authorization: Bearer first-secret\r\nX-Trace: safe\r\nToken: \"second secret\"\r\nX-End: ok",
+    "expected": "Authorization: [redacted]\r\nX-Trace: safe\r\nToken: \"[redacted]\"\r\nX-End: ok"
+  },
+  {
+    "name": "Folded authorization header",
+    "input": "Authorization: Digest realm=\"one\"\r\n nonce=\"two\"\r\nX-Trace: safe",
+    "expected": "Authorization: [redacted]\r\nX-Trace: safe"
+  },
+  {
+    "name": "Standalone bearer credential",
+    "input": "request failed with Bearer loose-secret",
+    "expected": "request failed with Bearer [redacted]"
+  },
+  {
+    "name": "Redaction marker cannot prefix an assignment secret",
+    "input": "token=[redacted]actual-secret",
+    "expected": "token=[redacted]"
+  },
+  {
+    "name": "Redaction marker cannot prefix a quoted secret",
+    "input": "{\"password\":\"[redacted]actual-secret\"}",
+    "expected": "{\"password\":\"[redacted]\"}"
+  },
+  {
+    "name": "Redaction marker cannot prefix an authorization value",
+    "input": "Authorization: [redacted]actual-secret",
+    "expected": "Authorization: [redacted]"
+  },
+  {
+    "name": "Redaction marker cannot prefix a bearer credential",
+    "input": "request failed with Bearer [redacted]actual-secret",
+    "expected": "request failed with Bearer [redacted]"
+  },
+  {
+    "name": "Common credential headers",
+    "input": "X-API-Key: first-secret\r\nProxy-Authorization: Basic second-secret\r\nCookie: session=third-secret",
+    "expected": "X-API-Key: [redacted]\r\nProxy-Authorization: [redacted]\r\nCookie: [redacted]"
+  },
+  {
+    "name": "Coordinates and URL query",
+    "input": "At 32.5149,-117.0382 https://test/path?token=x",
+    "expected": "At [redacted-coordinates] https://test/path?[redacted]"
+  },
+  {
+    "name": "Space separated coordinates",
+    "input": "POINT(-117.0382 32.5149)",
+    "expected": "POINT([redacted-coordinates])"
+  },
+  {
+    "name": "Coordinates with three decimal places",
+    "input": "geo:32.515,-117.038",
+    "expected": "geo:[redacted-coordinates]"
+  },
+  {
+    "name": "Labeled coordinates without assignment symbols",
+    "input": "latitude 32.5149 longitude -117.0382",
+    "expected": "latitude [redacted-coordinates] longitude [redacted-coordinates]"
+  }
+]

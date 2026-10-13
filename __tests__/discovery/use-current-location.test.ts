@@ -4,6 +4,12 @@ import * as Location from 'expo-location';
 import { DISCOVERY_TIMING } from '@/features/discovery/constants/discovery.constants';
 import { useCurrentLocation } from '@/features/discovery/hooks/useCurrentLocation';
 
+const mockTrackProductEvent = jest.fn();
+
+jest.mock('@/core/telemetry/telemetry', () => ({
+  trackProductEvent: (...args: unknown[]) => mockTrackProductEvent(...args),
+}));
+
 jest.mock('expo-location', () => ({
   Accuracy: { High: 4 },
   PermissionStatus: {
@@ -60,16 +66,22 @@ describe('useCurrentLocation', () => {
   });
 
   it('resolves granted coordinates, country and display label', async () => {
-    locationMock.getForegroundPermissionsAsync.mockResolvedValue({
-      granted: false,
-      status: Location.PermissionStatus.UNDETERMINED,
-    } as Location.LocationPermissionResponse);
+    locationMock.getForegroundPermissionsAsync
+      .mockResolvedValueOnce({
+        granted: false,
+        status: Location.PermissionStatus.UNDETERMINED,
+      } as Location.LocationPermissionResponse)
+      .mockResolvedValue({
+        granted: true,
+        status: Location.PermissionStatus.GRANTED,
+      } as Location.LocationPermissionResponse);
     locationMock.requestForegroundPermissionsAsync.mockResolvedValue({
       granted: true,
       status: Location.PermissionStatus.GRANTED,
     } as Location.LocationPermissionResponse);
     const { result } = renderHook(() => useCurrentLocation());
 
+    await act(async () => result.current.requestLocation());
     await act(async () => result.current.requestLocation());
 
     expect(
@@ -84,6 +96,8 @@ describe('useCurrentLocation', () => {
       },
       label: 'Tijuana, Baja California',
     });
+    expect(mockTrackProductEvent).toHaveBeenCalledTimes(1);
+    expect(mockTrackProductEvent).toHaveBeenCalledWith('location_granted', {});
   });
 
   it('exposes denied without repeatedly requesting determined permission', async () => {
@@ -94,11 +108,14 @@ describe('useCurrentLocation', () => {
     const { result } = renderHook(() => useCurrentLocation());
 
     await act(async () => result.current.requestLocation());
+    await act(async () => result.current.requestLocation());
 
     expect(result.current.state).toEqual({ status: 'denied' });
     expect(
       locationMock.requestForegroundPermissionsAsync,
     ).not.toHaveBeenCalled();
+    expect(mockTrackProductEvent).toHaveBeenCalledTimes(1);
+    expect(mockTrackProductEvent).toHaveBeenCalledWith('location_denied', {});
   });
 
   it('exposes unavailable location as a recoverable error', async () => {

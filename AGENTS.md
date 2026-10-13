@@ -118,6 +118,26 @@ API keys, OAuth secrets or other credentials in status or log files.
 
 Do not overengineer for one million users today. Build the MVP correctly, with clean boundaries that allow measured scaling later.
 
+## Type, label and constant organization
+
+- Do not declare production prop types, domain types, API request options or
+  reusable object shapes inside React components, screens, hooks, controllers,
+  services or repositories. Put them in a feature-local `types/`, `models/` or
+  `interfaces/` file and import them. Existing API contracts remain in
+  `src/api/contracts/`.
+- Inline types are acceptable only for truly local inference with no named
+  architectural meaning; tests may keep test-only fixture/helper types local.
+- Put user-visible copy, accessibility copy and formatting templates in a
+  feature-local `*.labels.ts` file. Components and screens must consume those
+  labels instead of hard-coding prose.
+- Put reusable values, mappings, limits, paths, event names, regexes and other
+  non-style magic values in scoped `*.constants.ts` files. Design tokens remain
+  in the theme system; one-off layout/style values need not be globalized.
+- Prefer domain-local files over one giant global labels, types or constants
+  file. Use `src/core/` only for genuinely application-wide definitions.
+- When adding or reviewing a feature, audit its components for inline types,
+  visible strings and repeated constants before considering the work complete.
+
 
 ---
 

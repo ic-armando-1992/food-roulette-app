@@ -5,12 +5,20 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { AppProviders } from '@/core/providers/AppProviders';
+import {
+  AppErrorBoundary,
+  TelemetryProvider,
+} from '@/core/telemetry/TelemetryProvider';
 
 export default function RootLayout() {
   return (
-    <AppProviders>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }} />
-    </AppProviders>
+    <AppErrorBoundary>
+      <TelemetryProvider>
+        <AppProviders>
+          <StatusBar style="dark" />
+          <Stack screenOptions={{ headerShown: false }} />
+        </AppProviders>
+      </TelemetryProvider>
+    </AppErrorBoundary>
   );
 }
