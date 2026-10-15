@@ -14,11 +14,11 @@ commit `ea9fbfd` to synchronize project status with the integrated increment.
 
 ## Current environment status
 
-Expo SDK 57.0.28, React Native 0.86.3 and Node.js 20.20.2 remain active. The
-current audit passes format, lint, strict typecheck and 15 suites/76 tests. The
-integrated increment previously passed reproducible install, Expo dependency
-validation, Doctor 21/21, Android Hermes export and GitHub Actions run
-`38351620164`. Native iOS builds remain unavailable on this Linux/WSL host.
+Expo SDK 57.0.30, React Native 0.86.3 and Node.js 20.20.2 are active. The
+current audit passes reproducible install, format, lint, strict typecheck, 15
+suites/76 tests, Expo dependency validation, Android Hermes export and the
+critical audit threshold. Native iOS builds remain unavailable on this
+Linux/WSL host.
 
 ## Completed milestones
 
@@ -52,5 +52,6 @@ requires macOS and a physical iOS device before release.
 
 ## Next intended action
 
-Obtain the conflict-handling product decision before Google/Apple provider
-upgrades. Do not begin Phase 3 automatically.
+Merge the Phase 2 hygiene PR after its corrected CI run passes, synchronize
+`experimental`, then obtain the conflict-handling product decision before
+Google/Apple provider upgrades. Do not begin Phase 3 automatically.
