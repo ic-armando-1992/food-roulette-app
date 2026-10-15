@@ -13,6 +13,8 @@ Rolling log of recent meaningful activity. Archive older entries under
   merged Phase 2 `experimental` and updated current status to record that API
   and App PR #3 are integrated. No application behavior or dependency changed.
 - Validation: format, lint, strict typecheck and all 15 suites/76 tests pass.
+- Publication: documentation commit `231a8d3` is published on
+  `origin/fix/phase-2-closeout-hygiene` pending PR into `experimental`.
 - Next intended action: obtain the conflict-handling product decision before
   provider-linking work begins; do not begin Phase 3.
 
