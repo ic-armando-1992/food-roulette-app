@@ -8,8 +8,7 @@ Rolling log of recent meaningful activity. Archive older entries under
 ### 2026-10-15 — Expo SDK 57 patch compatibility restored
 
 - Timestamp: 2026-10-15.
-- Result: local correction and full CI-equivalent validation passed; remote CI
-  rerun is pending publication.
+- Result: success.
 - Relevant result summary: App PR #4 initially failed only because Expo's
   compatibility metadata advanced after the branch validation. Updated the four
   required SDK 57 patches: Expo 57.0.30, Constants 57.0.22, Linking 57.0.13 and
@@ -18,8 +17,10 @@ Rolling log of recent meaningful activity. Archive older entries under
   suites/76 tests, `expo install --check`, Android Hermes export and the critical
   audit threshold pass. Existing moderate/high transitive advisories require
   breaking Expo/Jest/Tailwind changes and were not force-upgraded.
-- Next intended action: publish the compatible patch update, wait for App PR #4
-  CI, then merge both hygiene PRs and synchronize `experimental`.
+- Publication: commit `d178bfa` passed App PR #4 CI and was merged into
+  `experimental`; the local integration branch was synchronized.
+- Next intended action: obtain the conflict-handling product decision, then
+  begin the Google account-upgrade increment from synchronized `experimental`.
 
 ### 2026-10-14 — Phase 2 integration status synchronized and verified
 

@@ -9,8 +9,7 @@ mobile guest bootstrap. Phase 3 has not started.
 
 ## Current branch
 
-`fix/phase-2-closeout-hygiene`, created from `experimental` at Phase 2 merge
-commit `ea9fbfd` to synchronize project status with the integrated increment.
+`experimental`, synchronized after Phase 2 closeout-hygiene PR #4.
 
 ## Current environment status
 
@@ -31,6 +30,8 @@ Linux/WSL host.
 - A revoked refresh can recover the same guest through its stored installation
   credential; network failure preserves that identity for later retry.
 - App PR #3 and its API dependency are merged into `experimental`.
+- Phase 2 closeout-hygiene PR #4 synchronizes integration status and the latest
+  compatible Expo SDK 57 patches.
 
 ## Active blocker(s)
 
@@ -52,6 +53,6 @@ requires macOS and a physical iOS device before release.
 
 ## Next intended action
 
-Merge the Phase 2 hygiene PR after its corrected CI run passes, synchronize
-`experimental`, then obtain the conflict-handling product decision before
-Google/Apple provider upgrades. Do not begin Phase 3 automatically.
+Obtain the conflict-handling product decision, then create the next Phase 2
+feature branches from synchronized `experimental` for the Google provider
+upgrade. Do not begin Phase 3 automatically.
