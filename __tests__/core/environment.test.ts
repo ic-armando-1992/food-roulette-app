@@ -20,4 +20,19 @@ describe('readEnvironment', () => {
       ).toBe(7);
     },
   );
+
+  it('accepts only well-formed public Google OAuth client identifiers', () => {
+    expect(
+      readEnvironment({
+        EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID:
+          '123-example.apps.googleusercontent.com',
+        EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: 'not-a-client-id',
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        googleWebClientId: '123-example.apps.googleusercontent.com',
+        googleIosClientId: null,
+      }),
+    );
+  });
 });

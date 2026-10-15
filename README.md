@@ -70,15 +70,16 @@ Web is not part of the MVP.
 
 ### Android emulator from WSL
 
-Use the emulator-specific script so Expo advertises the Android host alias for
-the JavaScript bundle, Fast Refresh and LogBox connection:
+Google Sign-In is a native module, so use the emulator-specific development
+build script rather than Expo Go:
 
 ```bash
 npm run android:emulator -- --clear
 ```
 
-The terminal should show `exp://10.0.2.2:8081`. The regular `npm run android`
-script remains available for other LAN/device setups.
+The regular `npm run android` script is available for other LAN/device setups.
+Both scripts prebuild/run the native app and then connect it to Metro; rerun the
+native build after changing config plugins or native dependencies.
 
 ---
 
@@ -302,13 +303,34 @@ Current progression:
 ```text
 secure guest bootstrap / restore
 → roulette
-→ Google / Apple upgrade (next Phase 2 increment)
+→ Google upgrade with explicit existing-account confirmation
+→ Apple upgrade (remaining Phase 2 increment)
 → later sync/share/account ownership
 → Facebook optional later
 ```
 
 The API remains authoritative for user identity and future owned data. The app
 does not persist an authoritative balance, provider subject or provider profile.
+
+Google Sign-In uses the native Credential Manager / Google Sign-In SDK and
+therefore requires a development or release build; it does not run in Expo Go.
+Configure these public OAuth identifiers in the local environment:
+
+```text
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=...apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=...apps.googleusercontent.com
+```
+
+The API must include the Web client ID in `GOOGLE_AUTH_CLIENT_IDS`. The iOS ID
+also drives the config plugin's reversed URL scheme. Android OAuth setup must
+use package `com.foodroulette.app` with the signing certificate SHA-1;
+iOS uses bundle ID `com.foodroulette.app`. Do not commit Google service
+files or provider tokens.
+
+If Google already belongs to another internal user, the app keeps the guest
+session active and displays a confirmation dialog. Cancel performs no account
+operation. Confirm exchanges the server-issued one-time token for a new session
+on the existing Google account; the app never merges user data itself.
 
 ---
 

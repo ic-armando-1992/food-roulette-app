@@ -46,6 +46,49 @@ describe('apiRequest', () => {
     ).rejects.toMatchObject({ kind: 'http', status: 503 });
   });
 
+  it('exposes only the allowlisted Google conflict contract', async () => {
+    jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          code: 'GOOGLE_IDENTITY_CONFLICT',
+          confirmationToken: 'A'.repeat(43),
+          message: 'server text that UI must not consume',
+          internalDetail: 'hidden',
+        }),
+        { status: 409 },
+      ),
+    );
+
+    await expect(apiRequest('/v1/auth/google')).rejects.toMatchObject({
+      kind: 'http',
+      status: 409,
+      code: 'GOOGLE_IDENTITY_CONFLICT',
+      confirmationToken: 'A'.repeat(43),
+      message: 'http',
+    });
+  });
+
+  it('does not expose malformed conflict bodies', async () => {
+    jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          code: 'GOOGLE_IDENTITY_CONFLICT',
+          confirmationToken: 'manipulated',
+          internalDetail: 'hidden',
+        }),
+        { status: 409 },
+      ),
+    );
+
+    await expect(apiRequest('/v1/auth/google')).rejects.toMatchObject({
+      kind: 'http',
+      status: 409,
+      code: undefined,
+      confirmationToken: undefined,
+      message: 'http',
+    });
+  });
+
   it('attaches the access token centrally', async () => {
     setApiAccessToken('access-token');
     const fetchMock = jest

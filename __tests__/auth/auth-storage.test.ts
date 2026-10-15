@@ -1,7 +1,10 @@
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 import { AUTH_SECURE_STORE_KEYS } from '@/features/auth/constants/auth.constants';
-import { getOrCreateGuestCredential } from '@/features/auth/services/auth-storage';
+import {
+  getOrCreateGuestCredential,
+  replaceGuestCredential,
+} from '@/features/auth/services/auth-storage';
 
 jest.mock('expo-crypto', () => ({ randomUUID: jest.fn() }));
 jest.mock('expo-secure-store', () => ({
@@ -34,6 +37,21 @@ describe('auth secure storage', () => {
     expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
       AUTH_SECURE_STORE_KEYS.guestCredential,
       '33333333-3333-4333-8333-333333333333',
+    );
+  });
+
+  it('replaces a server-revoked installation credential with a fresh value', async () => {
+    jest
+      .mocked(Crypto.randomUUID)
+      .mockReturnValue('44444444-4444-4444-8444-444444444444');
+    jest.mocked(SecureStore.setItemAsync).mockResolvedValue();
+
+    await expect(replaceGuestCredential()).resolves.toBe(
+      '44444444-4444-4444-8444-444444444444',
+    );
+    expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+      AUTH_SECURE_STORE_KEYS.guestCredential,
+      '44444444-4444-4444-8444-444444444444',
     );
   });
 });

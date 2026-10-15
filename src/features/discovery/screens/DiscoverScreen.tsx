@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RandomRecommendationResponse } from '@/api/contracts/recommendations';
 import { Button } from '@/components/ui/Button';
+import { GoogleAccountCard } from '@/features/auth/components/GoogleAccountCard';
 import { LocationPill } from '@/features/discovery/components/LocationPill';
 import { RadiusSelector } from '@/features/discovery/components/RadiusSelector';
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
@@ -253,6 +254,8 @@ export function DiscoverScreen() {
             onChange={handleRadiusChange}
           />
         </View>
+
+        <GoogleAccountCard />
 
         {recommendation.isError ? (
           <View className="mt-5">
