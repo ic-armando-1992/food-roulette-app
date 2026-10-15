@@ -2,23 +2,22 @@
 
 ## Current phase
 
-Roadmap Phases 0 and 1 are complete and integrated into `experimental` through
-PRs #1 and #2. Phase 2 is active. Its first reviewable increment implements
-steps 1--3: the identity/security contract, API guest identity foundation and
-non-blocking mobile guest bootstrap. Phase 3 has not started.
+Roadmap Phases 0 and 1 and the first Phase 2 increment are integrated into
+`experimental` through PRs #1--#3. Phase 2 remains active: steps 1--3 provide
+the identity/security contract, API guest identity foundation and non-blocking
+mobile guest bootstrap. Phase 3 has not started.
 
 ## Current branch
 
-`feature/phase-2-guest-identity`, created from synchronized `experimental` at
-merge commit `74294a8` and published through PR #3.
+`experimental`, synchronized after Phase 2 closeout-hygiene PR #4.
 
 ## Current environment status
 
-Expo SDK 57.0.28, React Native 0.86.3 and Node.js 20.20.2 remain active. The app
-passes reproducible install, format, lint, strict typecheck, 15 suites/76 tests,
-Expo dependency validation, Doctor 21/21 and Android Hermes export. Native iOS
-builds remain unavailable on this Linux/WSL host. GitHub Actions run
-`38351620164` passed for the implementation commit.
+Expo SDK 57.0.30, React Native 0.86.3 and Node.js 20.20.2 are active. The
+current audit passes reproducible install, format, lint, strict typecheck, 15
+suites/76 tests, Expo dependency validation, Android Hermes export and the
+critical audit threshold. Native iOS builds remain unavailable on this
+Linux/WSL host.
 
 ## Completed milestones
 
@@ -30,6 +29,9 @@ builds remain unavailable on this Linux/WSL host. GitHub Actions run
   retries a rejected authenticated request once.
 - A revoked refresh can recover the same guest through its stored installation
   credential; network failure preserves that identity for later retry.
+- App PR #3 and its API dependency are merged into `experimental`.
+- Phase 2 closeout-hygiene PR #4 synchronizes integration status and the latest
+  compatible Expo SDK 57 patches.
 
 ## Active blocker(s)
 
@@ -51,6 +53,6 @@ requires macOS and a physical iOS device before release.
 
 ## Next intended action
 
-Review API PR #3 before this dependent App PR #3. Obtain the conflict-handling
-decision before Phase 2 provider upgrades; do not merge or begin Phase 3
-automatically.
+Obtain the conflict-handling product decision, then create the next Phase 2
+feature branches from synchronized `experimental` for the Google provider
+upgrade. Do not begin Phase 3 automatically.

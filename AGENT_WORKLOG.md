@@ -5,6 +5,36 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-15 — Expo SDK 57 patch compatibility restored
+
+- Timestamp: 2026-10-15.
+- Result: success.
+- Relevant result summary: App PR #4 initially failed only because Expo's
+  compatibility metadata advanced after the branch validation. Updated the four
+  required SDK 57 patches: Expo 57.0.30, Constants 57.0.22, Linking 57.0.13 and
+  Router 57.0.28; no product behavior or major dependency changed.
+- Validation: reproducible `npm ci`, format, lint, strict typecheck, 15
+  suites/76 tests, `expo install --check`, Android Hermes export and the critical
+  audit threshold pass. Existing moderate/high transitive advisories require
+  breaking Expo/Jest/Tailwind changes and were not force-upgraded.
+- Publication: commit `d178bfa` passed App PR #4 CI and was merged into
+  `experimental`; the local integration branch was synchronized.
+- Next intended action: obtain the conflict-handling product decision, then
+  begin the Google account-upgrade increment from synchronized `experimental`.
+
+### 2026-10-14 — Phase 2 integration status synchronized and verified
+
+- Timestamp: 2026-10-14.
+- Result: success.
+- Relevant result summary: created `fix/phase-2-closeout-hygiene` from the
+  merged Phase 2 `experimental` and updated current status to record that API
+  and App PR #3 are integrated. No application behavior or dependency changed.
+- Validation: format, lint, strict typecheck and all 15 suites/76 tests pass.
+- Publication: documentation commit `231a8d3` is published on
+  `origin/fix/phase-2-closeout-hygiene` pending PR into `experimental`.
+- Next intended action: obtain the conflict-handling product decision before
+  provider-linking work begins; do not begin Phase 3.
+
 ### 2026-10-12 — Phase 2 secure guest bootstrap implemented
 
 - Timestamp: 2026-10-12.
