@@ -198,14 +198,19 @@ Filters/UI → local/Zustand as needed.
 
 ## `/src/features/auth`
 
-Do not block the first vertical slice.
+Guest bootstrap is non-blocking and owns only session lifecycle. The feature
+uses SecureStore for the installation credential and refresh token; access
+tokens remain in memory and are attached/refreshed centrally by `src/api`.
 
-When implemented:
-- Google
-- Apple
-- Facebook optional
-- SecureStore for tokens
-- `/me` with TanStack Query
+Current:
+- idempotent guest creation/restoration
+- rotating API session
+- provider-independent `/me` contract
+
+Next Phase 2 increments:
+- Google account upgrade
+- Apple account upgrade for iOS release
+- deterministic account-conflict recovery
 
 Do not use AsyncStorage for sensitive tokens.
 
