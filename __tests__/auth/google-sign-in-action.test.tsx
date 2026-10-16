@@ -43,7 +43,10 @@ describe('GoogleSignInAction', () => {
     jest.mocked(useAuth).mockReturnValue({
       beginGoogleAccountUpgrade,
       confirmGoogleAccountSwitch,
+      dismissSessionRecoveryNotice: jest.fn(),
+      logout: jest.fn(),
       retry: jest.fn(),
+      sessionRecoveryNoticeVisible: false,
       status: 'ready',
       user: guestUser,
     });

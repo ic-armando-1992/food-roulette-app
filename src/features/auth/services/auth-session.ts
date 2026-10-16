@@ -5,21 +5,46 @@ import {
   bootstrapGuest,
   confirmGoogleAccountSwitch as confirmGoogleAccountSwitchRequest,
   linkGoogleIdentity,
+  logoutSession,
   refreshSession,
 } from '@/api/endpoints/auth.api';
 import {
   getOrCreateGuestCredential,
   getStoredRefreshToken,
+  clearStoredRefreshToken,
   replaceGuestCredential,
   storeRefreshToken,
 } from './auth-storage';
+import {
+  GoogleAccountUpgradeResult,
+  LogoutResult,
+  SessionInitializationResult,
+  StoredSessionRefreshResult,
+} from '@/features/auth/types/auth.types';
 
-export type GoogleAccountUpgradeResult =
-  | { status: 'linked'; user: AuthUser }
-  | { status: 'conflict'; confirmationToken: string };
+let sessionGeneration = 0;
+let logoutInFlight: Promise<LogoutResult> | null = null;
+let sessionInitializationInFlight: Promise<SessionInitializationResult> | null =
+  null;
+let localLogoutTransitionActive = false;
 
-async function activateSession(session: AuthSession): Promise<AuthUser> {
+class SessionOperationSupersededError extends Error {}
+
+async function activateSession(
+  session: AuthSession,
+  expectedGeneration: number,
+): Promise<AuthUser> {
+  if (expectedGeneration !== sessionGeneration) {
+    throw new SessionOperationSupersededError();
+  }
+
   await storeRefreshToken(session.refreshToken);
+
+  if (expectedGeneration !== sessionGeneration) {
+    await clearStoredRefreshToken();
+    throw new SessionOperationSupersededError();
+  }
+
   setApiAccessToken(session.accessToken);
   return session.user;
 }
@@ -52,12 +77,17 @@ export async function beginGoogleAccountUpgrade(
 export async function confirmGoogleAccountSwitch(
   confirmationToken: string,
 ): Promise<AuthUser> {
-  return activateSession(
-    await confirmGoogleAccountSwitchRequest(confirmationToken),
-  );
+  const generation = sessionGeneration;
+  const session = await confirmGoogleAccountSwitchRequest(confirmationToken);
+  return activateSession(session, generation);
 }
 
-export async function refreshStoredSession(): Promise<string | null> {
+export async function refreshStoredSession(): Promise<StoredSessionRefreshResult | null> {
+  if (localLogoutTransitionActive) {
+    return null;
+  }
+
+  const generation = sessionGeneration;
   const refreshToken = await getStoredRefreshToken();
 
   if (!refreshToken) {
@@ -66,45 +96,125 @@ export async function refreshStoredSession(): Promise<string | null> {
 
   try {
     const session = await refreshSession(refreshToken);
-    await activateSession(session);
-    return session.accessToken;
+    const user = await activateSession(session, generation);
+    return {
+      accessToken: session.accessToken,
+      recoveredFromInvalidSession: false,
+      user,
+    };
   } catch (error) {
-    setApiAccessToken(null);
-
     if (!(error instanceof ApiError) || error.status !== 401) {
       return null;
     }
 
+    setApiAccessToken(null);
+    await clearStoredRefreshToken();
+
     try {
-      return (await bootstrapAvailableGuest()).accessToken;
+      const session = await bootstrapAvailableGuest(generation);
+      return {
+        accessToken: session.accessToken,
+        recoveredFromInvalidSession: true,
+        user: session.user,
+      };
     } catch {
-      return null;
+      return {
+        accessToken: null,
+        recoveredFromInvalidSession: true,
+        user: null,
+      };
     }
   }
 }
 
-export async function initializeGuestSession(): Promise<AuthUser> {
+export function initializeGuestSession(): Promise<SessionInitializationResult> {
+  sessionInitializationInFlight ??= performSessionInitialization().finally(
+    () => {
+      sessionInitializationInFlight = null;
+    },
+  );
+
+  return sessionInitializationInFlight;
+}
+
+async function performSessionInitialization(): Promise<SessionInitializationResult> {
+  const generation = sessionGeneration;
   const refreshToken = await getStoredRefreshToken();
 
   if (refreshToken) {
     try {
-      return await activateSession(await refreshSession(refreshToken));
+      return {
+        recoveredFromInvalidSession: false,
+        user: await activateSession(
+          await refreshSession(refreshToken),
+          generation,
+        ),
+      };
     } catch (error) {
       if (!(error instanceof ApiError) || error.status !== 401) {
         throw error;
       }
+
+      setApiAccessToken(null);
+      await clearStoredRefreshToken();
     }
   }
 
-  return (await bootstrapAvailableGuest()).user;
+  return {
+    recoveredFromInvalidSession: Boolean(refreshToken),
+    user: (await bootstrapAvailableGuest(generation)).user,
+  };
 }
 
-async function bootstrapAvailableGuest(): Promise<AuthSession> {
+export function logoutCurrentSession(): Promise<LogoutResult> {
+  logoutInFlight ??= performLogout().finally(() => {
+    logoutInFlight = null;
+  });
+
+  return logoutInFlight;
+}
+
+async function performLogout(): Promise<LogoutResult> {
+  ++sessionGeneration;
+  let remoteRevoked = false;
+
+  try {
+    await logoutSession();
+    remoteRevoked = true;
+  } catch {
+    // Local logout must still complete when the API is temporarily unavailable.
+  }
+
+  const generation = ++sessionGeneration;
+  localLogoutTransitionActive = true;
+
+  try {
+    setApiAccessToken(null);
+    await clearStoredRefreshToken();
+    const guestCredential = await replaceGuestCredential();
+
+    try {
+      const session = await bootstrapGuest(guestCredential);
+      const user = await activateSession(session, generation);
+      return { guestReady: true, remoteRevoked, user };
+    } catch {
+      setApiAccessToken(null);
+      await clearStoredRefreshToken();
+      return { guestReady: false, remoteRevoked, user: null };
+    }
+  } finally {
+    localLogoutTransitionActive = false;
+  }
+}
+
+async function bootstrapAvailableGuest(
+  generation = sessionGeneration,
+): Promise<AuthSession> {
   const guestCredential = await getOrCreateGuestCredential();
 
   try {
     const session = await bootstrapGuest(guestCredential);
-    await activateSession(session);
+    await activateSession(session, generation);
     return session;
   } catch (error) {
     if (!(error instanceof ApiError) || error.status !== 401) {
@@ -113,7 +223,7 @@ async function bootstrapAvailableGuest(): Promise<AuthSession> {
 
     const replacement = await replaceGuestCredential();
     const session = await bootstrapGuest(replacement);
-    await activateSession(session);
+    await activateSession(session, generation);
     return session;
   }
 }

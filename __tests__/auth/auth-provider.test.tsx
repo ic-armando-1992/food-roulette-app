@@ -1,21 +1,27 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
   waitFor,
 } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Pressable, Text } from 'react-native';
+import { refreshApiAccessToken } from '@/api/auth';
 import { AuthProvider, useAuth } from '@/features/auth/providers/AuthProvider';
 import {
   beginGoogleAccountUpgrade,
   confirmGoogleAccountSwitch,
   initializeGuestSession,
+  logoutCurrentSession,
+  refreshStoredSession,
 } from '@/features/auth/services/auth-session';
 
 jest.mock('@/features/auth/services/auth-session', () => ({
   beginGoogleAccountUpgrade: jest.fn(),
   confirmGoogleAccountSwitch: jest.fn(),
   initializeGuestSession: jest.fn(),
+  logoutCurrentSession: jest.fn(),
   refreshStoredSession: jest.fn(),
 }));
 
@@ -25,6 +31,7 @@ function AuthState() {
     <>
       <Text>{auth.status}</Text>
       <Text>{`${auth.user?.id ?? 'none'}:${String(auth.user?.isGuest)}`}</Text>
+      <Text>{`recovery:${String(auth.sessionRecoveryNoticeVisible)}`}</Text>
       <Pressable
         accessibilityRole="button"
         onPress={() => void auth.beginGoogleAccountUpgrade('verified-token')}
@@ -37,26 +44,45 @@ function AuthState() {
       >
         <Text>CONFIRM SWITCH</Text>
       </Pressable>
+      <Pressable accessibilityRole="button" onPress={() => void auth.logout()}>
+        <Text>LOGOUT</Text>
+      </Pressable>
     </>
   );
 }
 
-describe('AuthProvider', () => {
-  beforeEach(() => jest.clearAllMocks());
+function renderAuthProvider() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
 
-  it('renders the product immediately and becomes ready after guest bootstrap', async () => {
-    jest.mocked(initializeGuestSession).mockResolvedValue({
-      id: '11111111-1111-4111-8111-111111111111',
-      isGuest: true,
-      createdAt: '2030-01-01T00:00:00.000Z',
-    });
-
-    render(
+  return render(
+    <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Text>Ruleta disponible</Text>
         <AuthState />
-      </AuthProvider>,
-    );
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
+}
+
+describe('AuthProvider', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.mocked(refreshStoredSession).mockResolvedValue(null);
+  });
+
+  it('renders the product immediately and becomes ready after guest bootstrap', async () => {
+    jest.mocked(initializeGuestSession).mockResolvedValue({
+      recoveredFromInvalidSession: false,
+      user: {
+        id: '11111111-1111-4111-8111-111111111111',
+        isGuest: true,
+        createdAt: '2030-01-01T00:00:00.000Z',
+      },
+    });
+
+    renderAuthProvider();
 
     expect(screen.getByText('Ruleta disponible')).toBeOnTheScreen();
     expect(screen.getByText('initializing')).toBeOnTheScreen();
@@ -66,12 +92,7 @@ describe('AuthProvider', () => {
   it('keeps the product available when guest bootstrap fails', async () => {
     jest.mocked(initializeGuestSession).mockRejectedValue(new Error('offline'));
 
-    render(
-      <AuthProvider>
-        <Text>Ruleta disponible</Text>
-        <AuthState />
-      </AuthProvider>,
-    );
+    renderAuthProvider();
 
     expect(screen.getByText('Ruleta disponible')).toBeOnTheScreen();
     await waitFor(() =>
@@ -85,16 +106,15 @@ describe('AuthProvider', () => {
       isGuest: true,
       createdAt: '2030-01-01T00:00:00.000Z',
     };
-    jest.mocked(initializeGuestSession).mockResolvedValue(guest);
+    jest.mocked(initializeGuestSession).mockResolvedValue({
+      recoveredFromInvalidSession: false,
+      user: guest,
+    });
     jest.mocked(beginGoogleAccountUpgrade).mockResolvedValueOnce({
       status: 'conflict',
       confirmationToken: 'C'.repeat(43),
     });
-    render(
-      <AuthProvider>
-        <AuthState />
-      </AuthProvider>,
-    );
+    renderAuthProvider();
     await waitFor(() =>
       expect(screen.getByText(`${guest.id}:true`)).toBeOnTheScreen(),
     );
@@ -124,13 +144,12 @@ describe('AuthProvider', () => {
       id: '22222222-2222-4222-8222-222222222222',
       isGuest: false,
     };
-    jest.mocked(initializeGuestSession).mockResolvedValue(guest);
+    jest.mocked(initializeGuestSession).mockResolvedValue({
+      recoveredFromInvalidSession: false,
+      user: guest,
+    });
     jest.mocked(confirmGoogleAccountSwitch).mockResolvedValue(target);
-    render(
-      <AuthProvider>
-        <AuthState />
-      </AuthProvider>,
-    );
+    renderAuthProvider();
     await waitFor(() =>
       expect(screen.getByText(`${guest.id}:true`)).toBeOnTheScreen(),
     );
@@ -140,5 +159,66 @@ describe('AuthProvider', () => {
     await waitFor(() =>
       expect(screen.getByText(`${target.id}:false`)).toBeOnTheScreen(),
     );
+  });
+
+  it('switches locally to a new guest after logout', async () => {
+    const googleUser = {
+      id: '22222222-2222-4222-8222-222222222222',
+      isGuest: false,
+      createdAt: '2030-01-01T00:00:00.000Z',
+    };
+    const newGuest = {
+      ...googleUser,
+      id: '33333333-3333-4333-8333-333333333333',
+      isGuest: true,
+    };
+    jest.mocked(initializeGuestSession).mockResolvedValue({
+      recoveredFromInvalidSession: false,
+      user: googleUser,
+    });
+    jest.mocked(logoutCurrentSession).mockResolvedValue({
+      guestReady: true,
+      remoteRevoked: true,
+      user: newGuest,
+    });
+    renderAuthProvider();
+    await screen.findByText(`${googleUser.id}:false`);
+
+    fireEvent.press(screen.getByText('LOGOUT'));
+
+    await waitFor(() =>
+      expect(screen.getByText(`${newGuest.id}:true`)).toBeOnTheScreen(),
+    );
+  });
+
+  it('updates the visible identity when an invalid session recovers as guest', async () => {
+    const googleUser = {
+      id: '22222222-2222-4222-8222-222222222222',
+      isGuest: false,
+      createdAt: '2030-01-01T00:00:00.000Z',
+    };
+    const recoveredGuest = {
+      ...googleUser,
+      id: '33333333-3333-4333-8333-333333333333',
+      isGuest: true,
+    };
+    jest.mocked(initializeGuestSession).mockResolvedValue({
+      recoveredFromInvalidSession: false,
+      user: googleUser,
+    });
+    jest.mocked(refreshStoredSession).mockResolvedValue({
+      accessToken: 'guest-access-token',
+      recoveredFromInvalidSession: true,
+      user: recoveredGuest,
+    });
+    renderAuthProvider();
+    await screen.findByText(`${googleUser.id}:false`);
+
+    await act(async () => {
+      await refreshApiAccessToken();
+    });
+
+    expect(screen.getByText(`${recoveredGuest.id}:true`)).toBeOnTheScreen();
+    expect(screen.getByText('recovery:true')).toBeOnTheScreen();
   });
 });

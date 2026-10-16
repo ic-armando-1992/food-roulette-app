@@ -1,4 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import * as ReactNative from 'react-native';
 
 import { AccountButton } from '@/features/auth/components/AccountButton';
@@ -27,13 +33,22 @@ const guestUser = {
 };
 
 function mockAuthUser(user = guestUser) {
+  const logout = jest.fn().mockResolvedValue({
+    guestReady: true,
+    remoteRevoked: true,
+    user: guestUser,
+  });
   jest.mocked(useAuth).mockReturnValue({
     beginGoogleAccountUpgrade: jest.fn(),
     confirmGoogleAccountSwitch: jest.fn(),
+    dismissSessionRecoveryNotice: jest.fn(),
+    logout,
     retry: jest.fn(),
+    sessionRecoveryNoticeVisible: false,
     status: 'ready',
     user,
   });
+  return { logout };
 }
 
 describe('account UI', () => {
@@ -79,6 +94,60 @@ describe('account UI', () => {
     expect(screen.getByText('Cuenta de Google')).toBeOnTheScreen();
     expect(screen.getByTestId('account-avatar-fallback')).toBeOnTheScreen();
     expect(screen.queryByText('Continuar con Google')).not.toBeOnTheScreen();
+    expect(
+      screen.getByRole('button', { name: 'Cerrar la sesión de Google' }),
+    ).toBeOnTheScreen();
+  });
+
+  it('confirms logout before creating the new guest session', async () => {
+    const googleUser = { ...guestUser, isGuest: false };
+    const { logout } = mockAuthUser(googleUser);
+    const alert = jest.spyOn(ReactNative.Alert, 'alert');
+    const onClose = jest.fn();
+    render(<AccountModal onClose={onClose} visible />);
+
+    fireEvent.press(
+      screen.getByRole('button', { name: 'Cerrar la sesión de Google' }),
+    );
+
+    expect(alert).toHaveBeenCalledWith(
+      '¿Cerrar sesión?',
+      'Tu progreso vinculado a Google permanecerá guardado. Podrás recuperarlo cuando vuelvas a iniciar sesión.',
+      expect.any(Array),
+    );
+    expect(logout).not.toHaveBeenCalled();
+
+    await act(async () => {
+      alert.mock.calls[0]?.[2]?.[1]?.onPress?.();
+    });
+
+    await waitFor(() => expect(logout).toHaveBeenCalledTimes(1));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not claim remote revocation when logout completes only locally', async () => {
+    const googleUser = { ...guestUser, isGuest: false };
+    const { logout } = mockAuthUser(googleUser);
+    logout.mockResolvedValue({
+      guestReady: true,
+      remoteRevoked: false,
+      user: guestUser,
+    });
+    const alert = jest.spyOn(ReactNative.Alert, 'alert');
+    render(<AccountModal onClose={jest.fn()} visible />);
+
+    fireEvent.press(
+      screen.getByRole('button', { name: 'Cerrar la sesión de Google' }),
+    );
+    await act(async () => {
+      alert.mock.calls[0]?.[2]?.[1]?.onPress?.();
+    });
+
+    await waitFor(() => expect(alert).toHaveBeenCalledTimes(2));
+    expect(alert).toHaveBeenLastCalledWith(
+      'Sesión cerrada en este dispositivo',
+      expect.stringContaining('no pudimos confirmar la revocación remota'),
+    );
   });
 
   it('keeps the account content scrollable on a compact screen', () => {

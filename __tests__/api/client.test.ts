@@ -30,6 +30,16 @@ describe('apiRequest', () => {
     );
   });
 
+  it('accepts a successful response without a body', async () => {
+    jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 204 }));
+
+    await expect(
+      apiRequest<void>('/v1/auth/logout', { method: 'POST' }),
+    ).resolves.toBeUndefined();
+  });
+
   it('normalizes a network failure', async () => {
     jest.spyOn(global, 'fetch').mockRejectedValue(new Error('offline'));
     await expect(
