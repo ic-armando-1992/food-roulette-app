@@ -5,6 +5,39 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-15 — Shared date utility extracted
+
+- Timestamp: 2026-10-15.
+- Result: moved long-date formatting out of the account modal into the shared
+  core utility layer with caller-supplied locale and invalid-date handling.
+- Scope decision: Google sign-in callbacks, prompt coordination and discovery
+  request handlers remain feature-local because they depend on feature state,
+  services and UI side effects rather than representing generic utilities.
+- Validation: format, lint, strict typecheck and 19 suites/110 tests pass.
+
+### 2026-10-15 — Contextual account UX implemented and verified
+
+- Timestamp: 2026-10-15.
+- Result: focused dependent increment implemented on
+  `feature/phase-2-account-entry-ux` without backend or dependency changes.
+- UX: replaced the permanent home registration card with an accessible profile
+  entry beside Settings, added a safe-area account sheet for guest/Google state,
+  and added a non-blocking invitation after the first successful guest spin.
+- Persistence/security: the invitation's shown/dismissed state uses existing
+  SecureStore, Google flow/session handling is reused unchanged, and no personal
+  identifiers or provider errors were added to the UI or logs.
+- Profile boundary: the API currently returns only owner ID, guest state and
+  creation date. The UI therefore shows the required Google fallback icon; no
+  contract/backend expansion or client-trusted Google profile was introduced.
+- Validation: format, lint, strict typecheck, 18 suites/107 tests, Android
+  Hermes export and live Pixel-emulator inspection pass. The home, authenticated
+  fallback sheet and safe-area layout were visually checked.
+- Publication: the focused commit is created locally. GitHub CLI tokens remain
+  invalid and the personal SSH key is not loaded, so push/PR/CI/merge cannot run
+  until authentication is restored.
+- Next intended action: publish it after the API and base App Google-upgrade
+  dependency can be pushed and merged.
+
 ### 2026-10-15 — Neutral application identifiers selected
 
 - Timestamp: 2026-10-15.

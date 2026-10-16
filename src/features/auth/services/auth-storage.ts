@@ -33,3 +33,18 @@ export function storeRefreshToken(refreshToken: string): Promise<void> {
     refreshToken,
   );
 }
+
+export async function hasSeenGoogleLinkPrompt(): Promise<boolean> {
+  return (
+    (await SecureStore.getItemAsync(
+      AUTH_SECURE_STORE_KEYS.googleLinkPromptSeen,
+    )) === 'true'
+  );
+}
+
+export function markGoogleLinkPromptSeen(): Promise<void> {
+  return SecureStore.setItemAsync(
+    AUTH_SECURE_STORE_KEYS.googleLinkPromptSeen,
+    'true',
+  );
+}

@@ -6,7 +6,10 @@ import {
 
 export type DiscoveryView = 'home' | 'result';
 
-export type BrandHeaderProps = { showSettings?: boolean };
+export type BrandHeaderProps = {
+  onAccountPress: () => void;
+  showSettings?: boolean;
+};
 export type ErrorMessageProps = { message: string };
 
 export type GeographicCoordinates = {

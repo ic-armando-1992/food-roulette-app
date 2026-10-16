@@ -51,15 +51,18 @@ export function GoogleSignInButton({
   accessibilityLabel,
   disabled,
   onPress,
+  size,
   testID,
 }: {
   accessibilityLabel?: string;
   disabled?: boolean;
   onPress?: () => void | Promise<void>;
+  size?: 'icon' | 'standard' | 'wide';
   testID?: string;
 }) {
   return (
     <Pressable
+      accessibilityHint={size}
       accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       onPress={() => void onPress?.()}

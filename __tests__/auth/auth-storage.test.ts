@@ -3,6 +3,8 @@ import * as SecureStore from 'expo-secure-store';
 import { AUTH_SECURE_STORE_KEYS } from '@/features/auth/constants/auth.constants';
 import {
   getOrCreateGuestCredential,
+  hasSeenGoogleLinkPrompt,
+  markGoogleLinkPromptSeen,
   replaceGuestCredential,
 } from '@/features/auth/services/auth-storage';
 
@@ -53,5 +55,27 @@ describe('auth secure storage', () => {
       AUTH_SECURE_STORE_KEYS.guestCredential,
       '44444444-4444-4444-8444-444444444444',
     );
+  });
+
+  it('persists whether the contextual Google invitation was already shown', async () => {
+    jest.mocked(SecureStore.getItemAsync).mockResolvedValueOnce(null);
+    jest.mocked(SecureStore.setItemAsync).mockResolvedValue();
+
+    await expect(hasSeenGoogleLinkPrompt()).resolves.toBe(false);
+    await markGoogleLinkPromptSeen();
+
+    expect(SecureStore.getItemAsync).toHaveBeenCalledWith(
+      AUTH_SECURE_STORE_KEYS.googleLinkPromptSeen,
+    );
+    expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+      AUTH_SECURE_STORE_KEYS.googleLinkPromptSeen,
+      'true',
+    );
+  });
+
+  it('recognizes a previously shown Google invitation', async () => {
+    jest.mocked(SecureStore.getItemAsync).mockResolvedValue('true');
+
+    await expect(hasSeenGoogleLinkPrompt()).resolves.toBe(true);
   });
 });

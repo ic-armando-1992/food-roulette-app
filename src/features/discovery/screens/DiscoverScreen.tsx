@@ -5,7 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RandomRecommendationResponse } from '@/api/contracts/recommendations';
 import { Button } from '@/components/ui/Button';
-import { GoogleAccountCard } from '@/features/auth/components/GoogleAccountCard';
+import { AccountButton } from '@/features/auth/components/AccountButton';
+import { AccountModal } from '@/features/auth/components/AccountModal';
+import { GoogleLinkPrompt } from '@/features/auth/components/GoogleLinkPrompt';
+import { useGoogleLinkPrompt } from '@/features/auth/hooks/useGoogleLinkPrompt';
 import { LocationPill } from '@/features/discovery/components/LocationPill';
 import { RadiusSelector } from '@/features/discovery/components/RadiusSelector';
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
@@ -29,25 +32,29 @@ import {
 import { TELEMETRY_EVENTS } from '@/core/telemetry/constants/telemetry.constants';
 import colors from '@/theme/colors.json';
 
-function BrandHeader({ showSettings = false }: BrandHeaderProps) {
+function BrandHeader({
+  onAccountPress,
+  showSettings = false,
+}: BrandHeaderProps) {
   return (
     <View className="flex-row items-center justify-between px-5 py-3">
       <Text className="text-sm font-extrabold uppercase tracking-widest text-primary">
         {DISCOVERY_LABELS.brandName}
       </Text>
-      {showSettings ? (
-        <Pressable
-          accessibilityLabel={DISCOVERY_LABELS.accessibility.settings}
-          accessibilityRole="button"
-          className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
-          onPress={() => void Linking.openSettings()}
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-        >
-          <Settings color={colors.foreground} size={21} />
-        </Pressable>
-      ) : (
-        <View className="h-11" />
-      )}
+      <View className="flex-row items-center gap-2">
+        <AccountButton onPress={onAccountPress} />
+        {showSettings ? (
+          <Pressable
+            accessibilityLabel={DISCOVERY_LABELS.accessibility.settings}
+            accessibilityRole="button"
+            className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
+            onPress={() => void Linking.openSettings()}
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <Settings color={colors.foreground} size={21} />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -73,6 +80,8 @@ export function DiscoverScreen() {
   const setRadiusMeters = useDiscoveryStore((state) => state.setRadiusMeters);
   const { requestLocation, state: locationState } = useCurrentLocation();
   const recommendation = useRandomRecommendation();
+  const googleLinkPrompt = useGoogleLinkPrompt();
+  const [accountVisible, setAccountVisible] = useState(false);
   const [excludedRestaurantIds, setExcludedRestaurantIds] = useState<string[]>(
     [],
   );
@@ -147,6 +156,7 @@ export function DiscoverScreen() {
         setDisplayedResult(result);
         setDisplayedSpinId(spinId);
         setView('result');
+        googleLinkPrompt.recordSuccessfulSpin();
       }
     } catch (error) {
       trackProductEvent(TELEMETRY_EVENTS.spinFailed, {
@@ -178,10 +188,14 @@ export function DiscoverScreen() {
   if (isSpinning) {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
-        <BrandHeader />
+        <BrandHeader onAccountPress={() => setAccountVisible(true)} />
         <ScrollView contentContainerClassName="flex-grow" scrollEnabled={false}>
           <RouletteLoadingState />
         </ScrollView>
+        <AccountModal
+          onClose={() => setAccountVisible(false)}
+          visible={accountVisible}
+        />
       </SafeAreaView>
     );
   }
@@ -212,14 +226,27 @@ export function DiscoverScreen() {
             onReroll={() => void requestRecommendation(true)}
             result={displayedResult}
           />
+          {googleLinkPrompt.visible ? (
+            <GoogleLinkPrompt onDismiss={googleLinkPrompt.dismiss} />
+          ) : null}
         </ScrollView>
+        <View className="absolute right-5 top-3 z-20">
+          <AccountButton onPress={() => setAccountVisible(true)} />
+        </View>
+        <AccountModal
+          onClose={() => setAccountVisible(false)}
+          visible={accountVisible}
+        />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <BrandHeader showSettings />
+      <BrandHeader
+        onAccountPress={() => setAccountVisible(true)}
+        showSettings
+      />
       <ScrollView
         contentContainerClassName="px-5 pb-12"
         keyboardShouldPersistTaps="handled"
@@ -255,8 +282,6 @@ export function DiscoverScreen() {
           />
         </View>
 
-        <GoogleAccountCard />
-
         {recommendation.isError ? (
           <View className="mt-5">
             <ErrorMessage
@@ -286,6 +311,10 @@ export function DiscoverScreen() {
           </View>
         ) : null}
       </ScrollView>
+      <AccountModal
+        onClose={() => setAccountVisible(false)}
+        visible={accountVisible}
+      />
     </SafeAreaView>
   );
 }

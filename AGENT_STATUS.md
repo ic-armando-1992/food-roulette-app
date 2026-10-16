@@ -3,23 +3,23 @@
 ## Current phase
 
 Roadmap Phases 0 and 1 and the Phase 2 guest foundation are integrated into
-`experimental`. Phase 2 remains active: the native Google account-upgrade and
-explicit conflict dialog are implemented and locally verified, pending the API
-dependency and authorized publication/merge. Phase 3 has not started.
+`experimental`. Phase 2 remains active: the native Google account-upgrade is
+locally verified and its dependent account-entry UX increment is implemented
+on a focused stacked branch. Publication/merge remains pending. Phase 3 has not
+started.
 
 ## Current branch
 
-`feature/phase-2-google-account-upgrade`, created from synchronized
-`experimental` after Phase 2 closeout-hygiene PR #4.
+`feature/phase-2-account-entry-ux`, created from the locally verified
+`feature/phase-2-google-account-upgrade` dependency.
 
 ## Current environment status
 
-Expo SDK 57.0.30, React Native 0.86.3 and Node.js 20.20.2 are active. The Google
-increment passes a reproducible install, format, lint, strict typecheck, 17
-suites/96 tests, Expo configuration/dependency checks, Android Hermes export
-and a full Android Gradle debug compile. The critical audit threshold passes;
-known noncritical transitive advisories require breaking Expo/Jest/Tailwind
-changes. Native iOS builds remain unavailable on this Linux/WSL host.
+Expo SDK 57.0.30, React Native 0.86.3 and Node.js 20.20.2 are active. The stacked
+Google/account UX work passes format, lint, strict typecheck, 19 suites/110
+tests and Android Hermes export. The native Android build and configured Google
+first-link flow pass on a Pixel emulator. Native iOS builds remain unavailable
+on this Linux/WSL host.
 
 ## Completed milestones
 
@@ -40,13 +40,19 @@ changes. Native iOS builds remain unavailable on this Linux/WSL host.
   guest untouched; confirm activates returned target tokens only after success.
 - API error details remain hidden except for the allowlisted conflict code and
   opaque confirmation token.
+- Account access now lives beside Settings; the home registration card is
+  removed and a persisted, non-blocking invitation appears only after the first
+  successful guest spin.
+- Long-date formatting is a locale-aware shared core utility with direct unit
+  coverage; auth- and discovery-specific state handlers remain feature-local.
 
 ## Active blocker(s)
 
-No implementation blocker. Live validation needs configured Google Web,
-Android and iOS OAuth clients plus a custom native build; Expo Go cannot load
-the native provider module. Native iOS validation additionally requires macOS
-and a physical iOS device before release.
+No implementation blocker. The existing auth API does not expose verified
+display name/avatar fields, so authenticated account UI correctly uses the
+required profile fallback without changing the contract. Native iOS validation
+still requires macOS. Publication is blocked because GitHub CLI tokens are
+invalid and the personal SSH key is not loaded.
 
 ## Important current decisions
 
@@ -58,12 +64,16 @@ and a physical iOS device before release.
   client never declares authoritative identity data or displays raw errors.
 - Android package and iOS bundle identifiers are both `com.foodroulette.app`;
   Google OAuth clients must be registered against that stable identifier.
+- Account UI uses the repository's NativeWind design system rather than adding
+  Tamagui. The Google avatar remains a fallback until a roadmap-approved API
+  contract exposes verified profile data.
 - Existing Google accounts require explicit confirmation and remain principal;
   no silent merge occurs. Future giro transfer rules live in Phase 8.
 - Apple upgrade and Phase 2 closeout remain; Phase 3 has not started.
 
 ## Next intended action
 
-After the API dependency merges, commit and publish the verified increment,
-open its authorized App PR, wait for CI and merge it into `experimental`. Do not
-begin Phase 3 automatically.
+Restore GitHub CLI/SSH authentication, publish and merge the API and base App
+Google-upgrade dependencies, then publish this focused App PR to
+`experimental`, wait for CI and merge it under the existing authorization. Do
+not begin Phase 3 automatically.

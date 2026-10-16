@@ -6,6 +6,11 @@ import {
 } from '@testing-library/react-native';
 
 import { RandomRecommendationResponse } from '@/api/contracts/recommendations';
+import { useAuth } from '@/features/auth/providers/AuthProvider';
+import {
+  hasSeenGoogleLinkPrompt,
+  markGoogleLinkPromptSeen,
+} from '@/features/auth/services/auth-storage';
 import { DiscoverScreen } from '@/features/discovery/screens/DiscoverScreen';
 
 import { buildRecommendation } from '../../test-support/recommendation.fixture';
@@ -27,8 +32,21 @@ jest.mock('@/features/discovery/hooks/useCurrentLocation', () => ({
   }),
 }));
 
-jest.mock('@/features/auth/components/GoogleAccountCard', () => ({
-  GoogleAccountCard: () => null,
+jest.mock('@/features/auth/providers/AuthProvider', () => ({
+  useAuth: jest.fn(),
+}));
+
+jest.mock('@/features/auth/services/auth-storage', () => ({
+  hasSeenGoogleLinkPrompt: jest.fn(),
+  markGoogleLinkPromptSeen: jest.fn(),
+}));
+
+jest.mock('@/features/auth/components/GoogleSignInAction', () => ({
+  GoogleSignInAction: () => {
+    const { Text: NativeText } = require('react-native');
+
+    return <NativeText>Continuar con Google</NativeText>;
+  },
 }));
 
 jest.mock('@/features/discovery/hooks/useRandomRecommendation', () => ({
@@ -102,6 +120,42 @@ describe('DiscoverScreen', () => {
       recommend: mockRecommend,
       reset: mockReset,
     };
+    jest.mocked(useAuth).mockReturnValue({
+      beginGoogleAccountUpgrade: jest.fn(),
+      confirmGoogleAccountSwitch: jest.fn(),
+      retry: jest.fn(),
+      status: 'ready',
+      user: {
+        id: '11111111-1111-4111-8111-111111111111',
+        isGuest: true,
+        createdAt: '2030-01-01T00:00:00.000Z',
+      },
+    });
+    jest.mocked(hasSeenGoogleLinkPrompt).mockResolvedValue(false);
+    jest.mocked(markGoogleLinkPromptSeen).mockResolvedValue();
+  });
+
+  it('keeps the profile entry visible without showing a registration card', () => {
+    render(<DiscoverScreen />);
+
+    expect(
+      screen.getByRole('button', { name: 'Abrir cuenta de invitado' }),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText('Guarda tu progreso')).not.toBeOnTheScreen();
+    expect(
+      screen.queryByText('¿Quieres conservar tu progreso?'),
+    ).not.toBeOnTheScreen();
+  });
+
+  it('opens guest account access from the header', () => {
+    render(<DiscoverScreen />);
+
+    fireEvent.press(
+      screen.getByRole('button', { name: 'Abrir cuenta de invitado' }),
+    );
+
+    expect(screen.getByText('Cuenta de invitado')).toBeOnTheScreen();
+    expect(screen.getByText('Continuar con Google')).toBeOnTheScreen();
   });
 
   it('requests location on mount and presents recovery actions when denied', async () => {
@@ -143,6 +197,75 @@ describe('DiscoverScreen', () => {
         reroll: false,
       }),
     );
+  });
+
+  it('shows one contextual Google invitation after the first successful spin', async () => {
+    mockRecommend.mockResolvedValue(buildRecommendation());
+
+    render(<DiscoverScreen />);
+    expect(
+      screen.queryByText('¿Quieres conservar tu progreso?'),
+    ).not.toBeOnTheScreen();
+
+    fireEvent.press(screen.getByText('GIRAR RULETA'));
+
+    expect(
+      await screen.findByText('¿Quieres conservar tu progreso?'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('La Cocina de Prueba')).toBeOnTheScreen();
+    expect(screen.getByText('Continuar con Google')).toBeOnTheScreen();
+    await waitFor(() =>
+      expect(markGoogleLinkPromptSeen).toHaveBeenCalledTimes(1),
+    );
+
+    fireEvent.press(screen.getByText('Ahora no'));
+    expect(
+      screen.queryByText('¿Quieres conservar tu progreso?'),
+    ).not.toBeOnTheScreen();
+
+    fireEvent.press(screen.getByText('GIRAR OTRA VEZ'));
+    await screen.findByText('La Cocina de Prueba');
+    expect(
+      screen.queryByText('¿Quieres conservar tu progreso?'),
+    ).not.toBeOnTheScreen();
+  });
+
+  it('does not repeat a previously shown invitation', async () => {
+    jest.mocked(hasSeenGoogleLinkPrompt).mockResolvedValue(true);
+    mockRecommend.mockResolvedValue(buildRecommendation());
+
+    render(<DiscoverScreen />);
+    fireEvent.press(screen.getByText('GIRAR RULETA'));
+    await screen.findByText('La Cocina de Prueba');
+
+    expect(
+      screen.queryByText('¿Quieres conservar tu progreso?'),
+    ).not.toBeOnTheScreen();
+    expect(markGoogleLinkPromptSeen).not.toHaveBeenCalled();
+  });
+
+  it('does not invite an authenticated Google user', async () => {
+    jest.mocked(useAuth).mockReturnValue({
+      beginGoogleAccountUpgrade: jest.fn(),
+      confirmGoogleAccountSwitch: jest.fn(),
+      retry: jest.fn(),
+      status: 'ready',
+      user: {
+        id: '22222222-2222-4222-8222-222222222222',
+        isGuest: false,
+        createdAt: '2030-01-01T00:00:00.000Z',
+      },
+    });
+    mockRecommend.mockResolvedValue(buildRecommendation());
+
+    render(<DiscoverScreen />);
+    fireEvent.press(screen.getByText('GIRAR RULETA'));
+    await screen.findByText('La Cocina de Prueba');
+
+    expect(
+      screen.queryByText('¿Quieres conservar tu progreso?'),
+    ).not.toBeOnTheScreen();
+    expect(markGoogleLinkPromptSeen).not.toHaveBeenCalled();
   });
 
   it('keeps the loading state visible for the duration of a slow request', async () => {
