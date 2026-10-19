@@ -27,3 +27,5 @@ export const Settings = Icon;
 export const Sparkles = Icon;
 export const Star = Icon;
 export const Utensils = Icon;
+export const UserRound = Icon;
+export const X = Icon;

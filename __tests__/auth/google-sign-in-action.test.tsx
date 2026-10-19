@@ -6,7 +6,8 @@ import {
   waitFor,
 } from '@testing-library/react-native';
 import { Alert } from 'react-native';
-import { GoogleAccountCard } from '@/features/auth/components/GoogleAccountCard';
+
+import { GoogleSignInAction } from '@/features/auth/components/GoogleSignInAction';
 import { AUTH_ERROR_MESSAGES } from '@/features/auth/constants/auth.constants';
 import { useAuth } from '@/features/auth/providers/AuthProvider';
 import {
@@ -29,7 +30,7 @@ const guestUser = {
   createdAt: '2030-01-01T00:00:00.000Z',
 };
 
-describe('GoogleAccountCard', () => {
+describe('GoogleSignInAction', () => {
   const beginGoogleAccountUpgrade = jest.fn();
   const confirmGoogleAccountSwitch = jest.fn();
 
@@ -48,13 +49,16 @@ describe('GoogleAccountCard', () => {
     });
   });
 
-  it('links an unclaimed Google identity without asking to switch accounts', async () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('links an unclaimed Google identity and reports completion', async () => {
     beginGoogleAccountUpgrade.mockResolvedValue({
       status: 'linked',
       user: { ...guestUser, isGuest: false },
     });
     const alert = jest.spyOn(Alert, 'alert');
-    render(<GoogleAccountCard />);
+    const onLinked = jest.fn();
+    render(<GoogleSignInAction onLinked={onLinked} />);
 
     fireEvent.press(screen.getByTestId('google-sign-in-button'));
 
@@ -68,6 +72,7 @@ describe('GoogleAccountCard', () => {
       'Cuenta vinculada',
       'Tu progreso quedó vinculado a tu cuenta de Google.',
     );
+    expect(onLinked).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the guest unchanged when the conflict dialog is cancelled', async () => {
@@ -76,7 +81,7 @@ describe('GoogleAccountCard', () => {
       confirmationToken: 'C'.repeat(43),
     });
     const alert = jest.spyOn(Alert, 'alert');
-    render(<GoogleAccountCard />);
+    render(<GoogleSignInAction />);
 
     fireEvent.press(screen.getByTestId('google-sign-in-button'));
     await waitFor(() => expect(alert).toHaveBeenCalled());
@@ -90,7 +95,7 @@ describe('GoogleAccountCard', () => {
     expect(jest.mocked(useAuth).mock.results[0]?.value.user).toBe(guestUser);
   });
 
-  it('switches only when the user confirms the conflict dialog', async () => {
+  it('switches and reports completion only after conflict confirmation', async () => {
     beginGoogleAccountUpgrade.mockResolvedValue({
       status: 'conflict',
       confirmationToken: 'C'.repeat(43),
@@ -101,7 +106,8 @@ describe('GoogleAccountCard', () => {
       isGuest: false,
     });
     const alert = jest.spyOn(Alert, 'alert');
-    render(<GoogleAccountCard />);
+    const onLinked = jest.fn();
+    render(<GoogleSignInAction onLinked={onLinked} />);
 
     fireEvent.press(screen.getByTestId('google-sign-in-button'));
     await waitFor(() => expect(alert).toHaveBeenCalled());
@@ -112,11 +118,12 @@ describe('GoogleAccountCard', () => {
     await waitFor(() =>
       expect(confirmGoogleAccountSwitch).toHaveBeenCalledWith('C'.repeat(43)),
     );
+    expect(onLinked).toHaveBeenCalledTimes(1);
   });
 
   it('does nothing when the native Google prompt is cancelled', async () => {
     jest.mocked(requestGoogleIdToken).mockResolvedValue(null);
-    render(<GoogleAccountCard />);
+    render(<GoogleSignInAction />);
 
     fireEvent.press(screen.getByTestId('google-sign-in-button'));
 
@@ -130,7 +137,7 @@ describe('GoogleAccountCard', () => {
       .mocked(requestGoogleIdToken)
       .mockRejectedValue(new Error('sensitive provider detail'));
     const alert = jest.spyOn(Alert, 'alert');
-    render(<GoogleAccountCard />);
+    render(<GoogleSignInAction />);
 
     fireEvent.press(screen.getByTestId('google-sign-in-button'));
 

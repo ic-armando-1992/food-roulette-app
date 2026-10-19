@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, Text, useWindowDimensions } from 'react-native';
 import { GoogleSignInButton } from 'react-native-nitro-google-signin';
+
 import {
   AUTH_ERROR_MESSAGES,
   AUTH_LABELS,
+  GOOGLE_SIGN_IN_WIDE_MINIMUM_SCREEN_WIDTH,
 } from '@/features/auth/constants/auth.constants';
 import { useAuth } from '@/features/auth/providers/AuthProvider';
 import {
@@ -11,8 +13,10 @@ import {
   GoogleSignInUnavailableError,
   requestGoogleIdToken,
 } from '@/features/auth/services/google-sign-in';
+import { GoogleSignInActionProps } from '@/features/auth/types/account.types';
 
-export function GoogleAccountCard() {
+export function GoogleSignInAction({ onLinked }: GoogleSignInActionProps) {
+  const { width } = useWindowDimensions();
   const {
     beginGoogleAccountUpgrade,
     confirmGoogleAccountSwitch,
@@ -40,6 +44,7 @@ export function GoogleAccountCard() {
 
     try {
       await confirmGoogleAccountSwitch(confirmationToken);
+      onLinked?.();
     } catch {
       showGenericError();
     } finally {
@@ -68,6 +73,7 @@ export function GoogleAccountCard() {
           AUTH_LABELS.google.successTitle,
           AUTH_LABELS.google.successMessage,
         );
+        onLinked?.();
         return;
       }
 
@@ -94,30 +100,22 @@ export function GoogleAccountCard() {
     }
   };
 
-  return (
-    <View className="mt-5 items-center rounded-3xl bg-surface p-5">
-      <Text className="text-lg font-extrabold text-foreground">
-        {AUTH_LABELS.google.sectionTitle}
-      </Text>
-      <Text className="mb-4 mt-1 text-center text-sm leading-5 text-mutedForeground">
-        {AUTH_LABELS.google.sectionBody}
-      </Text>
-      {isConfigured ? (
-        <GoogleSignInButton
-          accessibilityLabel="Continuar con Google"
-          colorScheme="light"
-          disabled={isProcessing}
-          loading={isProcessing}
-          onPress={startGoogleSignIn}
-          signInBehavior="none"
-          size="wide"
-          testID="google-sign-in-button"
-        />
-      ) : (
-        <Text className="text-center text-sm text-mutedForeground">
-          {AUTH_ERROR_MESSAGES.googleSignInUnavailable}
-        </Text>
-      )}
-    </View>
+  return isConfigured ? (
+    <GoogleSignInButton
+      accessibilityLabel={AUTH_LABELS.google.continue}
+      colorScheme="light"
+      disabled={isProcessing}
+      loading={isProcessing}
+      onPress={startGoogleSignIn}
+      signInBehavior="none"
+      size={
+        width >= GOOGLE_SIGN_IN_WIDE_MINIMUM_SCREEN_WIDTH ? 'wide' : 'standard'
+      }
+      testID="google-sign-in-button"
+    />
+  ) : (
+    <Text className="text-center text-sm text-mutedForeground">
+      {AUTH_ERROR_MESSAGES.googleSignInUnavailable}
+    </Text>
   );
 }
