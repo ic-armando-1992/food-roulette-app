@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { Alert, Text, useWindowDimensions } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { GoogleSignInButton } from 'react-native-nitro-google-signin';
 
 import {
@@ -14,8 +21,12 @@ import {
   requestGoogleIdToken,
 } from '@/features/auth/services/google-sign-in';
 import { GoogleSignInActionProps } from '@/features/auth/types/account.types';
+import colors from '@/theme/colors.json';
 
-export function GoogleSignInAction({ onLinked }: GoogleSignInActionProps) {
+export function GoogleSignInAction({
+  onBeforeSignIn,
+  onLinked,
+}: GoogleSignInActionProps) {
   const { width } = useWindowDimensions();
   const {
     beginGoogleAccountUpgrade,
@@ -60,7 +71,7 @@ export function GoogleSignInAction({ onLinked }: GoogleSignInActionProps) {
     setIsProcessing(true);
 
     try {
-      const idToken = await requestGoogleIdToken();
+      const idToken = await requestGoogleIdToken(onBeforeSignIn);
 
       if (!idToken) {
         return;
@@ -100,22 +111,50 @@ export function GoogleSignInAction({ onLinked }: GoogleSignInActionProps) {
     }
   };
 
-  return isConfigured ? (
-    <GoogleSignInButton
-      accessibilityLabel={AUTH_LABELS.google.continue}
-      colorScheme="light"
-      disabled={isProcessing}
-      loading={isProcessing}
-      onPress={startGoogleSignIn}
-      signInBehavior="none"
-      size={
-        width >= GOOGLE_SIGN_IN_WIDE_MINIMUM_SCREEN_WIDTH ? 'wide' : 'standard'
-      }
-      testID="google-sign-in-button"
-    />
-  ) : (
-    <Text className="text-center text-sm text-mutedForeground">
-      {AUTH_ERROR_MESSAGES.googleSignInUnavailable}
-    </Text>
+  if (!isConfigured) {
+    return (
+      <Text className="text-center text-sm text-mutedForeground">
+        {AUTH_ERROR_MESSAGES.googleSignInUnavailable}
+      </Text>
+    );
+  }
+
+  const buttonSize =
+    width >= GOOGLE_SIGN_IN_WIDE_MINIMUM_SCREEN_WIDTH ? 'wide' : 'standard';
+
+  return (
+    <View className="items-center gap-2">
+      <Pressable
+        accessibilityLabel={AUTH_LABELS.google.continue}
+        accessibilityRole="button"
+        accessibilityState={{ busy: isProcessing, disabled: isProcessing }}
+        disabled={isProcessing}
+        onPress={() => void startGoogleSignIn()}
+        style={({ pressed }) => ({ opacity: pressed ? 0.78 : 1 })}
+        testID="google-sign-in-button"
+      >
+        <View
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          pointerEvents="none"
+        >
+          <GoogleSignInButton
+            colorScheme="light"
+            disabled={isProcessing}
+            loading={isProcessing}
+            signInBehavior="none"
+            size={buttonSize}
+          />
+        </View>
+      </Pressable>
+      {isProcessing ? (
+        <View className="flex-row items-center gap-2">
+          <ActivityIndicator color={colors.primary} size="small" />
+          <Text className="text-sm font-semibold text-mutedForeground">
+            {AUTH_LABELS.google.opening}
+          </Text>
+        </View>
+      ) : null}
+    </View>
   );
 }

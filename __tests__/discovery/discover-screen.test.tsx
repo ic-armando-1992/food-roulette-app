@@ -123,11 +123,16 @@ describe('DiscoverScreen', () => {
     jest.mocked(useAuth).mockReturnValue({
       beginGoogleAccountUpgrade: jest.fn(),
       confirmGoogleAccountSwitch: jest.fn(),
+      dismissSessionRecoveryNotice: jest.fn(),
+      logout: jest.fn(),
       retry: jest.fn(),
+      sessionRecoveryNoticeVisible: false,
       status: 'ready',
       user: {
         id: '11111111-1111-4111-8111-111111111111',
         isGuest: true,
+        displayName: null,
+        avatarUrl: null,
         createdAt: '2030-01-01T00:00:00.000Z',
       },
     });
@@ -145,6 +150,34 @@ describe('DiscoverScreen', () => {
     expect(
       screen.queryByText('¿Quieres conservar tu progreso?'),
     ).not.toBeOnTheScreen();
+  });
+
+  it('shows a dismissible recovery notice after an invalid account session', () => {
+    const dismissSessionRecoveryNotice = jest.fn();
+    jest.mocked(useAuth).mockReturnValue({
+      beginGoogleAccountUpgrade: jest.fn(),
+      confirmGoogleAccountSwitch: jest.fn(),
+      dismissSessionRecoveryNotice,
+      logout: jest.fn(),
+      retry: jest.fn(),
+      sessionRecoveryNoticeVisible: true,
+      status: 'ready',
+      user: {
+        id: '33333333-3333-4333-8333-333333333333',
+        isGuest: true,
+        displayName: null,
+        avatarUrl: null,
+        createdAt: '2030-01-01T00:00:00.000Z',
+      },
+    });
+
+    render(<DiscoverScreen />);
+
+    expect(screen.getByText('Tu sesión anterior terminó')).toBeOnTheScreen();
+    fireEvent.press(
+      screen.getByRole('button', { name: 'Ocultar aviso de sesión' }),
+    );
+    expect(dismissSessionRecoveryNotice).toHaveBeenCalledTimes(1);
   });
 
   it('opens guest account access from the header', () => {
@@ -248,11 +281,16 @@ describe('DiscoverScreen', () => {
     jest.mocked(useAuth).mockReturnValue({
       beginGoogleAccountUpgrade: jest.fn(),
       confirmGoogleAccountSwitch: jest.fn(),
+      dismissSessionRecoveryNotice: jest.fn(),
+      logout: jest.fn(),
       retry: jest.fn(),
+      sessionRecoveryNoticeVisible: false,
       status: 'ready',
       user: {
         id: '22222222-2222-4222-8222-222222222222',
         isGuest: false,
+        displayName: 'Armando Pérez',
+        avatarUrl: 'https://example.test/armando.png',
         createdAt: '2030-01-01T00:00:00.000Z',
       },
     });

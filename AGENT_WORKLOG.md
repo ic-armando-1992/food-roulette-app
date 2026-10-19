@@ -5,6 +5,30 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-15 — Authentication persistence and logout finalized locally
+
+- Timestamp: 2026-10-15.
+- Result: added confirmed account logout, current-session API revocation,
+  SecureStore credential removal, private Query cache clearing and immediate
+  creation of a fresh guest without signing out the device's Google account.
+- Recovery/concurrency: startup restoration and reactive refresh remain
+  transparent; transient network failures preserve stored credentials, invalid
+  sessions recover as guest with a discreet notice, duplicate startup/logout
+  calls are coordinated and pre-logout operations cannot restore the previous
+  session.
+- Policy: retained the existing 15-minute access and rotating 30-day sliding
+  refresh policy. A 90-day inactivity window or absolute lifetime remains an
+  explicit future decision rather than an implicit Phase 2 change.
+- Physical Android preparation: documented LAN/WSL networking, OAuth package
+  and debug SHA-1 requirements and the exact local development-build command.
+  The ARM64 APK builds successfully and includes Nitro Google Sign-In; no
+  physical phone was connected, so physical validation is still pending.
+- Validation: format, lint, strict typecheck and 19 suites/124 tests pass. Expo
+  dependency checks pass against the offline local SDK map; the ARM64 Gradle
+  development build succeeds.
+- Publication: GitHub CLI/SSH authentication remains unavailable, so the
+  stacked PRs and authorized merges are still pending.
+
 ### 2026-10-15 — Shared date utility extracted
 
 - Timestamp: 2026-10-15.

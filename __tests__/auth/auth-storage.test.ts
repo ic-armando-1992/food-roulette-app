@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { AUTH_SECURE_STORE_KEYS } from '@/features/auth/constants/auth.constants';
 import {
   getOrCreateGuestCredential,
+  clearStoredRefreshToken,
   hasSeenGoogleLinkPrompt,
   markGoogleLinkPromptSeen,
   replaceGuestCredential,
@@ -10,6 +11,7 @@ import {
 
 jest.mock('expo-crypto', () => ({ randomUUID: jest.fn() }));
 jest.mock('expo-secure-store', () => ({
+  deleteItemAsync: jest.fn(),
   getItemAsync: jest.fn(),
   setItemAsync: jest.fn(),
 }));
@@ -77,5 +79,15 @@ describe('auth secure storage', () => {
     jest.mocked(SecureStore.getItemAsync).mockResolvedValue('true');
 
     await expect(hasSeenGoogleLinkPrompt()).resolves.toBe(true);
+  });
+
+  it('removes the persisted refresh credential during logout', async () => {
+    jest.mocked(SecureStore.deleteItemAsync).mockResolvedValue();
+
+    await clearStoredRefreshToken();
+
+    expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith(
+      AUTH_SECURE_STORE_KEYS.refreshToken,
+    );
   });
 });

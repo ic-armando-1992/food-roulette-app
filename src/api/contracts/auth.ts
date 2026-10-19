@@ -1,6 +1,8 @@
 export interface AuthUser {
   id: string;
   isGuest: boolean;
+  displayName: string | null;
+  avatarUrl: string | null;
   createdAt: string;
 }
 

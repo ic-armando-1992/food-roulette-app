@@ -22,6 +22,13 @@ export function getCurrentUser(): Promise<AuthUser> {
   return apiRequest<AuthUser>(AUTH_API_PATHS.me, { auth: 'required' });
 }
 
+export function logoutSession(): Promise<void> {
+  return apiRequest<void>(AUTH_API_PATHS.logout, {
+    auth: 'required',
+    method: 'POST',
+  });
+}
+
 export function linkGoogleIdentity(idToken: string): Promise<AuthUser> {
   return apiRequest<AuthUser>(AUTH_API_PATHS.google, {
     auth: 'required',

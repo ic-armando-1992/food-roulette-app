@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { AccountButton } from '@/features/auth/components/AccountButton';
 import { AccountModal } from '@/features/auth/components/AccountModal';
 import { GoogleLinkPrompt } from '@/features/auth/components/GoogleLinkPrompt';
+import { SessionRecoveryNotice } from '@/features/auth/components/SessionRecoveryNotice';
 import { useGoogleLinkPrompt } from '@/features/auth/hooks/useGoogleLinkPrompt';
 import { LocationPill } from '@/features/discovery/components/LocationPill';
 import { RadiusSelector } from '@/features/discovery/components/RadiusSelector';
@@ -204,6 +205,7 @@ export function DiscoverScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['top']}>
         <ScrollView contentContainerClassName="pb-4">
+          <SessionRecoveryNotice />
           {recommendation.isError ? (
             <ErrorMessage
               message={getRecommendationErrorMessage(recommendation.error)}
@@ -247,6 +249,7 @@ export function DiscoverScreen() {
         onAccountPress={() => setAccountVisible(true)}
         showSettings
       />
+      <SessionRecoveryNotice />
       <ScrollView
         contentContainerClassName="px-5 pb-12"
         keyboardShouldPersistTaps="handled"

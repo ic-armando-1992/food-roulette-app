@@ -298,6 +298,14 @@ that carried an access token triggers one coordinated refresh and one retry.
 Network/bootstrap failures leave the existing roulette flow available and can
 be retried without replacing the stored guest identity.
 
+The API currently issues 15-minute access tokens and rotating refresh tokens
+with a 30-day sliding inactivity window. A successful refresh preserves the
+same internal user ID without invoking Google again. Logout revokes the current
+Food Roulette session, clears its local credentials and starts a new guest; it
+does not remove the Google account from the device or revoke other devices. If
+the API is unreachable, local logout still completes and the UI states clearly
+that remote revocation was not confirmed.
+
 Current progression:
 
 ```text
@@ -331,6 +339,57 @@ If Google already belongs to another internal user, the app keeps the guest
 session active and displays a confirmation dialog. Cancel performs no account
 operation. Confirm exchanges the server-issued one-time token for a new session
 on the existing Google account; the app never merges user data itself.
+
+### Android physical-device development build
+
+Google Sign-In does not work in Expo Go. Use the existing local native build;
+this repository does not currently have an EAS build profile.
+
+1. Connect the phone through USB, enable USB debugging, accept the computer and
+   verify it is visible:
+
+   ```bash
+   adb devices -l
+   ```
+
+2. Put the computer and phone on the same network. In `.env`, use the
+   computer's LAN address, never `localhost` or `10.0.2.2`:
+
+   ```env
+   EXPO_PUBLIC_API_BASE_URL=http://<IP_LAN_DE_TU_PC>:3000
+   ```
+
+3. Start the API. It already listens on `0.0.0.0`; allow inbound TCP 3000 in
+   the host firewall. With WSL2 NAT, expose the WSL port from an Administrator
+   PowerShell before using the Windows LAN address:
+
+   ```powershell
+   $WslIp = ((wsl hostname -I).Trim() -split '\s+')[0]
+   netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=3000 connectaddress=$WslIp connectport=3000
+   New-NetFirewallRule -DisplayName "Food Roulette API 3000" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow
+   ```
+
+   ```bash
+   cd /home/armando/projects/food-roulette/food-roulette-api
+   PATH=/home/armando/.nvm/versions/node/v20.20.2/bin:$PATH npm run start:dev
+   ```
+
+4. Confirm from the phone browser that
+   `http://<IP_LAN_DE_TU_PC>:3000/health` responds, then compile, install and
+   open the development build on the selected device:
+
+   ```bash
+   cd /home/armando/projects/food-roulette/food-roulette-app
+   PATH=/home/armando/.nvm/versions/node/v20.20.2/bin:$PATH npm run android -- --device
+   ```
+
+The Android application ID is `com.foodroulette.app`. This repository's debug
+APK is signed with SHA-1
+`5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`; that exact
+package/SHA-1 pair must exist in the Android OAuth client. The App reads the Web
+client ID from `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`; the Android client remains a
+Google Cloud package/signature registration and is not placed in `.env`. The
+API must allowlist the same Web client ID in `GOOGLE_AUTH_CLIENT_IDS`.
 
 ---
 

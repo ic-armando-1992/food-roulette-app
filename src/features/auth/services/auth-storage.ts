@@ -34,6 +34,10 @@ export function storeRefreshToken(refreshToken: string): Promise<void> {
   );
 }
 
+export function clearStoredRefreshToken(): Promise<void> {
+  return SecureStore.deleteItemAsync(AUTH_SECURE_STORE_KEYS.refreshToken);
+}
+
 export async function hasSeenGoogleLinkPrompt(): Promise<boolean> {
   return (
     (await SecureStore.getItemAsync(

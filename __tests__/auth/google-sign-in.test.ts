@@ -54,36 +54,38 @@ describe('native Google sign-in', () => {
     });
   });
 
-  it('uses the recommended fallback flow and returns only the ID token', async () => {
-    jest.mocked(GoogleOneTapSignIn.signIn).mockResolvedValue({
-      type: 'noSavedCredentialFound',
-      data: null,
-    });
-    jest.mocked(GoogleOneTapSignIn.createAccount).mockResolvedValue({
-      type: 'noSavedCredentialFound',
-      data: null,
-    });
+  it('opens the explicit button flow and returns only the ID token', async () => {
+    const onBeforePrompt = jest.fn();
     jest
       .mocked(GoogleOneTapSignIn.presentExplicitSignIn)
       .mockResolvedValue(successResponse);
 
-    await expect(requestGoogleIdToken()).resolves.toBe(
+    await expect(requestGoogleIdToken(onBeforePrompt)).resolves.toBe(
       'verified-google-id-token',
     );
     expect(GoogleOneTapSignIn.checkPlayServices).toHaveBeenCalled();
-    expect(GoogleOneTapSignIn.signIn).toHaveBeenCalled();
-    expect(GoogleOneTapSignIn.createAccount).toHaveBeenCalled();
+    expect(onBeforePrompt).toHaveBeenCalledTimes(1);
     expect(GoogleOneTapSignIn.presentExplicitSignIn).toHaveBeenCalled();
+    expect(
+      jest.mocked(GoogleOneTapSignIn.checkPlayServices).mock
+        .invocationCallOrder[0],
+    ).toBeLessThan(onBeforePrompt.mock.invocationCallOrder[0]);
+    expect(onBeforePrompt.mock.invocationCallOrder[0]).toBeLessThan(
+      jest.mocked(GoogleOneTapSignIn.presentExplicitSignIn).mock
+        .invocationCallOrder[0],
+    );
+    expect(GoogleOneTapSignIn.signIn).not.toHaveBeenCalled();
+    expect(GoogleOneTapSignIn.createAccount).not.toHaveBeenCalled();
   });
 
   it('normalizes returned and thrown user cancellation to no token', async () => {
-    jest.mocked(GoogleOneTapSignIn.signIn).mockResolvedValue({
+    jest.mocked(GoogleOneTapSignIn.presentExplicitSignIn).mockResolvedValue({
       type: 'cancelled',
       data: null,
     });
     await expect(requestGoogleIdToken()).resolves.toBeNull();
 
-    jest.mocked(GoogleOneTapSignIn.signIn).mockRejectedValue({
+    jest.mocked(GoogleOneTapSignIn.presentExplicitSignIn).mockRejectedValue({
       code: statusCodes.SIGN_IN_CANCELLED,
       message: 'cancelled',
     });
