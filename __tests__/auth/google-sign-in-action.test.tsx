@@ -27,6 +27,8 @@ jest.mock('@/features/auth/services/google-sign-in', () => ({
 const guestUser = {
   id: '11111111-1111-4111-8111-111111111111',
   isGuest: true,
+  displayName: null,
+  avatarUrl: null,
   createdAt: '2030-01-01T00:00:00.000Z',
 };
 
@@ -76,6 +78,35 @@ describe('GoogleSignInAction', () => {
       'Tu progreso quedó vinculado a tu cuenta de Google.',
     );
     expect(onLinked).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for the parent surface to close before opening Google', async () => {
+    let finishClosing: (() => void) | undefined;
+    const onBeforeSignIn = jest.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishClosing = resolve;
+        }),
+    );
+    jest
+      .mocked(requestGoogleIdToken)
+      .mockImplementation(async (beforePrompt) => {
+        await beforePrompt?.();
+        return 'verified-google-id-token';
+      });
+    render(<GoogleSignInAction onBeforeSignIn={onBeforeSignIn} />);
+
+    fireEvent.press(screen.getByTestId('google-sign-in-button'));
+
+    await waitFor(() => expect(onBeforeSignIn).toHaveBeenCalledTimes(1));
+    expect(screen.getByText('Abriendo Google…')).toBeOnTheScreen();
+
+    await act(async () => finishClosing?.());
+    await waitFor(() =>
+      expect(beginGoogleAccountUpgrade).toHaveBeenCalledWith(
+        'verified-google-id-token',
+      ),
+    );
   });
 
   it('keeps the guest unchanged when the conflict dialog is cancelled', async () => {

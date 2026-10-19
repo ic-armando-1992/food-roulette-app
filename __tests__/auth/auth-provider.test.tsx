@@ -78,6 +78,8 @@ describe('AuthProvider', () => {
       user: {
         id: '11111111-1111-4111-8111-111111111111',
         isGuest: true,
+        displayName: null,
+        avatarUrl: null,
         createdAt: '2030-01-01T00:00:00.000Z',
       },
     });
@@ -104,6 +106,8 @@ describe('AuthProvider', () => {
     const guest = {
       id: '11111111-1111-4111-8111-111111111111',
       isGuest: true,
+      displayName: null,
+      avatarUrl: null,
       createdAt: '2030-01-01T00:00:00.000Z',
     };
     jest.mocked(initializeGuestSession).mockResolvedValue({
@@ -137,6 +141,8 @@ describe('AuthProvider', () => {
     const guest = {
       id: '11111111-1111-4111-8111-111111111111',
       isGuest: true,
+      displayName: null,
+      avatarUrl: null,
       createdAt: '2030-01-01T00:00:00.000Z',
     };
     const target = {
@@ -165,6 +171,8 @@ describe('AuthProvider', () => {
     const googleUser = {
       id: '22222222-2222-4222-8222-222222222222',
       isGuest: false,
+      displayName: 'Armando Pérez',
+      avatarUrl: 'https://example.test/armando.png',
       createdAt: '2030-01-01T00:00:00.000Z',
     };
     const newGuest = {
@@ -195,6 +203,8 @@ describe('AuthProvider', () => {
     const googleUser = {
       id: '22222222-2222-4222-8222-222222222222',
       isGuest: false,
+      displayName: 'Armando Pérez',
+      avatarUrl: 'https://example.test/armando.png',
       createdAt: '2030-01-01T00:00:00.000Z',
     };
     const recoveredGuest = {

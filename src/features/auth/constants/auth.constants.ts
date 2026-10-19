@@ -14,6 +14,7 @@ export const AUTH_SECURE_STORE_KEYS = {
 } as const;
 
 export const GOOGLE_SIGN_IN_WIDE_MINIMUM_SCREEN_WIDTH = 360;
+export const ACCOUNT_MODAL_DISMISS_DELAY_MS = 350;
 
 export const AUTH_ERROR_MESSAGES = {
   googleSignInFailed:
@@ -29,7 +30,6 @@ export const AUTH_LABELS = {
   account: {
     accessibility: {
       close: 'Cerrar cuenta',
-      googleAvatarFallback: 'Perfil de la cuenta de Google',
       openGoogle: 'Abrir cuenta de Google',
       openGuest: 'Abrir cuenta de invitado',
     },
@@ -50,6 +50,7 @@ export const AUTH_LABELS = {
     conflictTitle: 'Esta cuenta ya existe',
     continue: 'Continuar con Google',
     errorTitle: 'No pudimos iniciar sesión',
+    opening: 'Abriendo Google…',
     successMessage: 'Tu progreso quedó vinculado a tu cuenta de Google.',
     successTitle: 'Cuenta vinculada',
   },

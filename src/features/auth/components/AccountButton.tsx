@@ -1,6 +1,6 @@
-import { UserRound } from 'lucide-react-native';
 import { Pressable } from 'react-native';
 
+import { AccountAvatar } from '@/features/auth/components/AccountAvatar';
 import { AUTH_LABELS } from '@/features/auth/constants/auth.constants';
 import { useAuth } from '@/features/auth/providers/AuthProvider';
 import { AccountButtonProps } from '@/features/auth/types/account.types';
@@ -17,24 +17,22 @@ export function AccountButton({ onPress }: AccountButtonProps) {
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
-      className={`h-11 w-11 items-center justify-center rounded-full border ${
+      className={`h-11 w-11 items-center justify-center overflow-hidden rounded-full border ${
         isGoogleUser ? 'border-primary bg-primary' : 'border-primary bg-surface'
       }`}
       disabled={status !== 'ready' || !user}
+      hitSlop={8}
       onPress={onPress}
       style={({ pressed }) => ({
         opacity: status !== 'ready' || !user ? 0.5 : pressed ? 0.72 : 1,
       })}
       testID="account-button"
     >
-      <UserRound
-        accessibilityLabel={
-          isGoogleUser
-            ? AUTH_LABELS.account.accessibility.googleAvatarFallback
-            : undefined
-        }
-        color={isGoogleUser ? colors.primaryForeground : colors.primary}
-        size={22}
+      <AccountAvatar
+        avatarUrl={isGoogleUser ? (user?.avatarUrl ?? null) : null}
+        fallbackColor={isGoogleUser ? colors.primaryForeground : colors.primary}
+        fallbackSize={22}
+        imageTestID="account-button-avatar-image"
       />
     </Pressable>
   );

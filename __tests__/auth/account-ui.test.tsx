@@ -7,6 +7,7 @@ import {
 } from '@testing-library/react-native';
 import * as ReactNative from 'react-native';
 
+import { AuthUser } from '@/api/contracts/auth';
 import { AccountButton } from '@/features/auth/components/AccountButton';
 import { AccountModal } from '@/features/auth/components/AccountModal';
 import { useAuth } from '@/features/auth/providers/AuthProvider';
@@ -26,9 +27,11 @@ jest.mock('@/features/auth/components/GoogleSignInAction', () => ({
   },
 }));
 
-const guestUser = {
+const guestUser: AuthUser = {
   id: '11111111-1111-4111-8111-111111111111',
   isGuest: true,
+  displayName: null,
+  avatarUrl: null,
   createdAt: '2030-01-01T00:00:00.000Z',
 };
 
@@ -97,6 +100,32 @@ describe('account UI', () => {
     expect(
       screen.getByRole('button', { name: 'Cerrar la sesión de Google' }),
     ).toBeOnTheScreen();
+  });
+
+  it('shows the Google profile name and photo in the account entry', () => {
+    const onPress = jest.fn();
+    mockAuthUser({
+      ...guestUser,
+      isGuest: false,
+      displayName: 'Armando Pérez',
+      avatarUrl: 'https://example.test/armando.png',
+    });
+    render(
+      <>
+        <AccountButton onPress={onPress} />
+        <AccountModal onClose={jest.fn()} visible />
+      </>,
+    );
+
+    expect(screen.getByText('Armando Pérez')).toBeOnTheScreen();
+    expect(screen.getByTestId('account-button-avatar-image')).toBeOnTheScreen();
+    expect(screen.getByTestId('account-avatar-image')).toBeOnTheScreen();
+    expect(
+      screen.queryByTestId('account-avatar-fallback'),
+    ).not.toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId('account-button-avatar-image'));
+    expect(onPress).toHaveBeenCalledTimes(1);
   });
 
   it('confirms logout before creating the new guest session', async () => {

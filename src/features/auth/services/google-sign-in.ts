@@ -3,7 +3,6 @@ import {
   GoogleOneTapSignIn,
   isCancelledResponse,
   isErrorWithCode,
-  isNoSavedCredentialFoundResponse,
   isSuccessResponse,
   statusCodes,
 } from 'react-native-nitro-google-signin';
@@ -39,21 +38,17 @@ export function configureGoogleSignIn(): boolean {
   return true;
 }
 
-export async function requestGoogleIdToken(): Promise<string | null> {
+export async function requestGoogleIdToken(
+  onBeforePrompt?: () => void | Promise<void>,
+): Promise<string | null> {
   if (!configureGoogleSignIn()) {
     throw new GoogleSignInUnavailableError();
   }
 
   try {
     await GoogleOneTapSignIn.checkPlayServices();
-    let response = await GoogleOneTapSignIn.signIn();
-
-    if (isNoSavedCredentialFoundResponse(response)) {
-      response = await GoogleOneTapSignIn.createAccount();
-    }
-    if (isNoSavedCredentialFoundResponse(response)) {
-      response = await GoogleOneTapSignIn.presentExplicitSignIn();
-    }
+    await onBeforePrompt?.();
+    const response = await GoogleOneTapSignIn.presentExplicitSignIn();
 
     if (isCancelledResponse(response)) {
       return null;

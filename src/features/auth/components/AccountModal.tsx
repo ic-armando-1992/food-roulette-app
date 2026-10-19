@@ -1,4 +1,4 @@
-import { UserRound, X } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { useState } from 'react';
 import {
   Alert,
@@ -12,8 +12,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { formatLongDate } from '@/core/utils/format-date';
+import { AccountAvatar } from '@/features/auth/components/AccountAvatar';
 import { GoogleSignInAction } from '@/features/auth/components/GoogleSignInAction';
 import {
+  ACCOUNT_MODAL_DISMISS_DELAY_MS,
   AUTH_ERROR_MESSAGES,
   AUTH_LABELS,
 } from '@/features/auth/constants/auth.constants';
@@ -27,6 +29,7 @@ export function AccountModal({ onClose, visible }: AccountModalProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isGoogleUser = status === 'ready' && user?.isGuest === false;
   const isGuest = !isGoogleUser;
+  const displayName = user?.displayName?.trim();
   const createdDate = user ? formatLongDate(user.createdAt, 'es-MX') : null;
 
   const performLogout = async () => {
@@ -79,6 +82,12 @@ export function AccountModal({ onClose, visible }: AccountModalProps) {
     ]);
   };
 
+  const closeBeforeGoogleSignIn = () =>
+    new Promise<void>((resolve) => {
+      onClose();
+      setTimeout(resolve, ACCOUNT_MODAL_DISMISS_DELAY_MS);
+    });
+
   return (
     <Modal
       animationType="slide"
@@ -120,22 +129,26 @@ export function AccountModal({ onClose, visible }: AccountModalProps) {
 
               <View className="mt-7 items-center">
                 <View
-                  className={`h-20 w-20 items-center justify-center rounded-full border-2 ${
+                  className={`h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 ${
                     isGuest
                       ? 'border-primary bg-surface'
                       : 'border-primary bg-primary'
                   }`}
-                  testID="account-avatar-fallback"
                 >
-                  <UserRound
-                    color={isGuest ? colors.primary : colors.primaryForeground}
-                    size={36}
+                  <AccountAvatar
+                    avatarUrl={isGoogleUser ? (user?.avatarUrl ?? null) : null}
+                    fallbackColor={
+                      isGuest ? colors.primary : colors.primaryForeground
+                    }
+                    fallbackSize={36}
+                    fallbackTestID="account-avatar-fallback"
+                    imageTestID="account-avatar-image"
                   />
                 </View>
                 <Text className="mt-4 text-center text-xl font-extrabold text-foreground">
                   {isGuest
                     ? AUTH_LABELS.account.guestTitle
-                    : AUTH_LABELS.account.googleTitle}
+                    : (displayName ?? AUTH_LABELS.account.googleTitle)}
                 </Text>
                 <Text className="mt-2 text-center text-sm leading-5 text-mutedForeground">
                   {isGuest
@@ -151,7 +164,10 @@ export function AccountModal({ onClose, visible }: AccountModalProps) {
 
               {isGuest ? (
                 <View className="mt-7 items-center">
-                  <GoogleSignInAction onLinked={onClose} />
+                  <GoogleSignInAction
+                    onBeforeSignIn={closeBeforeGoogleSignIn}
+                    onLinked={onClose}
+                  />
                 </View>
               ) : null}
 

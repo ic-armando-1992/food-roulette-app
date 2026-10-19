@@ -12,6 +12,7 @@ export type GoogleLinkPromptProps = {
 };
 
 export type GoogleSignInActionProps = {
+  onBeforeSignIn?: () => void | Promise<void>;
   onLinked?: () => void;
 };
 
