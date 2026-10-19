@@ -232,13 +232,6 @@ export function DiscoverScreen() {
             <GoogleLinkPrompt onDismiss={googleLinkPrompt.dismiss} />
           ) : null}
         </ScrollView>
-        <View className="absolute right-5 top-3 z-20">
-          <AccountButton onPress={() => setAccountVisible(true)} />
-        </View>
-        <AccountModal
-          onClose={() => setAccountVisible(false)}
-          visible={accountVisible}
-        />
       </SafeAreaView>
     );
   }

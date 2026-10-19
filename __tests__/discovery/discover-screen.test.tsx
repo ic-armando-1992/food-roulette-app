@@ -212,6 +212,9 @@ describe('DiscoverScreen', () => {
       screen.getByText('Buscando un restaurante cercano'),
     ).toBeOnTheScreen();
     await screen.findByText('La Cocina de Prueba');
+    expect(
+      screen.queryByRole('button', { name: 'Abrir cuenta de invitado' }),
+    ).not.toBeOnTheScreen();
     expect(mockRecommend).toHaveBeenCalledWith({
       allowInternational: false,
       countryCode: 'MX',
