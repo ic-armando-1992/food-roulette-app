@@ -1,5 +1,9 @@
 import { DEFAULT_API_TIMEOUT_MS } from '@/api/constants/client.constants';
-import { ApiErrorKind, ApiRequestOptions } from '@/api/types/client.types';
+import {
+  ApiErrorKind,
+  ApiRequestOptions,
+  PublicApiErrorCode,
+} from '@/api/types/client.types';
 import { getApiAccessToken, refreshApiAccessToken } from '@/api/auth';
 import { env } from '@/core/config/env';
 
@@ -7,6 +11,8 @@ export class ApiError extends Error {
   constructor(
     public readonly kind: ApiErrorKind,
     public readonly status?: number,
+    public readonly code?: PublicApiErrorCode,
+    public readonly confirmationToken?: string,
   ) {
     super(kind);
     this.name = 'ApiError';
@@ -77,7 +83,13 @@ async function executeApiRequest<T>(
         }
       }
 
-      throw new ApiError('http', response.status);
+      const publicError = await parsePublicApiError(response);
+      throw new ApiError(
+        'http',
+        response.status,
+        publicError?.code,
+        publicError?.confirmationToken,
+      );
     }
 
     try {
@@ -99,4 +111,40 @@ async function executeApiRequest<T>(
     clearTimeout(timeoutId);
     options.signal?.removeEventListener('abort', abortRequest);
   }
+}
+
+async function parsePublicApiError(response: Response): Promise<
+  | {
+      code: PublicApiErrorCode;
+      confirmationToken: string;
+    }
+  | undefined
+> {
+  if (response.status !== 409) {
+    return undefined;
+  }
+
+  try {
+    const body: unknown = await response.json();
+
+    if (
+      typeof body === 'object' &&
+      body !== null &&
+      'code' in body &&
+      body.code === 'GOOGLE_IDENTITY_CONFLICT' &&
+      'confirmationToken' in body &&
+      typeof body.confirmationToken === 'string' &&
+      /^[A-Za-z0-9_-]{43}$/.test(body.confirmationToken)
+    ) {
+      return {
+        code: body.code,
+        confirmationToken: body.confirmationToken,
+      };
+    }
+  } catch {
+    // Ignore every non-allowlisted error body so provider and server details
+    // never reach product UI or telemetry accidentally.
+  }
+
+  return undefined;
 }

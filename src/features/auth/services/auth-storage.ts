@@ -11,6 +11,10 @@ export async function getOrCreateGuestCredential(): Promise<string> {
     return stored;
   }
 
+  return replaceGuestCredential();
+}
+
+export async function replaceGuestCredential(): Promise<string> {
   const credential = Crypto.randomUUID();
   await SecureStore.setItemAsync(
     AUTH_SECURE_STORE_KEYS.guestCredential,

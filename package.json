@@ -7,6 +7,7 @@
     "expo": "~57.0.30",
     "expo-constants": "~57.0.22",
     "expo-crypto": "~57.0.4",
+    "expo-dev-client": "~57.0.20",
     "expo-image": "~57.0.5",
     "expo-linking": "~57.0.13",
     "expo-location": "~57.0.21",
@@ -22,6 +23,8 @@
     "react-hook-form": "^7.86.0",
     "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
+    "react-native-nitro-google-signin": "^2.3.0",
+    "react-native-nitro-modules": "^0.37.1",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
@@ -48,9 +51,9 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "android:emulator": "REACT_NATIVE_PACKAGER_HOSTNAME=10.0.2.2 expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "android:emulator": "REACT_NATIVE_PACKAGER_HOSTNAME=10.0.2.2 expo run:android",
+    "ios": "expo run:ios",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "lint": "expo lint",
@@ -66,6 +69,7 @@
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1",
       "^lucide-react-native$": "<rootDir>/test-support/lucide-react-native.mock.tsx",
+      "^react-native-nitro-google-signin$": "<rootDir>/test-support/react-native-nitro-google-signin.mock.tsx",
       "^react-native-reanimated$": "<rootDir>/test-support/react-native-reanimated.mock.tsx"
     }
   },

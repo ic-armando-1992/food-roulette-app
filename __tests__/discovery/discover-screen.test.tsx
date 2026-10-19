@@ -27,6 +27,10 @@ jest.mock('@/features/discovery/hooks/useCurrentLocation', () => ({
   }),
 }));
 
+jest.mock('@/features/auth/components/GoogleAccountCard', () => ({
+  GoogleAccountCard: () => null,
+}));
+
 jest.mock('@/features/discovery/hooks/useRandomRecommendation', () => ({
   useRandomRecommendation: () => mockRecommendationState,
 }));

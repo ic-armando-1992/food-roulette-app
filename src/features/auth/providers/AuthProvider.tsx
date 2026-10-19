@@ -10,6 +10,8 @@ import { configureApiTokenRefresh } from '@/api/auth';
 import { AuthUser } from '@/api/contracts/auth';
 import { AUTH_ERROR_MESSAGES } from '@/features/auth/constants/auth.constants';
 import {
+  beginGoogleAccountUpgrade,
+  confirmGoogleAccountSwitch,
   initializeGuestSession,
   refreshStoredSession,
 } from '@/features/auth/services/auth-session';
@@ -47,9 +49,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
       .catch(() => setStatus('unavailable'));
   }, []);
 
+  const beginGoogleUpgrade = useCallback(async (idToken: string) => {
+    const result = await beginGoogleAccountUpgrade(idToken);
+
+    if (result.status === 'linked') {
+      setUser(result.user);
+    }
+
+    return result;
+  }, []);
+
+  const confirmGoogleSwitch = useCallback(async (confirmationToken: string) => {
+    const switchedUser = await confirmGoogleAccountSwitch(confirmationToken);
+    setUser(switchedUser);
+    return switchedUser;
+  }, []);
+
   const value = useMemo(
-    () => ({ retry: initialize, status, user }),
-    [initialize, status, user],
+    () => ({
+      beginGoogleAccountUpgrade: beginGoogleUpgrade,
+      confirmGoogleAccountSwitch: confirmGoogleSwitch,
+      retry: initialize,
+      status,
+      user,
+    }),
+    [beginGoogleUpgrade, confirmGoogleSwitch, initialize, status, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -5,6 +5,38 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-15 — Neutral application identifiers selected
+
+- Timestamp: 2026-10-15.
+- Result: Android and iOS configuration now consistently use
+  `com.foodroulette.app`; the earlier personal-name identifier was removed.
+- Validation: repository search and Expo public/prebuild configuration checks
+  confirm the new identifiers. Local Web/iOS OAuth IDs now pass format checks;
+  an x86_64 Android debug build with Nitro Google Sign-In succeeds in 2m21s
+  when Node is placed explicitly on Gradle's PATH. Its debug certificate still
+  matches the registered SHA-1. WSL ADB device discovery remains unavailable.
+- Next intended action: amend the unpushed Google-upgrade commit, then publish
+  and merge after GitHub authentication is restored.
+
+### 2026-10-15 — Google account-upgrade UI implemented and verified
+
+- Timestamp: 2026-10-15.
+- Result: implementation and available local/native validation complete.
+- Relevant result summary: created `feature/phase-2-google-account-upgrade`,
+  integrated the modern native Google Credential Manager/Google Sign-In SDK,
+  added the official sign-in control, preserved guest state on cancel/conflict
+  and added explicit confirmation before activating an existing Google account.
+- Security: the App neither persists nor logs provider tokens; only the stable
+  conflict code and well-formed opaque confirmation token can cross the generic
+  API error boundary. All visible failures use product-safe Spanish messages.
+- Validation: a reproducible install, format, lint, strict typecheck, 17
+  suites/96 tests, Expo configuration/dependency checks, Android Hermes export
+  and a full Gradle debug compile pass. The critical audit threshold passes;
+  native iOS remains unavailable on Linux. Generated Android validation output
+  is preserved outside the repository under `/tmp`.
+- Next intended action: publish and merge the dependent App PR after the API PR
+  passes CI and integrates into `experimental`.
+
 ### 2026-10-15 — Expo SDK 57 patch compatibility restored
 
 - Timestamp: 2026-10-15.

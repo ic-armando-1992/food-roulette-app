@@ -40,6 +40,12 @@ export function readEnvironment(
 
   return {
     ...readApiBaseUrl(values.EXPO_PUBLIC_API_BASE_URL),
+    googleIosClientId: readGoogleClientId(
+      values.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    ),
+    googleWebClientId: readGoogleClientId(
+      values.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    ),
     telemetryErrorOutboxTtlDays:
       Number.isInteger(ttl) &&
       ttl >= ttlConfig.minimum &&
@@ -49,8 +55,21 @@ export function readEnvironment(
   };
 }
 
+function readGoogleClientId(value: string | undefined): string | null {
+  const clientId = value?.trim();
+
+  return clientId &&
+    /^[A-Za-z0-9._-]+\.apps\.googleusercontent\.com$/.test(clientId)
+    ? clientId
+    : null;
+}
+
 export const env = readEnvironment({
   EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
+  EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID:
+    process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID:
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   EXPO_PUBLIC_TELEMETRY_ERROR_OUTBOX_TTL_DAYS:
     process.env.EXPO_PUBLIC_TELEMETRY_ERROR_OUTBOX_TTL_DAYS,
 });
