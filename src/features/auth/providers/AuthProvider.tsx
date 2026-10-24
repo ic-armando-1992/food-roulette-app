@@ -118,17 +118,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return result;
   }, []);
 
-  const confirmGoogleSwitch = useCallback(async (confirmationToken: string) => {
-    const generation = operationGeneration.current;
-    const switchedUser = await confirmGoogleAccountSwitch(confirmationToken);
+  const confirmGoogleSwitch = useCallback(
+    async (confirmationToken: string) => {
+      const generation = operationGeneration.current;
+      const switchedUser = await confirmGoogleAccountSwitch(confirmationToken);
 
-    if (generation === operationGeneration.current) {
-      setUser(switchedUser);
-      setSessionRecoveryNoticeVisible(false);
-    }
+      if (generation === operationGeneration.current) {
+        queryClient.clear();
+        setUser(switchedUser);
+        setSessionRecoveryNoticeVisible(false);
+      }
 
-    return switchedUser;
-  }, []);
+      return switchedUser;
+    },
+    [queryClient],
+  );
 
   const logout = useCallback(async () => {
     const generation = ++operationGeneration.current;

@@ -324,6 +324,34 @@ continues with Phase 3 Favorites. Apple authentication and native iOS validation
 remain required before an iOS release and are intentionally deferred to Phase
 13.
 
+## ❤️ Favorites
+
+Phase 3 uses the authenticated API as the source of truth. The selected
+restaurant card has one accessible heart action backed by the cheap
+`GET /v1/favorites/:restaurantId` status route and idempotent `PUT`/`DELETE`
+mutations. It does not load the full Favorites collection just to render one
+heart.
+
+The home header opens `/favorites`. That screen uses TanStack Query for the
+server collection and renders loading, empty, error and unavailable-place
+states plus live name/address, optional photo with author/source attribution,
+Maps and removal actions. It applies a one-minute in-memory stale window to
+avoid unnecessary provider-backed list refreshes. Favorites are not copied into
+Zustand, AsyncStorage or SQLite.
+
+The API stores only the user/restaurant association and resolves current
+provider presentation when the list opens. The app therefore does not persist
+Google display content and always renders the returned Google/photo attribution.
+Logout, invalid-session recovery and confirmed switches to an existing account
+clear private Query state so one owner's Favorites cannot remain visible for
+another owner. If Google already belongs to another owner, the confirmation
+dialog explicitly offers to combine the guest's Favorites into that account;
+the API performs the deduplicated transfer transactionally before switching.
+
+Phase 3 automated checks and its physical Android flow were accepted on
+2026-10-24. Branch publication, review and merge remain before integration into
+`experimental`.
+
 The API remains authoritative for user identity and future owned data. The app
 does not persist an authoritative balance, provider subject or provider profile.
 
@@ -345,7 +373,9 @@ files or provider tokens.
 If Google already belongs to another internal user, the app keeps the guest
 session active and displays a confirmation dialog. Cancel performs no account
 operation. Confirm exchanges the server-issued one-time token for a new session
-on the existing Google account; the app never merges user data itself.
+on the existing Google account and instructs the API to merge guest Favorites
+without duplicates. The app never merges or rewrites owned data itself, and no
+other data category is transferred implicitly.
 
 ### Android physical-device development build
 

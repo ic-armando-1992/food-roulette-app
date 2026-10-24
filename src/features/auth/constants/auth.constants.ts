@@ -44,10 +44,10 @@ export const AUTH_LABELS = {
   },
   google: {
     cancel: 'Cancelar',
-    conflictConfirm: 'Cambiar de cuenta',
+    conflictConfirm: 'Combinar y continuar',
     conflictMessage:
-      'Esta cuenta de Google ya está vinculada. Si continúas, usarás esa cuenta. Tus otros datos de invitado no se fusionarán automáticamente.',
-    conflictTitle: 'Esta cuenta ya existe',
+      'Esta cuenta de Google ya existe. Si continúas, tus favoritos de invitado se agregarán a esa cuenta sin duplicarse.',
+    conflictTitle: '¿Combinar tus favoritos?',
     continue: 'Continuar con Google',
     errorTitle: 'No pudimos iniciar sesión',
     opening: 'Abriendo Google…',

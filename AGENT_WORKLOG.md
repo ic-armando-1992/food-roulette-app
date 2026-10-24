@@ -5,6 +5,42 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-23 — Phase 3 Favorites App implemented and verified
+
+- Timestamp: 2026-10-23.
+- Branch: created `feature/phase-3-favorites-app` from synchronized
+  `experimental`.
+- Result: added the authenticated Favorites client contract, result-card heart
+  toggle, home navigation entry and a dedicated live Favorites screen with
+  loading, empty, error, unavailable-place, Maps, photo-attribution and removal
+  states.
+- Ownership/privacy: TanStack Query owns Favorites server state; status checks
+  use the cheap database endpoint and the full provider-hydrated list loads only
+  on its screen. Confirmed account switches now clear private query cache before
+  showing the target account.
+- Account-transfer follow-up (2026-10-24): when Google already belongs to an
+  existing owner, the confirmation dialog now explicitly offers to combine the
+  guest's Favorites without duplicates. Cancel leaves the guest unchanged; the
+  API performs the transactional transfer before the App activates the target
+  account and clears private Query state.
+- Physical validation (2026-10-24): the developer installed the development
+  build on a replacement Android phone and accepted the complete Favorites
+  flow, including the updated guest-to-existing-Google behavior.
+- Telemetry/security: added the shared `restaurant_favorited` event and updated
+  direct Zod to 4.6.7, removing its direct high-severity advisory. Remaining
+  Expo/Tailwind transitive advisories require breaking upgrades; the configured
+  critical threshold passes.
+- Validation: format, lint, strict typecheck, all 23 suites/144 tests, Expo
+  dependency validation, Android Hermes export, critical audit and whitespace
+  checks pass.
+- History: rotated the oldest logging-validation entry into
+  `docs/agent-logs/2026-08-mobile-context-foundation.md`; no history was deleted
+  and this rolling log remains at 50 entries.
+- Blocker: no implementation or device blocker; publication/review remain
+  before integration. Native iOS remains Phase 13.
+- Next intended action: publish both authorized feature branches, open PRs into
+  `experimental` and verify CI before requesting merge approval.
+
 ### 2026-10-23 — Phase 2 Android scope closed; Phase 3 authorized
 
 - Timestamp: 2026-10-23.
@@ -925,13 +961,3 @@ Rolling log of recent meaningful activity. Archive older entries under
   environment-limited.
 - Next intended action: scaffold Expo Router + TypeScript while preserving the
   existing documentation changes.
-
-### 2026-08-17 — Logging-strategy diff validation passed
-
-- Timestamp: 2026-08-17.
-- Command/action: ran final Git whitespace validation for both repositories.
-- Result: success.
-- Relevant result summary: no whitespace errors were reported.
-- Current phase/status: persistent-context preparation complete.
-- Blocker: none.
-- Next intended action: await explicit authorization for future work.
