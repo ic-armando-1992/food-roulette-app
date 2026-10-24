@@ -312,10 +312,17 @@ Current progression:
 secure guest bootstrap / restore
 → roulette
 → Google upgrade with explicit existing-account confirmation
-→ Apple upgrade (remaining Phase 2 increment)
+→ favorites and later owned product data
+→ Apple upgrade + native iOS validation (Phase 13 release readiness)
 → later sync/share/account ownership
 → Facebook optional later
 ```
+
+The Android-targeted Phase 2 identity/authentication scope closed on
+2026-10-23 after automated and physical-device validation. Product development
+continues with Phase 3 Favorites. Apple authentication and native iOS validation
+remain required before an iOS release and are intentionally deferred to Phase
+13.
 
 The API remains authoritative for user identity and future owned data. The app
 does not persist an authoritative balance, provider subject or provider profile.

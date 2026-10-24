@@ -3,14 +3,11 @@
 ## Current phase
 
 Roadmap Phases 0 and 1 and the Android-targeted Phase 2 guest/Google account
-path are integrated into `experimental`. Google upgrade, verified profile,
-account-entry UX and session persistence/logout are merged. The integrated
-discovery flow keeps the roulette rotating continuously for the longer of two
-seconds or the recommendation request, then decelerates before revealing the
-outcome. The home roulette is directly interactive by tap or a deliberate
-one-finger circular gesture and reuses the same guarded recommendation flow as
-the button. Sign in with Apple remains before the iOS release when applicable;
-Phase 3 has not started.
+path are complete in `experimental`. Automated and physical Android validation,
+including the API-backed interactive roulette, were accepted on 2026-10-23.
+Phase 3 Favorites is now authorized and active at its first vertical-slice
+boundary; no Favorites product code has been added yet. Sign in with Apple and
+all native iOS validation are deferred to Phase 13 before an iOS release.
 
 ## Current branch
 
@@ -75,11 +72,10 @@ request-action lock on that physical device.
 
 ## Active blocker(s)
 
-No local Android implementation blocker. The continuous spinner, API-backed
-flow, direct touch/circular gesture and request-action lock are physically
-validated. App PR #9 passed CI and is merged into `experimental`, including the
-required same-SDK Expo patch alignment. Sign in with Apple and native iOS
-validation remain before the iOS release.
+No blocker for Phase 3 implementation. Phase 2 Android behavior is merged and
+physically validated. Production hardening remains in Phases 12/13; Sign in
+with Apple and native iOS validation are explicit Phase 13 release gates rather
+than blockers for Favorites.
 
 ## Important current decisions
 
@@ -108,9 +104,13 @@ validation remain before the iOS release.
   while scrolling.
 - No secondary authentication request may begin from discovery while a
   recommendation spin is active; purely visual loading UI remains noninteractive.
-- Apple upgrade and Phase 2 closeout remain; Phase 3 has not started.
+- Phase 2 is closed for Android. Apple authentication and native iOS validation
+  move together in Phase 13 before an iOS release.
+- Phase 3 starts with owner-scoped idempotent favorite persistence, then a
+  result-card heart action and a basic Favorites screen. It does not absorb spin
+  history or check-in behavior from later phases.
 
 ## Next intended action
 
-Perform the final cross-repository Phase 2 closeout. Do not begin Phase 3
-automatically.
+Begin the Phase 3 Favorites vertical slice against the existing stable user ID:
+integrate the API favorite contract first, then the App heart/list experience.
