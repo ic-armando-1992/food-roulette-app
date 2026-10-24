@@ -38,12 +38,22 @@ Rolling log of recent meaningful activity. Archive older entries under
   the push because that alias's personal SSH key is not loaded. The only loaded
   general key is not accepted by GitHub and both local GitHub CLI tokens are
   invalid; no code was exported.
+- Publication: after the developer loaded the personal key and renewed GitHub
+  CLI through the official device flow, published the branch and opened App PR
+  #9 against `experimental` without uploading any SSH key.
+- CI remediation: the first PR run failed only at Expo dependency validation
+  because the SDK 57 compatibility metadata advanced. Updated Expo to 57.0.31,
+  Expo Location to 57.0.22 and Expo Router to 57.0.29; no major SDK or product
+  behavior changed.
+- Patch validation: format, lint, strict typecheck, all 21 suites/138 tests,
+  Expo dependency validation, Android Hermes export and the critical audit
+  threshold pass. Existing moderate/high transitive advisories require breaking
+  Expo/Tailwind changes and were not force-upgraded.
 - History: rotated the oldest remaining context-foundation entry into
   `docs/agent-logs/2026-08-mobile-context-foundation.md`; no history was
   deleted and this rolling log remains at 50 entries.
-- Next intended action: after the developer unlocks the configured personal SSH
-  key or renews GitHub CLI authentication, publish the focused branch, integrate
-  it into `experimental` and record final Phase 2 closeout.
+- Next intended action: push the patch-alignment commit to PR #9, wait for green
+  CI, merge it into `experimental` and record final Phase 2 closeout.
 
 ### 2026-10-23 — Current Phase 2 documentation synchronized
 

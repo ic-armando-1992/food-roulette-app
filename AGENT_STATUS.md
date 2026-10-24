@@ -18,7 +18,7 @@ Phase 3 has not started.
 
 ## Current environment status
 
-Expo SDK 57.0.30, React Native 0.86.3 and Node.js 20.20.2 are active. Format,
+Expo SDK 57.0.31, React Native 0.86.3 and Node.js 20.20.2 are active. Format,
 lint and strict typecheck pass; all 21 suites/138 tests and an Android Hermes
 export pass. The configured Google first-link flow previously passed on a Pixel
 emulator, and the account/session work passed an ARM64 Android development
@@ -77,10 +77,10 @@ request-action lock on that physical device.
 
 No local Android implementation blocker. The continuous spinner, API-backed
 flow, direct touch/circular gesture and request-action lock are physically
-validated and committed on `feature/roulette-interaction`. Publication is
-authorized but blocked because the configured personal SSH key is not loaded
-and the local GitHub CLI tokens are invalid. Sign in with Apple and native iOS
-validation remain before the iOS release.
+validated and committed on `feature/roulette-interaction`. App PR #9 is open;
+its initial CI run exposed only Expo patch-metadata drift, and the required
+same-SDK dependency patches are locally validated for the next run. Sign in
+with Apple and native iOS validation remain before the iOS release.
 
 ## Important current decisions
 
@@ -113,7 +113,6 @@ validation remain before the iOS release.
 
 ## Next intended action
 
-After the developer loads the configured personal SSH key or renews GitHub CLI
-authentication, publish `feature/roulette-interaction`, open/merge its PR into
-`experimental`, then perform the final cross-repository Phase 2 closeout. Do not
-begin Phase 3 automatically.
+Push the validated Expo patch alignment to App PR #9, wait for green CI and
+merge it into `experimental`, then perform the final cross-repository Phase 2
+closeout. Do not begin Phase 3 automatically.
