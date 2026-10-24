@@ -4,6 +4,9 @@ export const DISCOVERY_LABELS = {
       `Cargando foto de ${restaurantName}`,
     photo: (restaurantName: string) => `Foto de ${restaurantName}`,
     rouletteIdle: 'Ruleta de comida',
+    rouletteSpinAction: 'Girar la ruleta',
+    rouletteSpinHint:
+      'Toca la ruleta o gírala con un dedo para buscar un restaurante',
     rouletteSpinning: 'Ruleta girando',
     searchProgress: 'Buscando un restaurante cercano',
     settings: 'Abrir ajustes de la aplicación',
@@ -72,7 +75,7 @@ export const DISCOVERY_LABELS = {
   },
   home: {
     locationRequired: 'Necesitamos tu ubicación para buscar cerca de ti.',
-    subtitle: 'Deja que el azar decida por ti.',
+    subtitle: 'Toca o gira la ruleta y deja que el azar decida.',
     title: '¿Qué vamos a\ncomer? 🍴',
   },
   hours: {

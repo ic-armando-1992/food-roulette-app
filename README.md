@@ -343,45 +343,106 @@ on the existing Google account; the app never merges user data itself.
 ### Android physical-device development build
 
 Google Sign-In does not work in Expo Go. Use the existing local native build;
-this repository does not currently have an EAS build profile.
+this repository does not currently have an EAS build profile. The development
+build and API-backed roulette flow were validated on a physical SM-S948B on
+2026-10-23.
 
-1. Connect the phone through USB, enable USB debugging, accept the computer and
-   verify it is visible:
+Connect the phone through USB, enable USB debugging, accept the computer and
+verify it is visible:
 
-   ```bash
-   adb devices -l
-   ```
+```bash
+adb devices -l
+```
 
-2. Put the computer and phone on the same network. In `.env`, use the
-   computer's LAN address, never `localhost` or `10.0.2.2`:
+Build/install the native development client initially and again after changing
+config plugins or native dependencies:
 
-   ```env
-   EXPO_PUBLIC_API_BASE_URL=http://<IP_LAN_DE_TU_PC>:3000
-   ```
+```bash
+cd /home/armando/projects/food-roulette/food-roulette-app
+PATH=/home/armando/.nvm/versions/node/v20.20.2/bin:$PATH npm run android -- --device
+```
 
-3. Start the API. It already listens on `0.0.0.0`; allow inbound TCP 3000 in
-   the host firewall. With WSL2 NAT, expose the WSL port from an Administrator
-   PowerShell before using the Windows LAN address:
+Do not pass `--clear` to `expo run:android`; cache clearing belongs to
+`expo start`.
 
-   ```powershell
-   $WslIp = ((wsl hostname -I).Trim() -split '\s+')[0]
-   netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=3000 connectaddress=$WslIp connectport=3000
-   New-NetFirewallRule -DisplayName "Food Roulette API 3000" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow
-   ```
+#### USB-forwarded development
 
-   ```bash
-   cd /home/armando/projects/food-roulette/food-roulette-api
-   PATH=/home/armando/.nvm/versions/node/v20.20.2/bin:$PATH npm run start:dev
-   ```
+This is the simplest path while the phone remains connected. Configure the App
+API URL as:
 
-4. Confirm from the phone browser that
-   `http://<IP_LAN_DE_TU_PC>:3000/health` responds, then compile, install and
-   open the development build on the selected device:
+```env
+EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3000
+```
 
-   ```bash
-   cd /home/armando/projects/food-roulette/food-roulette-app
-   PATH=/home/armando/.nvm/versions/node/v20.20.2/bin:$PATH npm run android -- --device
-   ```
+Start the API in one WSL terminal:
+
+```bash
+cd /home/armando/projects/food-roulette/food-roulette-api
+docker compose up -d postgres
+PATH=/home/armando/.nvm/versions/node/v20.20.2/bin:$PATH npm run start:dev
+```
+
+Forward both services and start Metro in another terminal:
+
+```bash
+cd /home/armando/projects/food-roulette/food-roulette-app
+adb reverse tcp:3000 tcp:3000
+adb reverse tcp:8081 tcp:8081
+PATH=/home/armando/.nvm/versions/node/v20.20.2/bin:$PATH npm start -- --dev-client --localhost
+```
+
+Keep Metro running. If the installed development client retains an old server
+URL and opens blank, reconnect it explicitly:
+
+```bash
+adb shell am start \
+  -a android.intent.action.VIEW \
+  -d 'exp+food-roulette://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081'
+```
+
+`http://127.0.0.1:3000/health` must respond from the phone. A blank browser page
+at `http://127.0.0.1:8081/` is not an App test; Metro's diagnostic endpoint is
+`http://127.0.0.1:8081/status` and should return `packager-status:running`.
+
+#### LAN development
+
+For a wireless/LAN setup, put the computer and phone on the same network and
+configure the Windows LAN IPv4 address, never `localhost` or `10.0.2.2`:
+
+```env
+EXPO_PUBLIC_API_BASE_URL=http://<IP_LAN_DE_TU_PC>:3000
+```
+
+With WSL2 NAT, expose both WSL ports from an Administrator PowerShell and allow
+them through the Windows firewall. Refresh these mappings after the WSL address
+changes:
+
+```powershell
+$WslIp = ((wsl hostname -I).Trim() -split '\s+')[0]
+netsh interface portproxy delete v4tov4 listenaddress=0.0.0.0 listenport=3000
+netsh interface portproxy delete v4tov4 listenaddress=0.0.0.0 listenport=8081
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=3000 connectaddress=$WslIp connectport=3000
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=8081 connectaddress=$WslIp connectport=8081
+if (-not (Get-NetFirewallRule -DisplayName "Food Roulette API 3000" -ErrorAction SilentlyContinue)) {
+  New-NetFirewallRule -DisplayName "Food Roulette API 3000" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow
+}
+if (-not (Get-NetFirewallRule -DisplayName "Food Roulette Metro 8081" -ErrorAction SilentlyContinue)) {
+  New-NetFirewallRule -DisplayName "Food Roulette Metro 8081" -Direction Inbound -Protocol TCP -LocalPort 8081 -Action Allow
+}
+```
+
+Start Metro while advertising the Windows LAN address:
+
+```bash
+cd /home/armando/projects/food-roulette/food-roulette-app
+REACT_NATIVE_PACKAGER_HOSTNAME=<IP_LAN_DE_TU_PC> \
+  PATH=/home/armando/.nvm/versions/node/v20.20.2/bin:$PATH \
+  npm start -- --dev-client --lan
+```
+
+Confirm from the phone that both
+`http://<IP_LAN_DE_TU_PC>:3000/health` and
+`http://<IP_LAN_DE_TU_PC>:8081/status` respond before opening the App.
 
 The Android application ID is `com.foodroulette.app`. This repository's debug
 APK is signed with SHA-1

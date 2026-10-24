@@ -8,9 +8,13 @@ import {
   DISCOVERY_TIMING,
 } from '@/features/discovery/constants/discovery.constants';
 import { DISCOVERY_LABELS } from '@/features/discovery/constants/discovery.labels';
+import { RouletteLoadingStateProps } from '@/features/discovery/types/discovery.types';
 import colors from '@/theme/colors.json';
 
-export function RouletteLoadingState() {
+export function RouletteLoadingState({
+  onSpinStopped,
+  spinPhase,
+}: RouletteLoadingStateProps) {
   const [activeMessage, setActiveMessage] = useState(0);
 
   useEffect(() => {
@@ -40,7 +44,7 @@ export function RouletteLoadingState() {
       </Text>
 
       <View className="my-7">
-        <RouletteSpinner />
+        <RouletteSpinner onStopped={onSpinStopped} phase={spinPhase} />
       </View>
 
       <View className="min-h-20 w-full max-w-sm items-center justify-center rounded-3xl bg-surface px-5">

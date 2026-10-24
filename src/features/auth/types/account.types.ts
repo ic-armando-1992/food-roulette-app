@@ -1,4 +1,5 @@
 export type AccountButtonProps = {
+  disabled?: boolean;
   onPress: () => void;
 };
 

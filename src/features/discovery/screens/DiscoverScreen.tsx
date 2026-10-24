@@ -1,5 +1,5 @@
 import { AlertCircle, Settings, Sparkles } from 'lucide-react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,8 +23,10 @@ import {
   BrandHeaderProps,
   DiscoveryView,
   ErrorMessageProps,
+  RouletteSpinPhase,
 } from '@/features/discovery/types/discovery.types';
 import { getRecommendationErrorMessage } from '@/features/discovery/utils/getRecommendationErrorMessage';
+import { waitForMinimumSpinDuration } from '@/features/discovery/utils/waitForMinimumSpinDuration';
 import {
   createTelemetryId,
   getTelemetryErrorProperties,
@@ -34,6 +36,7 @@ import { TELEMETRY_EVENTS } from '@/core/telemetry/constants/telemetry.constants
 import colors from '@/theme/colors.json';
 
 function BrandHeader({
+  actionsDisabled = false,
   onAccountPress,
   showSettings = false,
 }: BrandHeaderProps) {
@@ -43,14 +46,18 @@ function BrandHeader({
         {DISCOVERY_LABELS.brandName}
       </Text>
       <View className="flex-row items-center gap-2">
-        <AccountButton onPress={onAccountPress} />
+        <AccountButton disabled={actionsDisabled} onPress={onAccountPress} />
         {showSettings ? (
           <Pressable
             accessibilityLabel={DISCOVERY_LABELS.accessibility.settings}
             accessibilityRole="button"
+            accessibilityState={{ disabled: actionsDisabled }}
             className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
+            disabled={actionsDisabled}
             onPress={() => void Linking.openSettings()}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            style={({ pressed }) => ({
+              opacity: actionsDisabled ? 0.5 : pressed ? 0.7 : 1,
+            })}
           >
             <Settings color={colors.foreground} size={21} />
           </Pressable>
@@ -90,9 +97,25 @@ export function DiscoverScreen() {
     useState<RandomRecommendationResponse | null>(null);
   const [displayedSpinId, setDisplayedSpinId] = useState<string | null>(null);
   const [view, setView] = useState<DiscoveryView>('home');
-  const [isSpinning, setIsSpinning] = useState(false);
+  const [roulettePhase, setRoulettePhase] = useState<RouletteSpinPhase>('idle');
   const requestedLocationOnMount = useRef(false);
   const requestInFlight = useRef(false);
+  const stopAnimationResolver = useRef<(() => void) | null>(null);
+  const isSpinning = roulettePhase !== 'idle';
+
+  const waitForRouletteToStop = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        stopAnimationResolver.current = resolve;
+        setRoulettePhase('stopping');
+      }),
+    [],
+  );
+
+  const handleRouletteStopped = useCallback(() => {
+    stopAnimationResolver.current?.();
+    stopAnimationResolver.current = null;
+  }, []);
 
   useEffect(() => {
     if (!requestedLocationOnMount.current) {
@@ -114,8 +137,10 @@ export function DiscoverScreen() {
     const exclusions = isReroll ? excludedRestaurantIds : [];
     const spinId = createTelemetryId();
     const startedAt = Date.now();
+    const minimumSpinDuration = waitForMinimumSpinDuration();
     requestInFlight.current = true;
-    setIsSpinning(true);
+    setAccountVisible(false);
+    setRoulettePhase('spinning');
     recommendation.reset();
 
     if (!isReroll) {
@@ -144,6 +169,8 @@ export function DiscoverScreen() {
         excludedRestaurantIds: exclusions.length > 0 ? exclusions : undefined,
       });
 
+      await minimumSpinDuration;
+
       if (result) {
         trackProductEvent(TELEMETRY_EVENTS.spinResult, {
           spinId,
@@ -156,10 +183,12 @@ export function DiscoverScreen() {
         setExcludedRestaurantIds([...exclusions, result.recommendation.id]);
         setDisplayedResult(result);
         setDisplayedSpinId(spinId);
-        setView('result');
         googleLinkPrompt.recordSuccessfulSpin();
+        await waitForRouletteToStop();
+        setView('result');
       }
     } catch (error) {
+      await minimumSpinDuration;
       trackProductEvent(TELEMETRY_EVENTS.spinFailed, {
         spinId,
         reroll: isReroll,
@@ -168,9 +197,10 @@ export function DiscoverScreen() {
         ...getTelemetryErrorProperties(error),
       });
       // TanStack Query retains the normalized error for the visible error state.
+      await waitForRouletteToStop();
     } finally {
       requestInFlight.current = false;
-      setIsSpinning(false);
+      setRoulettePhase('idle');
     }
   };
 
@@ -189,9 +219,15 @@ export function DiscoverScreen() {
   if (isSpinning) {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
-        <BrandHeader onAccountPress={() => setAccountVisible(true)} />
+        <BrandHeader
+          actionsDisabled
+          onAccountPress={() => setAccountVisible(true)}
+        />
         <ScrollView contentContainerClassName="flex-grow" scrollEnabled={false}>
-          <RouletteLoadingState />
+          <RouletteLoadingState
+            onSpinStopped={handleRouletteStopped}
+            spinPhase={roulettePhase === 'stopping' ? 'stopping' : 'spinning'}
+          />
         </ScrollView>
         <AccountModal
           onClose={() => setAccountVisible(false)}
@@ -260,7 +296,11 @@ export function DiscoverScreen() {
         </View>
 
         <View className="my-5 items-center">
-          <RouletteSpinner spinning={false} />
+          <RouletteSpinner
+            disabled={!locationReady}
+            onSpinRequest={() => void requestRecommendation(false)}
+            phase="idle"
+          />
         </View>
 
         <Button

@@ -10,6 +10,9 @@ export const DISCOVERY_TIMING = {
   lastKnownLocationMaxAgeMs: 2 * 60 * 1_000,
   locationRequestTimeoutMs: 12_000,
   loadingMessageIntervalMs: 850,
+  minimumSpinDurationMs: 2_000,
+  rouletteStopDurationMs: 700,
+  rouletteStopRotationDegrees: 180,
   rouletteSpinDurationMs: 1_100,
 } as const;
 
@@ -138,6 +141,9 @@ export const CATEGORY_PRESENTATIONS: Record<string, CategoryPresentation> = {
 };
 
 export const ROULETTE_APPEARANCE = {
+  gestureActivationDegrees: 60,
+  gestureMinimumRadiusRatio: 0.24,
+  gestureResetDurationMs: 180,
   defaultSize: 292,
   foodIcons: ['🍕', '🌮', '🍣', '🍔', '🍜', '🥗', '🍗', '🥩'],
   hubRadiusRatio: 0.17,
