@@ -121,15 +121,24 @@ describe('GoogleSignInAction', () => {
     await waitFor(() => expect(alert).toHaveBeenCalled());
 
     const buttons = alert.mock.calls[0]?.[2];
+    expect(alert).toHaveBeenCalledWith(
+      '¿Combinar tus favoritos?',
+      'Esta cuenta de Google ya existe. Si continúas, tus favoritos de invitado se agregarán a esa cuenta sin duplicarse.',
+      expect.any(Array),
+      { cancelable: true },
+    );
     expect(buttons?.[0]).toEqual(
       expect.objectContaining({ text: 'Cancelar', style: 'cancel' }),
+    );
+    expect(buttons?.[1]).toEqual(
+      expect.objectContaining({ text: 'Combinar y continuar' }),
     );
     buttons?.[0]?.onPress?.();
     expect(confirmGoogleAccountSwitch).not.toHaveBeenCalled();
     expect(jest.mocked(useAuth).mock.results[0]?.value.user).toBe(guestUser);
   });
 
-  it('switches and reports completion only after conflict confirmation', async () => {
+  it('merges favorites and reports completion only after confirmation', async () => {
     beginGoogleAccountUpgrade.mockResolvedValue({
       status: 'conflict',
       confirmationToken: 'C'.repeat(43),

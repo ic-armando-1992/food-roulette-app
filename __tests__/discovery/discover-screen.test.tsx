@@ -24,8 +24,13 @@ const mockReset = jest.fn();
 const mockTrackProductEvent = jest.fn();
 const mockWaitForMinimumSpinDuration = jest.fn();
 const mockStopSpin = jest.fn<void, [() => void]>();
+const mockPush = jest.fn();
 let mockLocationState: unknown;
 let mockRecommendationState: Record<string, unknown>;
+
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
 
 jest.mock('@/features/discovery/hooks/useCurrentLocation', () => ({
   useCurrentLocation: () => ({
@@ -53,6 +58,16 @@ jest.mock('@/features/auth/components/GoogleSignInAction', () => ({
 
 jest.mock('@/features/discovery/hooks/useRandomRecommendation', () => ({
   useRandomRecommendation: () => mockRecommendationState,
+}));
+
+jest.mock('@/features/favorites/hooks/useFavoriteStatus', () => ({
+  useFavoriteStatus: () => ({
+    error: null,
+    isFavorite: false,
+    isPending: false,
+    isReady: true,
+    toggle: jest.fn(),
+  }),
 }));
 
 jest.mock('@/features/discovery/utils/waitForMinimumSpinDuration', () => ({
@@ -188,6 +203,14 @@ describe('DiscoverScreen', () => {
     expect(
       screen.queryByText('¿Quieres conservar tu progreso?'),
     ).not.toBeOnTheScreen();
+  });
+
+  it('opens the Favorites screen from the home header', () => {
+    render(<DiscoverScreen />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Abrir favoritos' }));
+
+    expect(mockPush).toHaveBeenCalledWith('/favorites');
   });
 
   it('shows a dismissible recovery notice after an invalid account session', () => {

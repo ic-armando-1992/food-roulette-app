@@ -98,7 +98,6 @@ export function GoogleSignInAction({
           },
           {
             onPress: () => void confirmSwitch(result.confirmationToken),
-            style: 'destructive',
             text: AUTH_LABELS.google.conflictConfirm,
           },
         ],

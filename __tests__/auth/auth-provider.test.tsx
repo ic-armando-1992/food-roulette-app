@@ -56,7 +56,7 @@ function renderAuthProvider() {
     defaultOptions: { queries: { retry: false } },
   });
 
-  return render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Text>Ruleta disponible</Text>
@@ -64,6 +64,8 @@ function renderAuthProvider() {
       </AuthProvider>
     </QueryClientProvider>,
   );
+
+  return { ...view, queryClient };
 }
 
 describe('AuthProvider', () => {
@@ -155,7 +157,10 @@ describe('AuthProvider', () => {
       user: guest,
     });
     jest.mocked(confirmGoogleAccountSwitch).mockResolvedValue(target);
-    renderAuthProvider();
+    const { queryClient } = renderAuthProvider();
+    queryClient.setQueryData(['favorites', 'list'], {
+      favorites: [{ id: 'private-guest-favorite' }],
+    });
     await waitFor(() =>
       expect(screen.getByText(`${guest.id}:true`)).toBeOnTheScreen(),
     );
@@ -165,6 +170,7 @@ describe('AuthProvider', () => {
     await waitFor(() =>
       expect(screen.getByText(`${target.id}:false`)).toBeOnTheScreen(),
     );
+    expect(queryClient.getQueryData(['favorites', 'list'])).toBeUndefined();
   });
 
   it('switches locally to a new guest after logout', async () => {

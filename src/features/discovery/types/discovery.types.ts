@@ -9,6 +9,8 @@ export type DiscoveryView = 'home' | 'result';
 export type BrandHeaderProps = {
   actionsDisabled?: boolean;
   onAccountPress: () => void;
+  onFavoritesPress?: () => void;
+  showFavorites?: boolean;
   showSettings?: boolean;
 };
 export type ErrorMessageProps = { message: string };
@@ -68,8 +70,13 @@ export type OpeningHoursSectionProps = {
 };
 
 export type RecommendationCardProps = {
+  favoriteDisabled: boolean;
+  favoriteError: boolean;
+  isFavorite: boolean;
+  isFavoritePending: boolean;
   isRerolling: boolean;
   onBack: () => void;
+  onFavoriteToggle: () => void;
   onMapsOpened: () => void;
   onReroll: () => void;
   result: RandomRecommendationResponse;

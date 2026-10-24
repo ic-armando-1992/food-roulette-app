@@ -3,6 +3,7 @@ export const TELEMETRY_EVENTS = {
   locationDenied: 'location_denied',
   locationGranted: 'location_granted',
   mapsOpened: 'restaurant_maps_opened',
+  restaurantFavorited: 'restaurant_favorited',
   spinAgain: 'roulette_spin_again',
   spinFailed: 'roulette_spin_failed',
   spinResult: 'roulette_spin_result',

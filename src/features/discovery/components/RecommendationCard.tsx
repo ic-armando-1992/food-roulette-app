@@ -22,6 +22,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { getApiResourceUrl } from '@/api/client';
 import { Button } from '@/components/ui/Button';
 import { OpeningHoursSection } from '@/features/discovery/components/OpeningHoursSection';
+import { FavoriteToggleButton } from '@/features/favorites/components/FavoriteToggleButton';
 import {
   CATEGORY_PRESENTATIONS,
   DISCOVERY_RESULT_LAYOUT,
@@ -83,8 +84,13 @@ function PhotoAttribution({ attribution }: PhotoAttributionProps) {
 }
 
 export function RecommendationCard({
+  favoriteDisabled,
+  favoriteError,
+  isFavorite,
+  isFavoritePending,
   isRerolling,
   onBack,
+  onFavoriteToggle,
   onMapsOpened,
   onReroll,
   result,
@@ -186,6 +192,15 @@ export function RecommendationCard({
         >
           <ArrowLeft color={colors.foreground} size={24} />
         </Pressable>
+        <View className="absolute right-5 top-5">
+          <FavoriteToggleButton
+            disabled={favoriteDisabled}
+            isFavorite={isFavorite}
+            isPending={isFavoritePending}
+            onPress={onFavoriteToggle}
+            restaurantName={recommendation.name}
+          />
+        </View>
       </View>
 
       <View className="-mt-5 gap-4 rounded-t-3xl bg-background px-5 pb-10 pt-6">
@@ -279,6 +294,11 @@ export function RecommendationCard({
             onPress={onReroll}
             variant="secondary"
           />
+          {favoriteError ? (
+            <Text accessibilityRole="alert" className="text-sm text-error">
+              {DISCOVERY_LABELS.error.favoriteUnavailable}
+            </Text>
+          ) : null}
         </View>
 
         <View className="gap-1 border-t border-border pt-4">

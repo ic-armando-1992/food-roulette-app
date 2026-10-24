@@ -25,8 +25,13 @@ describe('RecommendationCard', () => {
   it('presents a complete closed result, attribution and Maps action', async () => {
     render(
       <RecommendationCard
+        favoriteDisabled={false}
+        favoriteError={false}
+        isFavorite={false}
+        isFavoritePending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
         result={buildRecommendation()}
@@ -61,8 +66,13 @@ describe('RecommendationCard', () => {
   it('expands the weekly schedule for a closed restaurant', () => {
     render(
       <RecommendationCard
+        favoriteDisabled={false}
+        favoriteError={false}
+        isFavorite={false}
+        isFavoritePending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
         result={buildRecommendation()}
@@ -74,11 +84,62 @@ describe('RecommendationCard', () => {
     expect(screen.getByText('lunes: 9:00–22:00')).toBeOnTheScreen();
   });
 
+  it('uses one accessible heart action for saving and removing', () => {
+    const onFavoriteToggle = jest.fn();
+    const { rerender } = render(
+      <RecommendationCard
+        favoriteDisabled={false}
+        favoriteError={false}
+        isFavorite={false}
+        isFavoritePending={false}
+        isRerolling={false}
+        onBack={jest.fn()}
+        onFavoriteToggle={onFavoriteToggle}
+        onMapsOpened={onMapsOpened}
+        onReroll={jest.fn()}
+        result={buildRecommendation()}
+      />,
+    );
+
+    fireEvent.press(
+      screen.getByRole('button', {
+        name: 'Guardar La Cocina de Prueba en favoritos',
+      }),
+    );
+    expect(onFavoriteToggle).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <RecommendationCard
+        favoriteDisabled={false}
+        favoriteError={false}
+        isFavorite
+        isFavoritePending={false}
+        isRerolling={false}
+        onBack={jest.fn()}
+        onFavoriteToggle={onFavoriteToggle}
+        onMapsOpened={onMapsOpened}
+        onReroll={jest.fn()}
+        result={buildRecommendation()}
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Quitar La Cocina de Prueba de favoritos',
+      }),
+    ).toBeOnTheScreen();
+  });
+
   it('keeps the result usable when optional metadata is missing', () => {
     render(
       <RecommendationCard
+        favoriteDisabled={false}
+        favoriteError={false}
+        isFavorite={false}
+        isFavoritePending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
         result={buildRecommendation({
@@ -116,8 +177,13 @@ describe('RecommendationCard', () => {
 
     render(
       <RecommendationCard
+        favoriteDisabled={false}
+        favoriteError={false}
+        isFavorite={false}
+        isFavoritePending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
         result={buildRecommendation()}

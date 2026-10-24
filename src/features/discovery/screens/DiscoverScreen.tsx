@@ -1,4 +1,5 @@
-import { AlertCircle, Settings, Sparkles } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { AlertCircle, Heart, Settings, Sparkles } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +11,7 @@ import { AccountModal } from '@/features/auth/components/AccountModal';
 import { GoogleLinkPrompt } from '@/features/auth/components/GoogleLinkPrompt';
 import { SessionRecoveryNotice } from '@/features/auth/components/SessionRecoveryNotice';
 import { useGoogleLinkPrompt } from '@/features/auth/hooks/useGoogleLinkPrompt';
+import { useFavoriteStatus } from '@/features/favorites/hooks/useFavoriteStatus';
 import { LocationPill } from '@/features/discovery/components/LocationPill';
 import { RadiusSelector } from '@/features/discovery/components/RadiusSelector';
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
@@ -38,6 +40,8 @@ import colors from '@/theme/colors.json';
 function BrandHeader({
   actionsDisabled = false,
   onAccountPress,
+  onFavoritesPress,
+  showFavorites = false,
   showSettings = false,
 }: BrandHeaderProps) {
   return (
@@ -46,6 +50,21 @@ function BrandHeader({
         {DISCOVERY_LABELS.brandName}
       </Text>
       <View className="flex-row items-center gap-2">
+        {showFavorites && onFavoritesPress ? (
+          <Pressable
+            accessibilityLabel={DISCOVERY_LABELS.accessibility.favorites}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: actionsDisabled }}
+            className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
+            disabled={actionsDisabled}
+            onPress={onFavoritesPress}
+            style={({ pressed }) => ({
+              opacity: actionsDisabled ? 0.5 : pressed ? 0.7 : 1,
+            })}
+          >
+            <Heart color={colors.foreground} size={21} />
+          </Pressable>
+        ) : null}
         <AccountButton disabled={actionsDisabled} onPress={onAccountPress} />
         {showSettings ? (
           <Pressable
@@ -84,6 +103,7 @@ function ErrorMessage({ message }: ErrorMessageProps) {
 }
 
 export function DiscoverScreen() {
+  const router = useRouter();
   const radiusMeters = useDiscoveryStore((state) => state.radiusMeters);
   const setRadiusMeters = useDiscoveryStore((state) => state.setRadiusMeters);
   const { requestLocation, state: locationState } = useCurrentLocation();
@@ -102,6 +122,11 @@ export function DiscoverScreen() {
   const requestInFlight = useRef(false);
   const stopAnimationResolver = useRef<(() => void) | null>(null);
   const isSpinning = roulettePhase !== 'idle';
+  const favorite = useFavoriteStatus(
+    view === 'result' && !isSpinning
+      ? (displayedResult?.recommendation.id ?? '')
+      : '',
+  );
 
   const waitForRouletteToStop = useCallback(
     () =>
@@ -248,6 +273,10 @@ export function DiscoverScreen() {
             />
           ) : null}
           <RecommendationCard
+            favoriteDisabled={!favorite.isReady}
+            favoriteError={Boolean(favorite.error)}
+            isFavorite={favorite.isFavorite}
+            isFavoritePending={favorite.isPending}
             isRerolling={isSpinning}
             onBack={() => {
               recommendation.reset();
@@ -261,6 +290,7 @@ export function DiscoverScreen() {
                 });
               }
             }}
+            onFavoriteToggle={() => favorite.toggle()}
             onReroll={() => void requestRecommendation(true)}
             result={displayedResult}
           />
@@ -276,6 +306,8 @@ export function DiscoverScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <BrandHeader
         onAccountPress={() => setAccountVisible(true)}
+        onFavoritesPress={() => router.push('/favorites')}
+        showFavorites
         showSettings
       />
       <SessionRecoveryNotice />
