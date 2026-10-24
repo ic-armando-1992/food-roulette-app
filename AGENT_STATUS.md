@@ -4,17 +4,17 @@
 
 Roadmap Phases 0 and 1 and the Android-targeted Phase 2 guest/Google account
 path are integrated into `experimental`. Google upgrade, verified profile,
-account-entry UX and session persistence/logout are merged. A local discovery
-UX refinement keeps the roulette rotating continuously for the longer of two
+account-entry UX and session persistence/logout are merged. The integrated
+discovery flow keeps the roulette rotating continuously for the longer of two
 seconds or the recommendation request, then decelerates before revealing the
-outcome. The home roulette is now directly interactive by tap or a deliberate
+outcome. The home roulette is directly interactive by tap or a deliberate
 one-finger circular gesture and reuses the same guarded recommendation flow as
 the button. Sign in with Apple remains before the iOS release when applicable;
 Phase 3 has not started.
 
 ## Current branch
 
-`feature/roulette-interaction` (based on `experimental`).
+`experimental` after App PR #9.
 
 ## Current environment status
 
@@ -77,10 +77,9 @@ request-action lock on that physical device.
 
 No local Android implementation blocker. The continuous spinner, API-backed
 flow, direct touch/circular gesture and request-action lock are physically
-validated and committed on `feature/roulette-interaction`. App PR #9 is open;
-its initial CI run exposed only Expo patch-metadata drift, and the required
-same-SDK dependency patches are locally validated for the next run. Sign in
-with Apple and native iOS validation remain before the iOS release.
+validated. App PR #9 passed CI and is merged into `experimental`, including the
+required same-SDK Expo patch alignment. Sign in with Apple and native iOS
+validation remain before the iOS release.
 
 ## Important current decisions
 
@@ -113,6 +112,5 @@ with Apple and native iOS validation remain before the iOS release.
 
 ## Next intended action
 
-Push the validated Expo patch alignment to App PR #9, wait for green CI and
-merge it into `experimental`, then perform the final cross-repository Phase 2
-closeout. Do not begin Phase 3 automatically.
+Perform the final cross-repository Phase 2 closeout. Do not begin Phase 3
+automatically.
