@@ -49,11 +49,14 @@ Rolling log of recent meaningful activity. Archive older entries under
   Expo dependency validation, Android Hermes export and the critical audit
   threshold pass. Existing moderate/high transitive advisories require breaking
   Expo/Tailwind changes and were not force-upgraded.
+- Merge: the corrected CI run passed every workflow step and App PR #9 merged
+  into `experimental` as `4fc3a18`; the roulette refinement is no longer local
+  or pending publication.
 - History: rotated the oldest remaining context-foundation entry into
   `docs/agent-logs/2026-08-mobile-context-foundation.md`; no history was
   deleted and this rolling log remains at 50 entries.
-- Next intended action: push the patch-alignment commit to PR #9, wait for green
-  CI, merge it into `experimental` and record final Phase 2 closeout.
+- Next intended action: perform the final cross-repository Phase 2 closeout;
+  do not start Phase 3 automatically.
 
 ### 2026-10-23 — Current Phase 2 documentation synchronized
 
