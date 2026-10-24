@@ -5,6 +5,25 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-23 — Phase 2 Android scope closed; Phase 3 authorized
+
+- Timestamp: 2026-10-23.
+- Closeout: the developer accepted the complete automated and physical Android
+  validation covering guest/Google identity, session recovery/logout, verified
+  profile data, recommendation flow and the final interactive roulette.
+- Scope decision: Phase 2 is closed for the Android target. Sign in with Apple
+  and all native iOS work are intentionally deferred together to Phase 13 before
+  an iOS release; production infrastructure gates remain in Phases 12/13.
+- Phase transition: Phase 3 Favorites is authorized. Its first vertical slice
+  will reuse the stable internal user owner, add idempotent API persistence,
+  then expose a result-card heart action and basic Favorites screen; history and
+  check-in remain later phases.
+- History: rotated the oldest remaining context-foundation entry into
+  `docs/agent-logs/2026-08-mobile-context-foundation.md`; no history was deleted
+  and the rolling log remains at 50 entries.
+- Next intended action: implement the API Favorites contract/persistence before
+  wiring the App heart and Favorites list.
+
 ### 2026-10-23 — Home roulette made directly interactive
 
 - Timestamp: 2026-10-23.
@@ -916,16 +935,3 @@ Rolling log of recent meaningful activity. Archive older entries under
 - Current phase/status: persistent-context preparation complete.
 - Blocker: none.
 - Next intended action: await explicit authorization for future work.
-
-### 2026-08-17 — Status/log structure verified
-
-- Timestamp: 2026-08-17.
-- Command/action: verified status headings, rolling-log size, instruction rules,
-  Master Prompt consistency and both Git states.
-- Result: success.
-- Relevant result summary: mobile status contains exactly the seven permitted
-  sections and the rolling log has five prior meaningful entries, so no archive
-  is needed yet.
-- Current phase/status: mobile context prepared; implementation not started.
-- Blocker: none.
-- Next intended action: run final whitespace validation, then stop.
