@@ -73,6 +73,19 @@ describe('account UI', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
+  it('blocks account actions when explicitly disabled', () => {
+    const onPress = jest.fn();
+    render(<AccountButton disabled onPress={onPress} />);
+
+    const accountButton = screen.getByRole('button', {
+      name: 'Abrir cuenta de invitado',
+    });
+    expect(accountButton).toBeDisabled();
+    fireEvent.press(accountButton);
+
+    expect(onPress).not.toHaveBeenCalled();
+  });
+
   it('opens the guest account content with Google Sign-In', () => {
     render(<AccountModal onClose={jest.fn()} visible />);
 

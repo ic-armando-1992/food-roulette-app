@@ -7,6 +7,7 @@ import {
 export type DiscoveryView = 'home' | 'result';
 
 export type BrandHeaderProps = {
+  actionsDisabled?: boolean;
   onAccountPress: () => void;
   showSettings?: boolean;
 };
@@ -46,7 +47,19 @@ export type RadiusSelectorProps = {
   onChange: (radiusMeters: number) => void;
 };
 
-export type RouletteSpinnerProps = { spinning?: boolean };
+export type RouletteSpinPhase = 'idle' | 'spinning' | 'stopping';
+
+export type RouletteSpinnerProps = {
+  disabled?: boolean;
+  onSpinRequest?: () => void;
+  onStopped?: () => void;
+  phase?: RouletteSpinPhase;
+};
+
+export type RouletteLoadingStateProps = {
+  onSpinStopped: () => void;
+  spinPhase: Exclude<RouletteSpinPhase, 'idle'>;
+};
 
 export type CartesianPoint = { x: number; y: number };
 

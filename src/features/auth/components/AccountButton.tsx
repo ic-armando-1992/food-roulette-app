@@ -6,9 +6,13 @@ import { useAuth } from '@/features/auth/providers/AuthProvider';
 import { AccountButtonProps } from '@/features/auth/types/account.types';
 import colors from '@/theme/colors.json';
 
-export function AccountButton({ onPress }: AccountButtonProps) {
+export function AccountButton({
+  disabled = false,
+  onPress,
+}: AccountButtonProps) {
   const { status, user } = useAuth();
   const isGoogleUser = status === 'ready' && user?.isGuest === false;
+  const isDisabled = disabled || status !== 'ready' || !user;
   const accessibilityLabel = isGoogleUser
     ? AUTH_LABELS.account.accessibility.openGoogle
     : AUTH_LABELS.account.accessibility.openGuest;
@@ -17,14 +21,15 @@ export function AccountButton({ onPress }: AccountButtonProps) {
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled }}
       className={`h-11 w-11 items-center justify-center overflow-hidden rounded-full border ${
         isGoogleUser ? 'border-primary bg-primary' : 'border-primary bg-surface'
       }`}
-      disabled={status !== 'ready' || !user}
+      disabled={isDisabled}
       hitSlop={8}
       onPress={onPress}
       style={({ pressed }) => ({
-        opacity: status !== 'ready' || !user ? 0.5 : pressed ? 0.72 : 1,
+        opacity: isDisabled ? 0.5 : pressed ? 0.72 : 1,
       })}
       testID="account-button"
     >

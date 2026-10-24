@@ -22,6 +22,8 @@ const mockRecommend = jest.fn<
 >();
 const mockReset = jest.fn();
 const mockTrackProductEvent = jest.fn();
+const mockWaitForMinimumSpinDuration = jest.fn();
+const mockStopSpin = jest.fn<void, [() => void]>();
 let mockLocationState: unknown;
 let mockRecommendationState: Record<string, unknown>;
 
@@ -53,6 +55,10 @@ jest.mock('@/features/discovery/hooks/useRandomRecommendation', () => ({
   useRandomRecommendation: () => mockRecommendationState,
 }));
 
+jest.mock('@/features/discovery/utils/waitForMinimumSpinDuration', () => ({
+  waitForMinimumSpinDuration: () => mockWaitForMinimumSpinDuration(),
+}));
+
 jest.mock('@/core/telemetry/telemetry', () => ({
   createTelemetryId: () => '33333333-3333-4333-8333-333333333333',
   getTelemetryErrorProperties: () => ({ errorKind: 'network' }),
@@ -60,18 +66,48 @@ jest.mock('@/core/telemetry/telemetry', () => ({
 }));
 
 jest.mock('@/features/discovery/components/RouletteSpinner', () => {
-  const { Text: NativeText } = require('react-native');
+  const { Pressable, Text: NativeText } = require('react-native');
 
-  return { RouletteSpinner: () => <NativeText>Ruleta lista</NativeText> };
+  return {
+    RouletteSpinner: ({
+      disabled,
+      onSpinRequest,
+    }: {
+      disabled?: boolean;
+      onSpinRequest?: () => void;
+    }) => (
+      <Pressable
+        accessibilityLabel="Girar la ruleta"
+        accessibilityRole="button"
+        disabled={disabled}
+        onPress={onSpinRequest}
+      >
+        <NativeText>Ruleta lista</NativeText>
+      </Pressable>
+    ),
+  };
 });
 
 jest.mock('@/features/discovery/components/RouletteLoadingState', () => {
+  const { useEffect } = require('react');
   const { Text: NativeText } = require('react-native');
 
   return {
-    RouletteLoadingState: () => (
-      <NativeText>Buscando un restaurante cercano</NativeText>
-    ),
+    RouletteLoadingState: ({
+      onSpinStopped,
+      spinPhase,
+    }: {
+      onSpinStopped: () => void;
+      spinPhase: 'spinning' | 'stopping';
+    }) => {
+      useEffect(() => {
+        if (spinPhase === 'stopping') {
+          mockStopSpin(onSpinStopped);
+        }
+      }, [onSpinStopped, spinPhase]);
+
+      return <NativeText>Buscando un restaurante cercano</NativeText>;
+    },
   };
 });
 
@@ -104,6 +140,8 @@ jest.mock('@/features/discovery/components/RecommendationCard', () => {
 describe('DiscoverScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockWaitForMinimumSpinDuration.mockResolvedValue(undefined);
+    mockStopSpin.mockImplementation((onStopped) => onStopped());
     mockLocationState = {
       status: 'granted',
       coordinates: {
@@ -235,6 +273,23 @@ describe('DiscoverScreen', () => {
     );
   });
 
+  it('starts the same recommendation flow by pressing the roulette', async () => {
+    mockRecommend.mockResolvedValue(buildRecommendation());
+
+    render(<DiscoverScreen />);
+    fireEvent.press(screen.getByRole('button', { name: 'Girar la ruleta' }));
+
+    await screen.findByText('La Cocina de Prueba');
+    expect(mockRecommend).toHaveBeenCalledTimes(1);
+    expect(mockRecommend).toHaveBeenCalledWith({
+      allowInternational: false,
+      countryCode: 'MX',
+      latitude: 32.5149,
+      longitude: -117.0382,
+      radiusMeters: 3_000,
+    });
+  });
+
   it('shows one contextual Google invitation after the first successful spin', async () => {
     mockRecommend.mockResolvedValue(buildRecommendation());
 
@@ -327,10 +382,41 @@ describe('DiscoverScreen', () => {
     expect(
       screen.getByText('Buscando un restaurante cercano'),
     ).toBeOnTheScreen();
+    expect(
+      screen.getByRole('button', { name: 'Abrir cuenta de invitado' }),
+    ).toBeDisabled();
     expect(screen.queryByText('La Cocina de Prueba')).not.toBeOnTheScreen();
     expect(mockRecommend).toHaveBeenCalledTimes(1);
 
     resolveRequest?.(buildRecommendation());
+    await screen.findByText('La Cocina de Prueba');
+  });
+
+  it('waits for the minimum duration and stop animation before revealing a fast result', async () => {
+    let finishMinimumSpin: (() => void) | undefined;
+    let finishStopAnimation: (() => void) | undefined;
+    mockWaitForMinimumSpinDuration.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishMinimumSpin = resolve;
+        }),
+    );
+    mockStopSpin.mockImplementation((onStopped) => {
+      finishStopAnimation = onStopped;
+    });
+    mockRecommend.mockResolvedValue(buildRecommendation());
+
+    render(<DiscoverScreen />);
+    fireEvent.press(screen.getByText('GIRAR RULETA'));
+
+    await waitFor(() => expect(mockRecommend).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText('La Cocina de Prueba')).not.toBeOnTheScreen();
+
+    finishMinimumSpin?.();
+    await waitFor(() => expect(mockStopSpin).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText('La Cocina de Prueba')).not.toBeOnTheScreen();
+
+    finishStopAnimation?.();
     await screen.findByText('La Cocina de Prueba');
   });
 

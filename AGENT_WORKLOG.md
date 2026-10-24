@@ -5,6 +5,104 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-23 — Home roulette made directly interactive
+
+- Timestamp: 2026-10-23.
+- Branch: created `feature/roulette-interaction` from the dirty local
+  `experimental` state so the previously validated continuous-spinner work and
+  this interaction refinement can be published together without continuing on
+  the integration branch.
+- Result: the idle home roulette now invokes the same initial recommendation
+  flow as `GIRAR RULETA` when tapped or deliberately rotated with one finger.
+  Existing in-flight guards prevent duplicate backend requests.
+- Gesture safety: circular input requires at least 60 degrees of accumulated
+  movement outside the hub; center-crossing drags and short movements are
+  ignored/reset to reduce accidental activation during scrolling. The control
+  stays disabled until location is ready and exposes an accessible button label
+  and hint.
+- Request lock: beginning a spin closes the account sheet, disables the account
+  entry during both continuous rotation and final stopping, and therefore
+  prevents Google Sign-In/logout requests while the recommendation is active.
+  The synchronous in-flight guard continues rejecting duplicate wheel/button
+  events before React can render the loading state.
+- Validation: Prettier, lint, strict typecheck, all 21 suites/138 tests and a
+  fresh Android Hermes export pass. Coverage includes tap, disabled state,
+  circular activation, center rejection, account-action blocking and the shared
+  API request path.
+- Physical validation: the developer confirmed the tap/circular interaction,
+  continuous/final-stop animation and request-action lock on the connected
+  Android phone.
+- Local closeout: created the focused feature commit after a clean staged-diff
+  audit. The developer explicitly authorized publication to
+  `git@github-personal:ic-armando-1992/food-roulette-app.git`, but GitHub rejected
+  the push because that alias's personal SSH key is not loaded. The only loaded
+  general key is not accepted by GitHub and both local GitHub CLI tokens are
+  invalid; no code was exported.
+- Publication: after the developer loaded the personal key and renewed GitHub
+  CLI through the official device flow, published the branch and opened App PR
+  #9 against `experimental` without uploading any SSH key.
+- CI remediation: the first PR run failed only at Expo dependency validation
+  because the SDK 57 compatibility metadata advanced. Updated Expo to 57.0.31,
+  Expo Location to 57.0.22 and Expo Router to 57.0.29; no major SDK or product
+  behavior changed.
+- Patch validation: format, lint, strict typecheck, all 21 suites/138 tests,
+  Expo dependency validation, Android Hermes export and the critical audit
+  threshold pass. Existing moderate/high transitive advisories require breaking
+  Expo/Tailwind changes and were not force-upgraded.
+- History: rotated the oldest remaining context-foundation entry into
+  `docs/agent-logs/2026-08-mobile-context-foundation.md`; no history was
+  deleted and this rolling log remains at 50 entries.
+- Next intended action: push the patch-alignment commit to PR #9, wait for green
+  CI, merge it into `experimental` and record final Phase 2 closeout.
+
+### 2026-10-23 — Current Phase 2 documentation synchronized
+
+- Timestamp: 2026-10-23.
+- Result: reconciled current-state documentation with merged Git history:
+  Google upgrade, verified profile, account UX and persistence/logout are all
+  integrated into `experimental` through App PRs #5--#8 and API PR #6.
+- Physical validation: recorded the developer-confirmed Android
+  development-device validation, including the API-backed roulette and latest
+  spinner transition; historical entries retain their original point-in-time
+  results.
+- History: rotated four older context-foundation entries into
+  `docs/agent-logs/2026-08-mobile-context-foundation.md`; no history was deleted
+  and the rolling log now contains 50 entries.
+- Workflow: the validated roulette refinement remains local and uncommitted on
+  `experimental`; it should move to a focused fix branch before publication.
+- Remaining scope: Sign in with Apple/native iOS and final Phase 2 closeout
+  remain; Phase 3 has not started.
+- Next intended action: create the focused fix branch and publish the roulette
+  refinement when requested, then record final Phase 2 closeout.
+
+### 2026-10-23 — Roulette made continuous with coordinated final stop
+
+- Timestamp: 2026-10-23.
+- Result: changed the loading roulette from an ease-out animation that visibly
+  paused at every 1.1-second revolution to a seamless linear infinite loop.
+- Request coordination: the wheel now spins for the longer of the existing
+  two-second minimum or the backend request, then performs a dedicated 700 ms
+  ease-out stop before revealing either the result or error state.
+- Validation: Prettier, lint, strict typecheck, Git whitespace checks, all 20
+  suites/129 tests and a fresh Android Hermes export pass.
+- Next intended action: confirm the animation through hot reload on the
+  connected physical Android phone, then commit/publish when requested.
+
+### 2026-10-20 — Minimum roulette spin duration added
+
+- Timestamp: 2026-10-20.
+- Result: initial spins and rerolls now keep the roulette loading animation
+  visible for a minimum of two seconds, including fast success and failure
+  responses.
+- Performance: the minimum-duration timer starts in parallel with the API
+  request, so requests that already take two seconds or longer receive no
+  additional artificial wait.
+- Validation: Prettier, lint, strict typecheck and 20 suites/128 tests pass;
+  focused coverage verifies both fast-request/minimum-animation and slow-request
+  behavior.
+- Next intended action: manually confirm the cadence on an emulator or physical
+  device, then commit/publish when requested.
+
 ### 2026-10-15 — Authentication persistence and logout finalized locally
 
 - Timestamp: 2026-10-15.
@@ -828,71 +926,3 @@ Rolling log of recent meaningful activity. Archive older entries under
 - Current phase/status: mobile context prepared; implementation not started.
 - Blocker: none.
 - Next intended action: run final whitespace validation, then stop.
-
-### 2026-08-17 — Mobile worklog converted to rolling history
-
-- Timestamp: 2026-08-17.
-- Command/action: removed duplicated current-state content from this log after
-  creating `AGENT_STATUS.md`.
-- Result: success.
-- Relevant result summary: this file now contains recent activity only; no
-  archive is needed yet because it has fewer than 30 meaningful actions.
-- Current phase/status: mobile context prepared; implementation not started.
-- Blocker: none.
-- Next intended action: await explicit authorization; backend remains priority.
-
-### 2026-08-17 — Status-first logging instructions established
-
-- Timestamp: 2026-08-17.
-- Command/action: updated both repositories and the Master Prompt with concise
-  status, rolling-log and archive-rotation rules; created both status files.
-- Result: success.
-- Relevant result summary: `AGENT_STATUS.md` is now the primary current-state
-  source and trivial read-only commands no longer require log entries.
-- Current phase/status: mobile context prepared; worklog simplification pending.
-- Blocker: none.
-- Next intended action: simplify this recent log after API rotation.
-
-### 2026-08-17 — Combined logging-strategy patch failed
-
-- Timestamp: 2026-08-17.
-- Command/action: attempted a combined cross-repository instruction/status/log
-  rotation patch.
-- Result: failed.
-- Relevant result summary: patch was rejected atomically because it targeted
-  the API worklog for both move and recreation; no files changed.
-- Current phase/status: mobile context remains prepared under the old logging
-  rule until split patches complete.
-- Blocker: none.
-- Next intended action: apply instruction and status changes separately, then
-  rotate the API log and simplify this rolling log.
-
-### 2026-08-17 — Persistent mobile context verified
-
-- Timestamp: 2026-08-17.
-- Command/action: checked instruction/worklog line counts, searched for the
-  required worklog/API-boundary/vertical-slice rules, inspected final Git status
-  and ran `git diff --check`.
-- Result: success.
-- Relevant result summary: both files exist; persistent logging and API-only
-  provider rules are present; whitespace check passes; expected uncommitted
-  changes are `AGENTS.md` and new `AGENT_WORKLOG.md` only.
-- Current phase/status: mobile context preparation complete; no Expo scaffold,
-  dependencies, product code or branch changes were created.
-- Blocker: none.
-- Next intended action: stop mobile work and return to `food-roulette-api`.
-
-### 2026-08-17 — Initial repository inspection and context preparation
-
-- Timestamp: 2026-08-17.
-- Command/action: read `AGENTS.md` completely; checked worklog presence, Git
-  status/history/branches/remotes and repository files; then added the required
-  persistent-worklog rules and API-only provider boundary.
-- Result: success.
-- Relevant result summary: repository has existing history and is already on
-  clean `experimental`; `main` and `experimental` exist locally/remotely;
-  `AGENT_WORKLOG.md` was missing and is now initialized; no branch change or
-  product scaffolding occurred.
-- Current phase/status: mobile repository context preparation in progress.
-- Blocker: none.
-- Next intended action: verify both instruction files and final Git status.
