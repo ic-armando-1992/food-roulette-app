@@ -39,8 +39,10 @@ Rolling log of recent meaningful activity. Archive older entries under
 - Physical acceptance: the developer confirmed on Android that the integrated
   notifications, adjusted durations, fixed-above-scroll placement and renamed
   `REGISTRAR VISITA` action work correctly.
-- Pending closeout: create the focused App commit, publish the Phase 5 API and
-  final App branches, verify CI and merge both into `experimental`.
+- Publication and closeout: committed the notification refactor as `1e50a8f`;
+  API PR #10 and App PR #14 passed CI and merged into `experimental` as
+  `0365051` and `2cbe6b7`. Phase 5 is complete; only this synchronized
+  documentation closeout remains before Phase 6 Achievements planning.
 
 ### 2026-10-25 — Phase 4 merged and Phase 5 verified Check-In implemented
 
@@ -71,8 +73,9 @@ Rolling log of recent meaningful activity. Archive older entries under
   meaningful move. Check-In also synchronizes its fresh reading back to the
   shared location label. The App now passes 27 suites/160 tests, lint, strict
   typecheck, formatting and Android Hermes export.
-- Pending acceptance: validate Check-In and `Mis visitas` on the physical
-  Android device before publishing Phase 5; native iOS remains Phase 13.
+- Closeout: the developer accepted Check-In, `Mis visitas` and the final
+  notification UX on physical Android. API PR #10 and App PR #14 passed CI and
+  merged into `experimental`; native iOS remains Phase 13.
 
 ### 2026-10-24 — Phase 3 integrated and Phase 4 spin foundation implemented
 

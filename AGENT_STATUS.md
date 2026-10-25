@@ -2,17 +2,15 @@
 
 ## Current phase
 
-Roadmap Phases 0--4 are complete in `experimental`; Phase 4 merged through API
-PR #9 and App PR #13 after green CI and accepted physical Android validation.
-Phase 5 Verified Restaurant Check-In is implementation-complete locally. A
-cross-cutting integrated notification refactor is also implementation-complete
-on the App and physically accepted on Android.
+Roadmap Phases 0--5 are complete in `experimental`. Phase 5 Verified Restaurant
+Check-In and the integrated notification refactor passed CI and merged through
+API PR #10 and App PR #14 after accepted physical Android validation.
 Apple authentication and native iOS validation remain deferred to Phase 13.
 
 ## Current branch
 
-`feature/in-app-notifications`, based on the local Phase 5 App branch at
-`2fcd875` after App PR #13 merged into `experimental` as `e333a44`.
+`docs/phase-5-final-closeout`, branched from synchronized `experimental` after
+App PR #14 merged as `2cbe6b7`.
 
 ## Current environment status
 
@@ -72,10 +70,8 @@ host.
 
 ## Active blocker(s)
 
-The Phase 5 API branch and the final App branch remain local: the notification
-changes need their focused commit, then both branches require publication, CI,
-review and merge into `experimental`. Production infrastructure and Apple/native
-iOS work remain Phase 12/13 gates.
+No active blocker remains for Phase 5. Production infrastructure and
+Apple/native iOS work remain Phase 12/13 gates.
 
 ## Important current decisions
 
@@ -100,5 +96,5 @@ iOS work remain Phase 12/13 gates.
 
 ## Next intended action
 
-Create the focused notification commit, publish the Phase 5 API and final App
-branches, verify both CI runs and merge them into `experimental`.
+Merge this documentation closeout, then begin Phase 6 Achievements planning
+from synchronized `experimental`.
