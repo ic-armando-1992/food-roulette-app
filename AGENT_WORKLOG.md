@@ -41,8 +41,9 @@ Rolling log of recent meaningful activity. Archive older entries under
   `REGISTRAR VISITA` action work correctly.
 - Publication and closeout: committed the notification refactor as `1e50a8f`;
   API PR #10 and App PR #14 passed CI and merged into `experimental` as
-  `0365051` and `2cbe6b7`. Phase 5 is complete; only this synchronized
-  documentation closeout remains before Phase 6 Achievements planning.
+  `0365051` and `2cbe6b7`. API documentation PR #11 and App documentation PR
+  #15 also passed CI and merged as `57e771e` and `e2007c8`. Phase 5 is closed
+  and `experimental` is ready for Phase 6 Achievements planning.
 
 ### 2026-10-25 — Phase 4 merged and Phase 5 verified Check-In implemented
 
