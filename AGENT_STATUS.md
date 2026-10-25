@@ -17,7 +17,7 @@ Apple authentication and native iOS validation remain deferred to Phase 13.
 ## Current environment status
 
 Expo SDK 57.0.31, React Native 0.86.3 and Node.js 20.20.2 are active. Format,
-lint, strict typecheck, 25 suites/152 tests and an Android Hermes export pass.
+lint, strict typecheck, 25 suites/156 tests and an Android Hermes export pass.
 The direct Zod dependency is patched to 4.6.7; the critical audit threshold
 passes while known Expo/Tailwind transitive moderate/high advisories still
 require breaking upgrades. Native iOS validation has not run on this Linux/WSL
@@ -54,6 +54,9 @@ host.
   empty/error/loading/unavailable states.
 - Successful verification emits `restaurant_checked_in` and refreshes the Visit
   query. A new spin or reroll resets the prior Check-In result.
+- A temporary API outage no longer leaves account-dependent screens loading
+  forever. Account, Favorites and Visits expose an explicit guest-session retry,
+  while the anonymous roulette remains usable.
 
 ## Active blocker(s)
 

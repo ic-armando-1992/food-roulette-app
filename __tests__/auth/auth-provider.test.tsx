@@ -47,6 +47,9 @@ function AuthState() {
       <Pressable accessibilityRole="button" onPress={() => void auth.logout()}>
         <Text>LOGOUT</Text>
       </Pressable>
+      <Pressable accessibilityRole="button" onPress={() => void auth.retry()}>
+        <Text>RETRY</Text>
+      </Pressable>
     </>
   );
 }
@@ -102,6 +105,32 @@ describe('AuthProvider', () => {
     await waitFor(() =>
       expect(screen.getByText('unavailable')).toBeOnTheScreen(),
     );
+  });
+
+  it('recovers the guest session after a temporary bootstrap failure', async () => {
+    const recoveredGuest = {
+      id: '11111111-1111-4111-8111-111111111111',
+      isGuest: true,
+      displayName: null,
+      avatarUrl: null,
+      createdAt: '2030-01-01T00:00:00.000Z',
+    };
+    jest
+      .mocked(initializeGuestSession)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce({
+        recoveredFromInvalidSession: false,
+        user: recoveredGuest,
+      });
+
+    renderAuthProvider();
+    await screen.findByText('unavailable');
+
+    fireEvent.press(screen.getByText('RETRY'));
+
+    expect(screen.getByText('initializing')).toBeOnTheScreen();
+    await waitFor(() => expect(screen.getByText('ready')).toBeOnTheScreen());
+    expect(screen.getByText(`${recoveredGuest.id}:true`)).toBeOnTheScreen();
   });
 
   it('keeps the guest in context on conflict and marks the same user linked on success', async () => {

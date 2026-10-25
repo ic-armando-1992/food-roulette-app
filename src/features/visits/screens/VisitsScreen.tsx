@@ -22,7 +22,9 @@ export function VisitsScreen() {
   const auth = useAuth();
   const visits = useVisits();
   const items = visits.data?.visits ?? [];
-  const showLoading = auth.status === 'initializing' || visits.isPending;
+  const showLoading =
+    auth.status === 'initializing' ||
+    (auth.status === 'ready' && visits.isPending);
   const showError = auth.status === 'unavailable' || visits.isError;
 
   const retry = () => {

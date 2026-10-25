@@ -26,7 +26,9 @@ export function FavoritesScreen() {
   const favorites = useFavorites();
   const removeFavorite = useRemoveFavorite();
   const items = favorites.data?.favorites ?? [];
-  const showLoading = auth.status === 'initializing' || favorites.isPending;
+  const showLoading =
+    auth.status === 'initializing' ||
+    (auth.status === 'ready' && favorites.isPending);
   const showError =
     auth.status === 'unavailable' ||
     favorites.isError ||

@@ -36,6 +36,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const initialize = useCallback(async () => {
     const generation = ++operationGeneration.current;
+    setStatus('initializing');
 
     try {
       const result = await initializeGuestSession();

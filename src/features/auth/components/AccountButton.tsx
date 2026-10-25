@@ -12,7 +12,7 @@ export function AccountButton({
 }: AccountButtonProps) {
   const { status, user } = useAuth();
   const isGoogleUser = status === 'ready' && user?.isGuest === false;
-  const isDisabled = disabled || status !== 'ready' || !user;
+  const isDisabled = disabled || status === 'initializing';
   const accessibilityLabel = isGoogleUser
     ? AUTH_LABELS.account.accessibility.openGoogle
     : AUTH_LABELS.account.accessibility.openGuest;

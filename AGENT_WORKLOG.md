@@ -21,8 +21,13 @@ Rolling log of recent meaningful activity. Archive older entries under
 - Ownership and telemetry: confirmed account switches now name and transfer
   guest Visits through the API; successful Check-In emits the strict
   `restaurant_checked_in` event and refreshes server state.
-- Validation: format, lint, strict typecheck, all 25 suites/152 tests and an
-  Android Hermes export pass.
+- Initial validation: format, lint, strict typecheck, all 25 suites/152 tests
+  and an Android Hermes export pass.
+- Physical-test correction: a lost USB/API connection could leave guest auth
+  unavailable while the anonymous roulette continued working. Account recovery
+  is now reachable, retry visibly reinitializes the guest session, and Favorites
+  and Visits show recovery instead of an infinite loader. Four regression tests
+  raise the App suite to 25 suites/156 tests; format, lint and typecheck pass.
 - Pending acceptance: validate Check-In and `Mis visitas` on the physical
   Android device before publishing Phase 5; native iOS remains Phase 13.
 

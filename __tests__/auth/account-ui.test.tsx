@@ -95,6 +95,38 @@ describe('account UI', () => {
     ).toBeOnTheScreen();
   });
 
+  it('opens account recovery and retries an unavailable guest session', () => {
+    const retry = jest.fn();
+    jest.mocked(useAuth).mockReturnValue({
+      beginGoogleAccountUpgrade: jest.fn(),
+      confirmGoogleAccountSwitch: jest.fn(),
+      dismissSessionRecoveryNotice: jest.fn(),
+      logout: jest.fn(),
+      retry,
+      sessionRecoveryNoticeVisible: false,
+      status: 'unavailable',
+      user: null,
+    });
+    const onPress = jest.fn();
+    render(
+      <>
+        <AccountButton onPress={onPress} />
+        <AccountModal onClose={jest.fn()} visible />
+      </>,
+    );
+
+    const accountButton = screen.getByRole('button', {
+      name: 'Abrir cuenta de invitado',
+    });
+    expect(accountButton).toBeEnabled();
+    fireEvent.press(accountButton);
+    expect(onPress).toHaveBeenCalledTimes(1);
+
+    fireEvent.press(screen.getByText('RECONECTAR CUENTA'));
+    expect(retry).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Continuar con Google')).not.toBeOnTheScreen();
+  });
+
   it('shows Google account status and an accessible avatar fallback', () => {
     mockAuthUser({ ...guestUser, isGuest: false });
     render(

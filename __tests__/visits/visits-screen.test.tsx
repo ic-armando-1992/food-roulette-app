@@ -106,6 +106,33 @@ describe('VisitsScreen', () => {
     view.unmount();
     queryClient.clear();
   });
+
+  it('shows account recovery instead of loading forever when auth is unavailable', () => {
+    const retry = jest.fn();
+    jest.mocked(useAuth).mockReturnValue({
+      beginGoogleAccountUpgrade: jest.fn(),
+      confirmGoogleAccountSwitch: jest.fn(),
+      dismissSessionRecoveryNotice: jest.fn(),
+      logout: jest.fn(),
+      retry,
+      sessionRecoveryNoticeVisible: false,
+      status: 'unavailable',
+      user: null,
+    });
+    const { queryClient, wrapper } = createWrapper();
+    const view = render(<VisitsScreen />, { wrapper });
+
+    expect(
+      screen.getByText(
+        'No pudimos preparar tu cuenta. Inténtalo de nuevo para ver tus visitas.',
+      ),
+    ).toBeOnTheScreen();
+    fireEvent.press(screen.getByText('INTENTAR DE NUEVO'));
+    expect(retry).toHaveBeenCalledTimes(1);
+
+    view.unmount();
+    queryClient.clear();
+  });
 });
 
 function createWrapper() {

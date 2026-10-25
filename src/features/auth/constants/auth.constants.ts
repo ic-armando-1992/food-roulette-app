@@ -33,6 +33,8 @@ export const AUTH_LABELS = {
       openGoogle: 'Abrir cuenta de Google',
       openGuest: 'Abrir cuenta de invitado',
     },
+    connectionUnavailable:
+      'No pudimos preparar tu cuenta. Reconecta la sesión de invitado antes de iniciar sesión con Google.',
     googleBody:
       'Tu progreso está vinculado y podrás recuperarlo en otro dispositivo.',
     googleTitle: 'Cuenta de Google',
@@ -40,6 +42,7 @@ export const AUTH_LABELS = {
       'Puedes seguir usando la ruleta sin registrarte. Vincula Google para conservar tu progreso al cambiar de dispositivo.',
     guestTitle: 'Cuenta de invitado',
     memberSince: (date: string) => `Cuenta creada el ${date}`,
+    retry: 'RECONECTAR CUENTA',
     title: 'Cuenta',
   },
   google: {
