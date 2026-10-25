@@ -35,6 +35,11 @@ export type ProductEventProperties = {
   roulette_spin_again: { restaurantId: string };
   restaurant_maps_opened: { restaurantId: string; spinId: string };
   restaurant_favorited: { restaurantId: string };
+  restaurant_checked_in: {
+    restaurantId: string;
+    visitId: string;
+    verificationDistanceMeters: number;
+  };
 };
 
 export type ProductEventName = keyof ProductEventProperties;

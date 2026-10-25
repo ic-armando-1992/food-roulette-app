@@ -88,8 +88,12 @@ export function RecommendationCard({
   favoriteError,
   isFavorite,
   isFavoritePending,
+  checkInError,
+  checkInResult,
+  isCheckInPending,
   isRerolling,
   onBack,
+  onCheckIn,
   onFavoriteToggle,
   onMapsOpened,
   onReroll,
@@ -281,6 +285,50 @@ export function RecommendationCard({
           {failedMapsRestaurantId === recommendation.id ? (
             <Text accessibilityRole="alert" className="text-sm text-error">
               {DISCOVERY_LABELS.error.mapsUnavailable}
+            </Text>
+          ) : null}
+          <Button
+            disabled={checkInResult?.status === 'verified'}
+            icon={<MapPin color={colors.foreground} size={19} />}
+            label={
+              checkInResult?.status === 'verified'
+                ? DISCOVERY_LABELS.actions.checkInVerified
+                : isCheckInPending
+                  ? DISCOVERY_LABELS.actions.checkingIn
+                  : DISCOVERY_LABELS.actions.checkIn
+            }
+            loading={isCheckInPending}
+            onPress={onCheckIn}
+            variant="secondary"
+          />
+          {checkInResult?.status === 'verified' ? (
+            <Text className="text-center text-sm font-bold text-success">
+              {DISCOVERY_LABELS.result.checkInVerified}
+            </Text>
+          ) : checkInResult?.status === 'too_far' ? (
+            <View className="gap-1 rounded-2xl bg-surfaceSecondary p-4">
+              <Text className="font-bold text-foreground">
+                {DISCOVERY_LABELS.result.checkInTooFarTitle}
+              </Text>
+              <Text className="text-sm leading-5 text-mutedForeground">
+                {DISCOVERY_LABELS.result.checkInTooFar(
+                  formatDistance(checkInResult.distanceMeters),
+                )}
+              </Text>
+            </View>
+          ) : checkInResult?.status === 'accuracy_too_low' ? (
+            <Text accessibilityRole="alert" className="text-sm text-error">
+              {DISCOVERY_LABELS.result.checkInAccuracyLow(
+                checkInResult.accuracyMeters,
+              )}
+            </Text>
+          ) : checkInError ? (
+            <Text accessibilityRole="alert" className="text-sm text-error">
+              {checkInError === 'permission_denied'
+                ? DISCOVERY_LABELS.error.checkInPermissionDenied
+                : checkInError === 'unavailable'
+                  ? DISCOVERY_LABELS.error.checkInLocationUnavailable
+                  : DISCOVERY_LABELS.error.checkInRequest}
             </Text>
           ) : null}
           <Button

@@ -5,6 +5,27 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-25 — Phase 4 merged and Phase 5 verified Check-In implemented
+
+- Timestamp: 2026-10-25.
+- Phase 4 closeout: API PR #9 and App PR #13 passed CI and merged into
+  `experimental` as `7152066` and `e333a44` after accepted Android validation.
+- Check-In flow: created `feature/phase-5-verified-checkins-app`; the result card
+  requests one fresh foreground high-accuracy location only after the explicit
+  action and renders loading, verified, too-far, poor-accuracy, permission and
+  request-failure states. It never stores or background-tracks coordinates.
+- Visit history: added the `Mis visitas` header action and screen for the 10
+  newest verified visits, including live provider presentation, attribution,
+  Maps, date, verification distance and complete empty/error/loading/unavailable
+  states. Spins and Maps openings never appear in the list.
+- Ownership and telemetry: confirmed account switches now name and transfer
+  guest Visits through the API; successful Check-In emits the strict
+  `restaurant_checked_in` event and refreshes server state.
+- Validation: format, lint, strict typecheck, all 25 suites/152 tests and an
+  Android Hermes export pass.
+- Pending acceptance: validate Check-In and `Mis visitas` on the physical
+  Android device before publishing Phase 5; native iOS remains Phase 13.
+
 ### 2026-10-24 — Phase 3 integrated and Phase 4 spin foundation implemented
 
 - Timestamp: 2026-10-24.

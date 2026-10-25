@@ -2,27 +2,26 @@
 
 ## Current phase
 
-Roadmap Phases 0--3 are complete in `experimental`; Phase 3 merged through API
-PR #8 and App PR #12 after green CI and accepted physical Android validation.
-Phase 4 Spin Activity Foundation is implementation-complete locally on its
-feature branches. Its user-facing spin list was removed by product decision;
-Phase 5 will expose only verified visits. Physical Android validation was
-accepted on 2026-10-25; publication/review remain. Apple authentication and
-native iOS validation remain deferred to Phase 13.
+Roadmap Phases 0--4 are complete in `experimental`; Phase 4 merged through API
+PR #9 and App PR #13 after green CI and accepted physical Android validation.
+Phase 5 Verified Restaurant Check-In is implementation-complete locally on its
+API/App feature branches. Automated API/App validation is green; physical
+Android validation of Check-In and `Mis visitas` remains before publication.
+Apple authentication and native iOS validation remain deferred to Phase 13.
 
 ## Current branch
 
-`feature/phase-4-spin-activity-app`, branched from synchronized `experimental`
-after App PR #12 merged as `5881114`.
+`feature/phase-5-verified-checkins-app`, branched from synchronized
+`experimental` after App PR #13 merged as `e333a44`.
 
 ## Current environment status
 
 Expo SDK 57.0.31, React Native 0.86.3 and Node.js 20.20.2 are active. Format,
-lint, strict typecheck, 23 suites/145 tests, Expo dependency validation and an
-Android Hermes export pass. The direct Zod dependency is patched to 4.6.7; the
-critical audit threshold passes while known Expo/Tailwind transitive
-moderate/high advisories still require breaking upgrades. Native iOS validation
-has not run on this Linux/WSL host.
+lint, strict typecheck, 25 suites/152 tests and an Android Hermes export pass.
+The direct Zod dependency is patched to 4.6.7; the critical audit threshold
+passes while known Expo/Tailwind transitive moderate/high advisories still
+require breaking upgrades. Native iOS validation has not run on this Linux/WSL
+host.
 
 ## Completed milestones
 
@@ -45,14 +44,22 @@ has not run on this Linux/WSL host.
   can associate minimal internal spin activity with its owner.
 - Successful Maps launches update the owner-scoped Spin through the API while
   telemetry remains best-effort; this does not create a visit.
-- The home header no longer exposes roulette history. Phase 5 will introduce
-  `Mis visitas` using only verified check-ins.
+- The home header no longer exposes roulette history; its `Mis visitas` entry
+  uses only verified check-ins.
+- The result card now offers `HACER CHECK-IN`, obtains one fresh foreground
+  high-accuracy location and renders pending, verified, too-far, poor-accuracy,
+  permission and request-failure outcomes without retaining coordinates.
+- The home header opens `Mis visitas`, which renders the 10 newest verified
+  visits with live provider details, date, verification distance, Maps and
+  empty/error/loading/unavailable states.
+- Successful verification emits `restaurant_checked_in` and refreshes the Visit
+  query. A new spin or reroll resets the prior Check-In result.
 
 ## Active blocker(s)
 
-No implementation or device blocker. Publication/review of both Phase 4
-feature branches remain. Production infrastructure and Apple/native iOS work
-remain Phase 12/13 gates.
+Physical Android validation of the Phase 5 Check-In and `Mis visitas` flow
+remains before publishing its API/App branches. Production infrastructure and
+Apple/native iOS work remain Phase 12/13 gates.
 
 ## Important current decisions
 
@@ -66,12 +73,15 @@ remain Phase 12/13 gates.
   internal owner changes.
 - Existing-account confirmation names Favorites and guest progress; cancelling
   preserves the guest unchanged and no later product data is implied.
-- Roulette results and Maps openings are not visits. The future `Mis visitas`
-  screen will show only the 10 newest verified check-ins.
+- Roulette results and Maps openings are not visits. `Mis visitas` shows only
+  the 10 newest verified check-ins.
+- Check-In requests location only after the explicit action, uses a 15-second
+  acquisition timeout and does not persist or background-track coordinates.
 - Apple authentication/native iOS remain Phase 13 release gates, not Phase 3
   blockers.
 
 ## Next intended action
 
-Publish both accepted Phase 4 feature branches, verify CI and merge them into
-`experimental`, then begin Phase 5 from the synchronized integration base.
+Validate Check-In outcomes and the newest-10 `Mis visitas` screen on the
+physical Android device. If accepted, publish both Phase 5 branches, verify CI
+and merge them into `experimental`.

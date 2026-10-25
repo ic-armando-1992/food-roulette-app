@@ -1,5 +1,11 @@
 import { useRouter } from 'expo-router';
-import { AlertCircle, Heart, Settings, Sparkles } from 'lucide-react-native';
+import {
+  AlertCircle,
+  Heart,
+  MapPin,
+  Settings,
+  Sparkles,
+} from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +19,8 @@ import { GoogleLinkPrompt } from '@/features/auth/components/GoogleLinkPrompt';
 import { SessionRecoveryNotice } from '@/features/auth/components/SessionRecoveryNotice';
 import { useGoogleLinkPrompt } from '@/features/auth/hooks/useGoogleLinkPrompt';
 import { useFavoriteStatus } from '@/features/favorites/hooks/useFavoriteStatus';
+import { useCheckIn } from '@/features/visits/hooks/useCheckIn';
+import { CheckInLocationError } from '@/features/visits/services/check-in-location';
 import { LocationPill } from '@/features/discovery/components/LocationPill';
 import { RadiusSelector } from '@/features/discovery/components/RadiusSelector';
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
@@ -42,7 +50,9 @@ function BrandHeader({
   actionsDisabled = false,
   onAccountPress,
   onFavoritesPress,
+  onVisitsPress,
   showFavorites = false,
+  showVisits = false,
   showSettings = false,
 }: BrandHeaderProps) {
   return (
@@ -51,6 +61,21 @@ function BrandHeader({
         {DISCOVERY_LABELS.brandName}
       </Text>
       <View className="flex-row items-center gap-2">
+        {showVisits && onVisitsPress ? (
+          <Pressable
+            accessibilityLabel={DISCOVERY_LABELS.accessibility.visits}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: actionsDisabled }}
+            className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
+            disabled={actionsDisabled}
+            onPress={onVisitsPress}
+            style={({ pressed }) => ({
+              opacity: actionsDisabled ? 0.5 : pressed ? 0.7 : 1,
+            })}
+          >
+            <MapPin color={colors.foreground} size={21} />
+          </Pressable>
+        ) : null}
         {showFavorites && onFavoritesPress ? (
           <Pressable
             accessibilityLabel={DISCOVERY_LABELS.accessibility.favorites}
@@ -109,6 +134,7 @@ export function DiscoverScreen() {
   const setRadiusMeters = useDiscoveryStore((state) => state.setRadiusMeters);
   const { requestLocation, state: locationState } = useCurrentLocation();
   const recommendation = useRandomRecommendation();
+  const checkIn = useCheckIn();
   const googleLinkPrompt = useGoogleLinkPrompt();
   const [accountVisible, setAccountVisible] = useState(false);
   const [excludedRestaurantIds, setExcludedRestaurantIds] = useState<string[]>(
@@ -117,6 +143,7 @@ export function DiscoverScreen() {
   const [displayedResult, setDisplayedResult] =
     useState<RandomRecommendationResponse | null>(null);
   const [displayedSpinId, setDisplayedSpinId] = useState<string | null>(null);
+  const [displayedVisitId, setDisplayedVisitId] = useState<string | null>(null);
   const [view, setView] = useState<DiscoveryView>('home');
   const [roulettePhase, setRoulettePhase] = useState<RouletteSpinPhase>('idle');
   const requestedLocationOnMount = useRef(false);
@@ -168,6 +195,7 @@ export function DiscoverScreen() {
     setAccountVisible(false);
     setRoulettePhase('spinning');
     recommendation.reset();
+    checkIn.reset();
 
     if (!isReroll) {
       setExcludedRestaurantIds([]);
@@ -210,6 +238,7 @@ export function DiscoverScreen() {
         setExcludedRestaurantIds([...exclusions, result.recommendation.id]);
         setDisplayedResult(result);
         setDisplayedSpinId(spinId);
+        setDisplayedVisitId(createTelemetryId());
         googleLinkPrompt.recordSuccessfulSpin();
         await waitForRouletteToStop();
         setView('result');
@@ -275,14 +304,32 @@ export function DiscoverScreen() {
             />
           ) : null}
           <RecommendationCard
+            checkInError={
+              checkIn.error instanceof CheckInLocationError
+                ? checkIn.error.kind
+                : checkIn.isError
+                  ? 'request'
+                  : null
+            }
+            checkInResult={checkIn.data ?? null}
             favoriteDisabled={!favorite.isReady}
             favoriteError={Boolean(favorite.error)}
             isFavorite={favorite.isFavorite}
             isFavoritePending={favorite.isPending}
+            isCheckInPending={checkIn.isPending}
             isRerolling={isSpinning}
             onBack={() => {
               recommendation.reset();
               setView('home');
+            }}
+            onCheckIn={() => {
+              if (displayedSpinId && displayedVisitId) {
+                checkIn.mutate({
+                  visitId: displayedVisitId,
+                  spinId: displayedSpinId,
+                  restaurantId: displayedResult.recommendation.id,
+                });
+              }
             }}
             onMapsOpened={() => {
               if (displayedSpinId) {
@@ -310,7 +357,9 @@ export function DiscoverScreen() {
       <BrandHeader
         onAccountPress={() => setAccountVisible(true)}
         onFavoritesPress={() => router.push('/favorites')}
+        onVisitsPress={() => router.push('/visits')}
         showFavorites
+        showVisits
         showSettings
       />
       <SessionRecoveryNotice />

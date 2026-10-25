@@ -26,8 +26,10 @@ const mockTrackProductEvent = jest.fn();
 const mockWaitForMinimumSpinDuration = jest.fn();
 const mockStopSpin = jest.fn<void, [() => void]>();
 const mockPush = jest.fn();
+const mockCheckInMutate = jest.fn();
 let mockLocationState: unknown;
 let mockRecommendationState: Record<string, unknown>;
+let mockCheckInState: Record<string, unknown>;
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
@@ -69,6 +71,10 @@ jest.mock('@/features/favorites/hooks/useFavoriteStatus', () => ({
     isReady: true,
     toggle: jest.fn(),
   }),
+}));
+
+jest.mock('@/features/visits/hooks/useCheckIn', () => ({
+  useCheckIn: () => mockCheckInState,
 }));
 
 jest.mock('@/api/endpoints/spins.api', () => ({
@@ -137,11 +143,13 @@ jest.mock('@/features/discovery/components/RecommendationCard', () => {
   return {
     RecommendationCard: ({
       onBack,
+      onCheckIn,
       onMapsOpened,
       onReroll,
       result,
     }: {
       onBack: () => void;
+      onCheckIn: () => void;
       onMapsOpened: () => void;
       onReroll: () => void;
       result: RandomRecommendationResponse;
@@ -156,6 +164,9 @@ jest.mock('@/features/discovery/components/RecommendationCard', () => {
         </Pressable>
         <Pressable accessibilityRole="button" onPress={onMapsOpened}>
           <NativeText>ABRIR EN MAPAS</NativeText>
+        </Pressable>
+        <Pressable accessibilityRole="button" onPress={onCheckIn}>
+          <NativeText>HACER CHECK-IN</NativeText>
         </Pressable>
       </View>
     ),
@@ -182,6 +193,14 @@ describe('DiscoverScreen', () => {
       isPending: false,
       recommend: mockRecommend,
       reset: mockReset,
+    };
+    mockCheckInState = {
+      data: null,
+      error: null,
+      isError: false,
+      isPending: false,
+      mutate: mockCheckInMutate,
+      reset: jest.fn(),
     };
     jest.mocked(useAuth).mockReturnValue({
       beginGoogleAccountUpgrade: jest.fn(),
@@ -222,6 +241,14 @@ describe('DiscoverScreen', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Abrir favoritos' }));
 
     expect(mockPush).toHaveBeenCalledWith('/favorites');
+  });
+
+  it('opens verified visits from the home header', () => {
+    render(<DiscoverScreen />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Abrir mis visitas' }));
+
+    expect(mockPush).toHaveBeenCalledWith('/visits');
   });
 
   it('shows a dismissible recovery notice after an invalid account session', () => {
@@ -337,6 +364,21 @@ describe('DiscoverScreen', () => {
     expect(markSpinMapsOpened).toHaveBeenCalledWith(
       '33333333-3333-4333-8333-333333333333',
     );
+  });
+
+  it('starts a check-in for the displayed spin and restaurant', async () => {
+    mockRecommend.mockResolvedValue(buildRecommendation());
+
+    render(<DiscoverScreen />);
+    fireEvent.press(screen.getByText('GIRAR RULETA'));
+    await screen.findByText('La Cocina de Prueba');
+    fireEvent.press(screen.getByText('HACER CHECK-IN'));
+
+    expect(mockCheckInMutate).toHaveBeenCalledWith({
+      visitId: '33333333-3333-4333-8333-333333333333',
+      spinId: '33333333-3333-4333-8333-333333333333',
+      restaurantId: '55555555-5555-4555-8555-555555555555',
+    });
   });
 
   it('shows one contextual Google invitation after the first successful spin', async () => {

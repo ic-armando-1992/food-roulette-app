@@ -46,7 +46,7 @@ export const AUTH_LABELS = {
     cancel: 'Cancelar',
     conflictConfirm: 'Combinar y continuar',
     conflictMessage:
-      'Esta cuenta de Google ya existe. Si continúas, tus favoritos y tu progreso de invitado se agregarán a esa cuenta.',
+      'Esta cuenta de Google ya existe. Si continúas, tus favoritos, visitas y progreso de invitado se agregarán a esa cuenta.',
     conflictTitle: '¿Combinar tu progreso?',
     continue: 'Continuar con Google',
     errorTitle: 'No pudimos iniciar sesión',

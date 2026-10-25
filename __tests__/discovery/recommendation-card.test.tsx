@@ -25,12 +25,16 @@ describe('RecommendationCard', () => {
   it('presents a complete closed result, attribution and Maps action', async () => {
     render(
       <RecommendationCard
+        checkInError={null}
+        checkInResult={null}
         favoriteDisabled={false}
         favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -66,12 +70,16 @@ describe('RecommendationCard', () => {
   it('expands the weekly schedule for a closed restaurant', () => {
     render(
       <RecommendationCard
+        checkInError={null}
+        checkInResult={null}
         favoriteDisabled={false}
         favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -88,12 +96,16 @@ describe('RecommendationCard', () => {
     const onFavoriteToggle = jest.fn();
     const { rerender } = render(
       <RecommendationCard
+        checkInError={null}
+        checkInResult={null}
         favoriteDisabled={false}
         favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={onFavoriteToggle}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -110,12 +122,16 @@ describe('RecommendationCard', () => {
 
     rerender(
       <RecommendationCard
+        checkInError={null}
+        checkInResult={null}
         favoriteDisabled={false}
         favoriteError={false}
         isFavorite
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={onFavoriteToggle}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -133,12 +149,16 @@ describe('RecommendationCard', () => {
   it('keeps the result usable when optional metadata is missing', () => {
     render(
       <RecommendationCard
+        checkInError={null}
+        checkInResult={null}
         favoriteDisabled={false}
         favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -177,12 +197,16 @@ describe('RecommendationCard', () => {
 
     render(
       <RecommendationCard
+        checkInError={null}
+        checkInResult={null}
         favoriteDisabled={false}
         favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -198,5 +222,62 @@ describe('RecommendationCard', () => {
       ),
     ).toBeOnTheScreen();
     expect(onMapsOpened).not.toHaveBeenCalled();
+  });
+
+  it('shows check-in distance guidance and verified success', () => {
+    const commonProps = {
+      favoriteDisabled: false,
+      favoriteError: false,
+      isCheckInPending: false,
+      isFavorite: false,
+      isFavoritePending: false,
+      isRerolling: false,
+      onBack: jest.fn(),
+      onCheckIn: jest.fn(),
+      onFavoriteToggle: jest.fn(),
+      onMapsOpened,
+      onReroll: jest.fn(),
+      result: buildRecommendation(),
+    };
+    const { rerender } = render(
+      <RecommendationCard
+        {...commonProps}
+        checkInError={null}
+        checkInResult={{
+          status: 'too_far',
+          distanceMeters: 1_250,
+          allowedDistanceMeters: 160,
+        }}
+      />,
+    );
+
+    expect(screen.getByText('Aún no estás ahí 📍')).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        'Estás a 1.3 km del restaurante. Acércate para registrar tu visita.',
+      ),
+    ).toBeOnTheScreen();
+
+    rerender(
+      <RecommendationCard
+        {...commonProps}
+        checkInError={null}
+        checkInResult={{
+          status: 'verified',
+          visit: {
+            id: '88888888-8888-4888-8888-888888888888',
+            restaurantId: '55555555-5555-4555-8555-555555555555',
+            spinId: '33333333-3333-4333-8333-333333333333',
+            checkedInAt: '2026-10-25T12:00:00.000Z',
+            verificationDistanceMeters: 42.5,
+            locationAccuracyMeters: 8,
+            source: 'roulette',
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText('¡Visita verificada! ✅')).toBeOnTheScreen();
+    expect(screen.getByText('VISITA REGISTRADA')).toBeDisabled();
   });
 });
