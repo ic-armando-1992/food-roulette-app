@@ -9,8 +9,8 @@ Apple authentication and native iOS validation remain deferred to Phase 13.
 
 ## Current branch
 
-`docs/phase-5-final-closeout`, branched from synchronized `experimental` after
-App PR #14 merged as `2cbe6b7`.
+`experimental`, synchronized with origin after the final App documentation PR
+#15 merged as `e2007c8`.
 
 ## Current environment status
 
@@ -96,5 +96,4 @@ Apple/native iOS work remain Phase 12/13 gates.
 
 ## Next intended action
 
-Merge this documentation closeout, then begin Phase 6 Achievements planning
-from synchronized `experimental`.
+Begin Phase 6 Achievements planning from synchronized `experimental`.
