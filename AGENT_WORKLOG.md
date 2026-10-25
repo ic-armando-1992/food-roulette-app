@@ -5,6 +5,43 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-25 — Integrated notification system completed for Android review
+
+- Timestamp: 2026-10-25.
+- Branch: created `feature/in-app-notifications` from the local Phase 5 App
+  branch so this cross-cutting UI refactor remains isolated.
+- Implementation: added the global `notify.success/error/warning/info` API, a
+  bounded duplicate-safe queue and a compact `NotificationRegion` with manual,
+  timed and persistent dismissal. The animated region sits below active headers
+  and participates in layout instead of floating over content; translucent
+  semantic surfaces, reduced-motion behavior and live-region accessibility are
+  centralized under `src/core/notifications/`. Default visibility is calibrated
+  by urgency: success 3 seconds, info 4, warning 5 and error 6.
+- Migration: replaced transient one-button alerts and duplicated inline
+  operation errors across Google authentication, logout outcomes,
+  recommendations, Maps, Favorites and Check-In. Native account dialogs remain
+  only where the user must choose an action, while full-screen recovery states
+  remain for unavailable data that requires retry.
+- Validation: Prettier, Expo lint, strict TypeScript, all 28 suites/170 tests,
+  whitespace validation and a Node 20.20.2 Android Hermes export pass. New tests
+  cover every variant, queue order/bounds, deduplication, manual/timed/persistent
+  dismissal and migrated Check-In/authentication outcomes.
+- Documentation: documented the API and placement rules in `README.md`, updated
+  current status and rotated two oldest worklog entries without deleting
+  history.
+- Android connectivity: diagnosed a healthy API/PostGIS process but a missing
+  device-to-host API mapping. Restored `adb reverse tcp:3000 tcp:3000` alongside
+  Metro 8081 and confirmed `/health` from the phone reports database `up`.
+- Android UX follow-up: renamed the result action to `REGISTRAR VISITA` and
+  moved notification regions outside result/account scroll containers so new
+  feedback remains visible while the user is scrolled down and still pushes the
+  scrollable viewport without becoming a floating overlay.
+- Physical acceptance: the developer confirmed on Android that the integrated
+  notifications, adjusted durations, fixed-above-scroll placement and renamed
+  `REGISTRAR VISITA` action work correctly.
+- Pending closeout: create the focused App commit, publish the Phase 5 API and
+  final App branches, verify CI and merge both into `experimental`.
+
 ### 2026-10-25 — Phase 4 merged and Phase 5 verified Check-In implemented
 
 - Timestamp: 2026-10-25.
@@ -952,35 +989,3 @@ Rolling log of recent meaningful activity. Archive older entries under
 - Blocker: none for implementation/static validation; device limitations remain.
 - Next intended action: inspect the backend recommendation contract and create
   global providers, environment config and API boundary.
-
-### 2026-08-25 — Minimal Expo SDK 57 scaffold completed
-
-- Timestamp: 2026-08-25.
-- Command/action: generated the official Expo SDK 57 default template in an
-  isolated temporary directory, copied only the mobile baseline into the app,
-  installed dependencies and removed demo/web-only configuration.
-- Result: success.
-- Relevant result summary: Expo Router, React Native and strict TypeScript are
-  configured; `npm run typecheck`, Expo public-config evaluation, dependency
-  inspection and `git diff --check` passed.
-- Current phase/status: mobile foundation scaffolded; approved stack install is
-  next.
-- Blocker: none for implementation/static validation; device limitations from
-  the environment audit remain.
-- Next intended action: install and configure the approved first-slice stack.
-
-### 2026-08-25 — Mobile repository and environment audit completed
-
-- Timestamp: 2026-08-25.
-- Command/action: read the required repository context, inspected Git and files,
-  and checked Node/npm, Expo, Java, Android and iOS tooling availability.
-- Result: success with device-validation limitations.
-- Relevant result summary: the app repository is unscaffolded on `experimental`;
-  Node v20.20.2/npm 10.8.2 are available through NVM; Expo is not installed;
-  Java 17 and Android SDK exist, but the WSL `adb` bridge currently fails;
-  native iOS tooling is unavailable on Linux.
-- Current phase/status: environment audit complete; Expo scaffolding is next.
-- Blocker: none for scaffolding/static checks; manual Android/iOS validation is
-  environment-limited.
-- Next intended action: scaffold Expo Router + TypeScript while preserving the
-  existing documentation changes.

@@ -2,7 +2,12 @@
   "background": "#FFF8F3",
   "border": "#EEDFD6",
   "error": "#B42318",
+  "errorBorder": "#F2C8C4",
+  "errorSurface": "#FFF1F0EB",
   "foreground": "#241B18",
+  "info": "#2563EB",
+  "infoBorder": "#C9DCF9",
+  "infoSurface": "#EEF5FFEB",
   "mutedForeground": "#756964",
   "primary": "#FF5A3C",
   "primaryPressed": "#E94A30",
@@ -13,7 +18,10 @@
   "success": "#16A36A",
   "successBorder": "#D5EDE0",
   "successSurface": "#EFF8F3",
+  "successSurfaceTranslucent": "#EFF8F3EB",
   "surface": "#FFFFFF",
   "surfaceSecondary": "#F8EFE9",
-  "warning": "#B76E00"
+  "warning": "#B76E00",
+  "warningBorder": "#F0D7AA",
+  "warningSurface": "#FFF7E8EB"
 }

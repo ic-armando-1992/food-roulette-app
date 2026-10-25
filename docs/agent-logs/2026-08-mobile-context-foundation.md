@@ -3,6 +3,38 @@
 Entries rotated from `AGENT_WORKLOG.md` on 2026-10-23. History is preserved
 verbatim below.
 
+### 2026-08-25 — Minimal Expo SDK 57 scaffold completed
+
+- Timestamp: 2026-08-25.
+- Command/action: generated the official Expo SDK 57 default template in an
+  isolated temporary directory, copied only the mobile baseline into the app,
+  installed dependencies and removed demo/web-only configuration.
+- Result: success.
+- Relevant result summary: Expo Router, React Native and strict TypeScript are
+  configured; `npm run typecheck`, Expo public-config evaluation, dependency
+  inspection and `git diff --check` passed.
+- Current phase/status: mobile foundation scaffolded; approved stack install is
+  next.
+- Blocker: none for implementation/static validation; device limitations from
+  the environment audit remain.
+- Next intended action: install and configure the approved first-slice stack.
+
+### 2026-08-25 — Mobile repository and environment audit completed
+
+- Timestamp: 2026-08-25.
+- Command/action: read the required repository context, inspected Git and files,
+  and checked Node/npm, Expo, Java, Android and iOS tooling availability.
+- Result: success with device-validation limitations.
+- Relevant result summary: the app repository is unscaffolded on `experimental`;
+  Node v20.20.2/npm 10.8.2 are available through NVM; Expo is not installed;
+  Java 17 and Android SDK exist, but the WSL `adb` bridge currently fails;
+  native iOS tooling is unavailable on Linux.
+- Current phase/status: environment audit complete; Expo scaffolding is next.
+- Blocker: none for scaffolding/static checks; manual Android/iOS validation is
+  environment-limited.
+- Next intended action: scaffold Expo Router + TypeScript while preserving the
+  existing documentation changes.
+
 ### 2026-08-17 — Status/log structure verified
 
 - Timestamp: 2026-08-17.

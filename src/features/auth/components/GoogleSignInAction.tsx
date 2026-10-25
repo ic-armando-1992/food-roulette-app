@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { GoogleSignInButton } from 'react-native-nitro-google-signin';
 
+import { notify } from '@/core/notifications/notify';
 import {
   AUTH_ERROR_MESSAGES,
   AUTH_LABELS,
@@ -42,12 +43,11 @@ export function GoogleSignInAction({
   }
 
   const showGenericError = (unavailable = false) => {
-    Alert.alert(
-      AUTH_LABELS.google.errorTitle,
-      unavailable
+    notify.error(AUTH_LABELS.google.errorTitle, {
+      description: unavailable
         ? AUTH_ERROR_MESSAGES.googleSignInUnavailable
         : AUTH_ERROR_MESSAGES.googleSignInFailed,
-    );
+    });
   };
 
   const confirmSwitch = async (confirmationToken: string) => {
@@ -80,10 +80,9 @@ export function GoogleSignInAction({
       const result = await beginGoogleAccountUpgrade(idToken);
 
       if (result.status === 'linked') {
-        Alert.alert(
-          AUTH_LABELS.google.successTitle,
-          AUTH_LABELS.google.successMessage,
-        );
+        notify.success(AUTH_LABELS.google.successTitle, {
+          description: AUTH_LABELS.google.successMessage,
+        });
         onLinked?.();
         return;
       }

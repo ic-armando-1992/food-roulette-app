@@ -17,8 +17,8 @@ export const DISCOVERY_LABELS = {
   },
   actions: {
     backToRoulette: 'Volver a la ruleta',
-    checkIn: 'HACER CHECK-IN',
-    checkingIn: 'VERIFICANDO…',
+    checkIn: 'REGISTRAR VISITA',
+    checkingIn: 'REGISTRANDO…',
     checkInVerified: 'VISITA REGISTRADA',
     openMaps: 'ABRIR EN MAPAS',
     openSettings: 'ABRIR AJUSTES',
@@ -69,14 +69,6 @@ export const DISCOVERY_LABELS = {
       'No pudimos conectarnos al servicio de restaurantes. Revisa tu conexión e inténtalo de nuevo.',
     mapsUnavailable:
       'No pudimos abrir Maps. Revisa que tengas una aplicación de mapas disponible e inténtalo de nuevo.',
-    favoriteUnavailable:
-      'No pudimos actualizar este favorito. Revisa tu conexión e inténtalo de nuevo.',
-    checkInLocationUnavailable:
-      'No pudimos obtener una ubicación precisa. Intenta de nuevo al aire libre.',
-    checkInPermissionDenied:
-      'Necesitamos permiso de ubicación para verificar que estás en el restaurante.',
-    checkInRequest:
-      'No pudimos registrar tu visita. Revisa tu conexión e inténtalo de nuevo.',
     noResults:
       'No encontramos restaurantes cercanos con esas opciones. Prueba con un radio más amplio.',
     serviceUnavailable:
@@ -142,12 +134,6 @@ export const DISCOVERY_LABELS = {
     distanceKilometers: (value: string) => `${value} km`,
     distanceMeters: (value: number) => `${value} m`,
     selected: 'La ruleta eligió',
-    checkInAccuracyLow: (accuracyMeters: number) =>
-      `La precisión actual es de ${Math.round(accuracyMeters)} m. Espera una mejor señal GPS e inténtalo de nuevo.`,
-    checkInTooFar: (distance: string) =>
-      `Estás a ${distance} del restaurante. Acércate para registrar tu visita.`,
-    checkInTooFarTitle: 'Aún no estás ahí 📍',
-    checkInVerified: '¡Visita verificada! ✅',
   },
 } as const;
 

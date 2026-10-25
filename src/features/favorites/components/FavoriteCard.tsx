@@ -5,6 +5,7 @@ import { Linking, Pressable, Text, View } from 'react-native';
 
 import { getApiResourceUrl } from '@/api/client';
 import { Button } from '@/components/ui/Button';
+import { notify } from '@/core/notifications/notify';
 import { formatLongDate } from '@/core/utils/format-date';
 import { FAVORITES_LABELS } from '@/features/favorites/constants/favorites.labels';
 import { FavoriteCardProps } from '@/features/favorites/types/favorites.types';
@@ -22,7 +23,6 @@ export function FavoriteCard({
     [photo],
   );
   const [photoFailed, setPhotoFailed] = useState(false);
-  const [mapsFailed, setMapsFailed] = useState(false);
   const savedDate = formatLongDate(item.createdAt, 'es-MX');
 
   const openMaps = async () => {
@@ -30,12 +30,10 @@ export function FavoriteCard({
       return;
     }
 
-    setMapsFailed(false);
-
     try {
       await Linking.openURL(restaurant.mapsUri);
     } catch {
-      setMapsFailed(true);
+      notify.error(FAVORITES_LABELS.error.maps);
     }
   };
 
@@ -102,11 +100,6 @@ export function FavoriteCard({
                 label={FAVORITES_LABELS.actions.openMaps}
                 onPress={() => void openMaps()}
               />
-            ) : null}
-            {mapsFailed ? (
-              <Text accessibilityRole="alert" className="text-sm text-error">
-                {FAVORITES_LABELS.error.maps}
-              </Text>
             ) : null}
           </>
         ) : (

@@ -150,6 +150,32 @@ nearest `types/`, `contracts/` or model file, while reusable mappings, limits,
 paths and other behavior constants belong in `*.constants.ts`. Keep these files
 feature-local unless the definition is genuinely application-wide.
 
+### Integrated notifications
+
+Transient operation feedback uses the global notification API instead of
+feature-local cards or native one-button alerts:
+
+```ts
+import { notify } from '@/core/notifications/notify';
+
+notify.success('Asistencia registrada correctamente');
+notify.error('No fue posible registrar la asistencia');
+notify.warning('Ya registraste tu asistencia');
+notify.info('Tu sesión expirará pronto');
+```
+
+`NotificationRegion` belongs immediately below the current screen header. It
+renders one queued message at a time as part of normal layout, so its animated
+entry pushes content instead of covering it. Messages expire according to their
+variant or an explicit `durationMs`; use `persistent: true` only when the user
+must acknowledge the message. Native alerts remain appropriate for decisions
+that require two or more explicit actions, such as account-switch and logout
+confirmation.
+
+The implementation lives under `src/core/notifications/`. Feature code should
+call `notify` and keep its visible copy in the feature's labels file. Do not add
+another toast provider or render independent transient error banners.
+
 Expected base components:
 
 ```text
@@ -374,7 +400,7 @@ If Google already belongs to another owner, the explicit confirmation now
 combines guest Favorites and progress before the private query cache is cleared
 and the target account becomes visible.
 
-The selected restaurant card offers `HACER CHECK-IN`. This explicit action asks
+The selected restaurant card offers `REGISTRAR VISITA`. This explicit action asks
 for one fresh foreground high-accuracy location, applies a 15-second acquisition
 timeout and submits the displayed Spin and restaurant to the API. Coordinates
 remain in request memory and are not written to device storage or collected in

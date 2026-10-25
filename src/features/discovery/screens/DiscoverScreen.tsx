@@ -1,11 +1,5 @@
 import { useRouter } from 'expo-router';
-import {
-  AlertCircle,
-  Heart,
-  MapPin,
-  Settings,
-  Sparkles,
-} from 'lucide-react-native';
+import { Heart, MapPin, Settings, Sparkles } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RandomRecommendationResponse } from '@/api/contracts/recommendations';
 import { markSpinMapsOpened } from '@/api/endpoints/spins.api';
 import { Button } from '@/components/ui/Button';
+import { NotificationRegion } from '@/core/notifications/NotificationRegion';
+import { notify } from '@/core/notifications/notify';
 import { AccountButton } from '@/features/auth/components/AccountButton';
 import { AccountModal } from '@/features/auth/components/AccountModal';
 import { GoogleLinkPrompt } from '@/features/auth/components/GoogleLinkPrompt';
@@ -20,7 +16,6 @@ import { SessionRecoveryNotice } from '@/features/auth/components/SessionRecover
 import { useGoogleLinkPrompt } from '@/features/auth/hooks/useGoogleLinkPrompt';
 import { useFavoriteStatus } from '@/features/favorites/hooks/useFavoriteStatus';
 import { useCheckIn } from '@/features/visits/hooks/useCheckIn';
-import { CheckInLocationError } from '@/features/visits/services/check-in-location';
 import { LocationPill } from '@/features/discovery/components/LocationPill';
 import { RadiusSelector } from '@/features/discovery/components/RadiusSelector';
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
@@ -35,7 +30,6 @@ import {
   BrandHeaderProps,
   Coordinates,
   DiscoveryView,
-  ErrorMessageProps,
   RouletteSpinPhase,
 } from '@/features/discovery/types/discovery.types';
 import { getRecommendationErrorMessage } from '@/features/discovery/utils/getRecommendationErrorMessage';
@@ -115,22 +109,6 @@ function BrandHeader({
   );
 }
 
-function ErrorMessage({ message }: ErrorMessageProps) {
-  return (
-    <View className="mx-5 mb-4 flex-row gap-3 rounded-2xl bg-surface px-4 py-3">
-      <AlertCircle color={colors.error} size={20} />
-      <View className="flex-1">
-        <Text className="font-bold text-error">
-          {DISCOVERY_LABELS.error.title}
-        </Text>
-        <Text className="mt-1 text-sm leading-5 text-mutedForeground">
-          {message}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
 export function DiscoverScreen() {
   const router = useRouter();
   const radiusMeters = useDiscoveryStore((state) => state.radiusMeters);
@@ -188,6 +166,16 @@ export function DiscoverScreen() {
       void requestLocation();
     }
   }, [requestLocation]);
+
+  useEffect(() => {
+    if (!recommendation.isError) {
+      return;
+    }
+
+    notify.error(DISCOVERY_LABELS.error.title, {
+      description: getRecommendationErrorMessage(recommendation.error),
+    });
+  }, [recommendation.error, recommendation.isError]);
 
   const requestRecommendation = async (isReroll: boolean) => {
     if (
@@ -318,6 +306,7 @@ export function DiscoverScreen() {
           actionsDisabled
           onAccountPress={() => setAccountVisible(true)}
         />
+        <NotificationRegion />
         <ScrollView contentContainerClassName="flex-grow" scrollEnabled={false}>
           <RouletteLoadingState
             onSpinStopped={handleRouletteStopped}
@@ -335,24 +324,12 @@ export function DiscoverScreen() {
   if (view === 'result' && displayedResult) {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-        <ScrollView contentContainerClassName="pb-4">
-          <SessionRecoveryNotice />
-          {recommendation.isError ? (
-            <ErrorMessage
-              message={getRecommendationErrorMessage(recommendation.error)}
-            />
-          ) : null}
+        <NotificationRegion />
+        <SessionRecoveryNotice />
+        <ScrollView className="flex-1" contentContainerClassName="pb-4">
           <RecommendationCard
-            checkInError={
-              checkIn.error instanceof CheckInLocationError
-                ? checkIn.error.kind
-                : checkIn.isError
-                  ? 'request'
-                  : null
-            }
             checkInResult={checkIn.data ?? null}
             favoriteDisabled={!favorite.isReady}
-            favoriteError={Boolean(favorite.error)}
             isFavorite={favorite.isFavorite}
             isFavoritePending={favorite.isPending}
             isCheckInPending={checkIn.isPending}
@@ -401,6 +378,7 @@ export function DiscoverScreen() {
         showVisits
         showSettings
       />
+      <NotificationRegion enabled={!accountVisible} />
       <SessionRecoveryNotice />
       <ScrollView
         contentContainerClassName="px-5 pb-12"
@@ -440,14 +418,6 @@ export function DiscoverScreen() {
             onChange={handleRadiusChange}
           />
         </View>
-
-        {recommendation.isError ? (
-          <View className="mt-5">
-            <ErrorMessage
-              message={getRecommendationErrorMessage(recommendation.error)}
-            />
-          </View>
-        ) : null}
 
         {locationState.status === 'denied' ||
         locationState.status === 'error' ? (

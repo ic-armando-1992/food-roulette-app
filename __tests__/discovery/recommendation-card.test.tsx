@@ -6,6 +6,7 @@ import {
 } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 
+import { useNotificationStore } from '@/core/notifications/notification.store';
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
 
 import { buildRecommendation } from '../../test-support/recommendation.fixture';
@@ -25,10 +26,8 @@ describe('RecommendationCard', () => {
   it('presents a complete closed result, attribution and Maps action', async () => {
     render(
       <RecommendationCard
-        checkInError={null}
         checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
         isCheckInPending={false}
@@ -70,10 +69,8 @@ describe('RecommendationCard', () => {
   it('expands the weekly schedule for a closed restaurant', () => {
     render(
       <RecommendationCard
-        checkInError={null}
         checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
         isCheckInPending={false}
@@ -96,10 +93,8 @@ describe('RecommendationCard', () => {
     const onFavoriteToggle = jest.fn();
     const { rerender } = render(
       <RecommendationCard
-        checkInError={null}
         checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
         isCheckInPending={false}
@@ -122,10 +117,8 @@ describe('RecommendationCard', () => {
 
     rerender(
       <RecommendationCard
-        checkInError={null}
         checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite
         isFavoritePending={false}
         isCheckInPending={false}
@@ -149,10 +142,8 @@ describe('RecommendationCard', () => {
   it('keeps the result usable when optional metadata is missing', () => {
     render(
       <RecommendationCard
-        checkInError={null}
         checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
         isCheckInPending={false}
@@ -197,10 +188,8 @@ describe('RecommendationCard', () => {
 
     render(
       <RecommendationCard
-        checkInError={null}
         checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
         isCheckInPending={false}
@@ -216,18 +205,19 @@ describe('RecommendationCard', () => {
 
     fireEvent.press(screen.getByText('ABRIR EN MAPAS'));
 
-    expect(
-      await screen.findByText(
-        'No pudimos abrir Maps. Revisa que tengas una aplicación de mapas disponible e inténtalo de nuevo.',
-      ),
-    ).toBeOnTheScreen();
+    await waitFor(() =>
+      expect(useNotificationStore.getState().queue[0]).toMatchObject({
+        message:
+          'No pudimos abrir Maps. Revisa que tengas una aplicación de mapas disponible e inténtalo de nuevo.',
+        type: 'error',
+      }),
+    );
     expect(onMapsOpened).not.toHaveBeenCalled();
   });
 
-  it('shows check-in distance guidance and verified success', () => {
+  it('disables check-in after a verified visit', () => {
     const commonProps = {
       favoriteDisabled: false,
-      favoriteError: false,
       isCheckInPending: false,
       isFavorite: false,
       isFavoritePending: false,
@@ -239,29 +229,9 @@ describe('RecommendationCard', () => {
       onReroll: jest.fn(),
       result: buildRecommendation(),
     };
-    const { rerender } = render(
+    render(
       <RecommendationCard
         {...commonProps}
-        checkInError={null}
-        checkInResult={{
-          status: 'too_far',
-          distanceMeters: 1_250,
-          allowedDistanceMeters: 160,
-        }}
-      />,
-    );
-
-    expect(screen.getByText('Aún no estás ahí 📍')).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        'Estás a 1.3 km del restaurante. Acércate para registrar tu visita.',
-      ),
-    ).toBeOnTheScreen();
-
-    rerender(
-      <RecommendationCard
-        {...commonProps}
-        checkInError={null}
         checkInResult={{
           status: 'verified',
           visit: {
@@ -277,7 +247,6 @@ describe('RecommendationCard', () => {
       />,
     );
 
-    expect(screen.getByText('¡Visita verificada! ✅')).toBeOnTheScreen();
     expect(screen.getByText('VISITA REGISTRADA')).toBeDisabled();
   });
 });

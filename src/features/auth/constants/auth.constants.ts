@@ -77,7 +77,6 @@ export const AUTH_LABELS = {
     title: '¿Quieres conservar tu progreso?',
   },
   sessionRecovery: {
-    accessibilityDismiss: 'Ocultar aviso de sesión',
     body: 'Continúa como invitado o inicia sesión con Google desde Cuenta para recuperar tu progreso.',
     title: 'Tu sesión anterior terminó',
   },

@@ -5,6 +5,7 @@ import { Linking, Pressable, Text, View } from 'react-native';
 
 import { getApiResourceUrl } from '@/api/client';
 import { Button } from '@/components/ui/Button';
+import { notify } from '@/core/notifications/notify';
 import { formatLongDate } from '@/core/utils/format-date';
 import { VISITS_LABELS } from '@/features/visits/constants/visits.labels';
 import { VisitCardProps } from '@/features/visits/types/visits.types';
@@ -18,7 +19,6 @@ export function VisitCard({ item }: VisitCardProps) {
     [photo],
   );
   const [photoFailed, setPhotoFailed] = useState(false);
-  const [mapsFailed, setMapsFailed] = useState(false);
   const visitDate = formatLongDate(item.checkedInAt, 'es-MX');
 
   const openMaps = async () => {
@@ -26,12 +26,10 @@ export function VisitCard({ item }: VisitCardProps) {
       return;
     }
 
-    setMapsFailed(false);
-
     try {
       await Linking.openURL(restaurant.mapsUri);
     } catch {
-      setMapsFailed(true);
+      notify.error(VISITS_LABELS.error.maps);
     }
   };
 
@@ -82,11 +80,6 @@ export function VisitCard({ item }: VisitCardProps) {
                 label={VISITS_LABELS.actions.openMaps}
                 onPress={() => void openMaps()}
               />
-            ) : null}
-            {mapsFailed ? (
-              <Text accessibilityRole="alert" className="text-sm text-error">
-                {VISITS_LABELS.error.maps}
-              </Text>
             ) : null}
           </>
         ) : (

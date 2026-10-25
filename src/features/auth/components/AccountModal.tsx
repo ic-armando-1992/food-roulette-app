@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
+import { NotificationRegion } from '@/core/notifications/NotificationRegion';
+import { notify } from '@/core/notifications/notify';
 import { formatLongDate } from '@/core/utils/format-date';
 import { AccountAvatar } from '@/features/auth/components/AccountAvatar';
 import { GoogleSignInAction } from '@/features/auth/components/GoogleSignInAction';
@@ -45,21 +47,19 @@ export function AccountModal({ onClose, visible }: AccountModalProps) {
       onClose();
 
       if (!result.guestReady) {
-        Alert.alert(
-          AUTH_LABELS.logout.localOnlyTitle,
-          AUTH_LABELS.logout.newGuestUnavailableMessage,
-        );
+        notify.warning(AUTH_LABELS.logout.localOnlyTitle, {
+          description: AUTH_LABELS.logout.newGuestUnavailableMessage,
+          persistent: true,
+        });
       } else if (!result.remoteRevoked) {
-        Alert.alert(
-          AUTH_LABELS.logout.localOnlyTitle,
-          AUTH_LABELS.logout.localOnlyMessage,
-        );
+        notify.warning(AUTH_LABELS.logout.localOnlyTitle, {
+          description: AUTH_LABELS.logout.localOnlyMessage,
+        });
       }
     } catch {
-      Alert.alert(
-        AUTH_LABELS.logout.errorTitle,
-        AUTH_ERROR_MESSAGES.logoutFailed,
-      );
+      notify.error(AUTH_LABELS.logout.errorTitle, {
+        description: AUTH_ERROR_MESSAGES.logoutFailed,
+      });
     } finally {
       setIsLoggingOut(false);
     }
@@ -108,26 +108,31 @@ export function AccountModal({ onClose, visible }: AccountModalProps) {
           onPress={(event) => event.stopPropagation()}
           style={{ maxHeight: Math.max(240, height - 24) }}
         >
-          <SafeAreaView edges={['bottom']}>
+          <SafeAreaView className="shrink" edges={['bottom']}>
+            <View className="flex-row items-center justify-between px-5 pt-5">
+              <Text className="text-2xl font-black text-foreground">
+                {AUTH_LABELS.account.title}
+              </Text>
+              <Pressable
+                accessibilityLabel={AUTH_LABELS.account.accessibility.close}
+                accessibilityRole="button"
+                className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
+                onPress={onClose}
+              >
+                <X color={colors.foreground} size={22} />
+              </Pressable>
+            </View>
+
+            <View className="mt-3">
+              <NotificationRegion enabled={visible} />
+            </View>
+
             <ScrollView
-              contentContainerClassName="px-5 pb-4 pt-5"
+              className="shrink"
+              contentContainerClassName="px-5 pb-4"
               keyboardShouldPersistTaps="handled"
               testID="account-modal-scroll"
             >
-              <View className="flex-row items-center justify-between">
-                <Text className="text-2xl font-black text-foreground">
-                  {AUTH_LABELS.account.title}
-                </Text>
-                <Pressable
-                  accessibilityLabel={AUTH_LABELS.account.accessibility.close}
-                  accessibilityRole="button"
-                  className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
-                  onPress={onClose}
-                >
-                  <X color={colors.foreground} size={22} />
-                </Pressable>
-              </View>
-
               <View className="mt-7 items-center">
                 <View
                   className={`h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 ${

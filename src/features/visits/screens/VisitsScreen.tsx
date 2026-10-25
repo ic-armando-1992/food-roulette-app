@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
+import { NotificationRegion } from '@/core/notifications/NotificationRegion';
 import { SessionRecoveryNotice } from '@/features/auth/components/SessionRecoveryNotice';
 import { useAuth } from '@/features/auth/providers/AuthProvider';
 import { VisitCard } from '@/features/visits/components/VisitCard';
@@ -57,6 +58,7 @@ export function VisitsScreen() {
         </View>
       </View>
 
+      <NotificationRegion />
       <SessionRecoveryNotice />
 
       {showLoading ? (

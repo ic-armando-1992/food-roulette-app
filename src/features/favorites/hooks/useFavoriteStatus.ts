@@ -8,8 +8,10 @@ import {
 } from '@/api/endpoints/favorites.api';
 import { TELEMETRY_EVENTS } from '@/core/telemetry/constants/telemetry.constants';
 import { trackProductEvent } from '@/core/telemetry/telemetry';
+import { notify } from '@/core/notifications/notify';
 import { useAuth } from '@/features/auth/providers/AuthProvider';
 import { FAVORITES_QUERY_KEYS } from '@/features/favorites/constants/favorites.constants';
+import { FAVORITES_LABELS } from '@/features/favorites/constants/favorites.labels';
 
 export function useFavoriteStatus(restaurantId: string) {
   const { status } = useAuth();
@@ -32,6 +34,7 @@ export function useFavoriteStatus(restaurantId: string) {
       return true;
     },
     mutationKey: ['favorites', 'toggle', restaurantId],
+    onError: () => notify.error(FAVORITES_LABELS.error.mutation),
     onSuccess: async (isFavorite) => {
       queryClient.setQueryData<FavoriteStatus>(
         FAVORITES_QUERY_KEYS.status(restaurantId),
@@ -52,6 +55,7 @@ export function useFavoriteStatus(restaurantId: string) {
 
   const toggle = () => {
     if (statusQuery.isError) {
+      notify.error(FAVORITES_LABELS.error.list);
       void statusQuery.refetch();
       return;
     }

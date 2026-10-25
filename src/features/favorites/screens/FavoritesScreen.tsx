@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
+import { NotificationRegion } from '@/core/notifications/NotificationRegion';
 import { SessionRecoveryNotice } from '@/features/auth/components/SessionRecoveryNotice';
 import { useAuth } from '@/features/auth/providers/AuthProvider';
 import { FavoriteCard } from '@/features/favorites/components/FavoriteCard';
@@ -29,14 +30,9 @@ export function FavoritesScreen() {
   const showLoading =
     auth.status === 'initializing' ||
     (auth.status === 'ready' && favorites.isPending);
-  const showError =
-    auth.status === 'unavailable' ||
-    favorites.isError ||
-    removeFavorite.isError;
+  const showError = auth.status === 'unavailable' || favorites.isError;
 
   const retry = () => {
-    removeFavorite.reset();
-
     if (auth.status === 'unavailable') {
       void auth.retry();
       return;
@@ -66,6 +62,7 @@ export function FavoritesScreen() {
         </View>
       </View>
 
+      <NotificationRegion />
       <SessionRecoveryNotice />
 
       {showLoading ? (
@@ -81,9 +78,7 @@ export function FavoritesScreen() {
           >
             {auth.status === 'unavailable'
               ? FAVORITES_LABELS.error.authUnavailable
-              : removeFavorite.isError
-                ? FAVORITES_LABELS.error.mutation
-                : FAVORITES_LABELS.error.list}
+              : FAVORITES_LABELS.error.list}
           </Text>
           <View className="w-full">
             <Button label={FAVORITES_LABELS.actions.retry} onPress={retry} />

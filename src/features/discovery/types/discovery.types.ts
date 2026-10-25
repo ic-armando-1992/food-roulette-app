@@ -4,7 +4,6 @@ import {
   RestaurantPhotoAuthorAttribution,
 } from '@/api/contracts/recommendations';
 import { CheckInResponse } from '@/api/contracts/visits';
-import { CheckInLocationErrorKind } from '@/features/visits/types/visits.types';
 
 export type DiscoveryView = 'home' | 'result';
 
@@ -17,8 +16,6 @@ export type BrandHeaderProps = {
   showVisits?: boolean;
   showSettings?: boolean;
 };
-export type ErrorMessageProps = { message: string };
-
 export type GeographicCoordinates = {
   latitude: number;
   longitude: number;
@@ -74,10 +71,8 @@ export type OpeningHoursSectionProps = {
 };
 
 export type RecommendationCardProps = {
-  checkInError: CheckInLocationErrorKind | 'request' | null;
   checkInResult: CheckInResponse | null;
   favoriteDisabled: boolean;
-  favoriteError: boolean;
   isFavorite: boolean;
   isFavoritePending: boolean;
   isRerolling: boolean;

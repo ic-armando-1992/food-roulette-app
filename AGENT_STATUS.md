@@ -4,20 +4,22 @@
 
 Roadmap Phases 0--4 are complete in `experimental`; Phase 4 merged through API
 PR #9 and App PR #13 after green CI and accepted physical Android validation.
-Phase 5 Verified Restaurant Check-In is implementation-complete locally on its
-API/App feature branches. Automated API/App validation is green; physical
-Android validation of Check-In and `Mis visitas` remains before publication.
+Phase 5 Verified Restaurant Check-In is implementation-complete locally. A
+cross-cutting integrated notification refactor is also implementation-complete
+on the App and physically accepted on Android.
 Apple authentication and native iOS validation remain deferred to Phase 13.
 
 ## Current branch
 
-`feature/phase-5-verified-checkins-app`, branched from synchronized
-`experimental` after App PR #13 merged as `e333a44`.
+`feature/in-app-notifications`, based on the local Phase 5 App branch at
+`2fcd875` after App PR #13 merged into `experimental` as `e333a44`.
 
 ## Current environment status
 
 Expo SDK 57.0.31, React Native 0.86.3 and Node.js 20.20.2 are active. Format,
-lint, strict typecheck, 27 suites/160 tests and an Android Hermes export pass.
+lint, strict typecheck, 28 suites/170 tests and an Android Hermes export pass.
+The physical Android device is connected; ADB reverse mappings for Metro 8081
+and API 3000 are active, and `/health` returns database `up` from the phone.
 The direct Zod dependency is patched to 4.6.7; the critical audit threshold
 passes while known Expo/Tailwind transitive moderate/high advisories still
 require breaking upgrades. Native iOS validation has not run on this Linux/WSL
@@ -46,7 +48,7 @@ host.
   telemetry remains best-effort; this does not create a visit.
 - The home header no longer exposes roulette history; its `Mis visitas` entry
   uses only verified check-ins.
-- The result card now offers `HACER CHECK-IN`, obtains one fresh foreground
+- The result card now offers `REGISTRAR VISITA`, obtains one fresh foreground
   high-accuracy location and renders pending, verified, too-far, poor-accuracy,
   permission and request-failure outcomes without retaining coordinates.
 - The home header opens `Mis visitas`, which renders the 10 newest verified
@@ -61,12 +63,19 @@ host.
   locality. Rerolls preserve the cost-saving candidate pool only within 100
   meters; a meaningful move starts a pool for the new location. Check-In's fresh
   reading also synchronizes the shared visible location.
+- Transient success, error, warning and info feedback now uses one global
+  `notify` API and a compact queued region directly below each active screen
+  header. It pushes layout, supports manual/automatic/persistent dismissal,
+  respects reduced motion and replaces duplicated operation banners/native
+  one-button alerts across authentication, recommendations, Maps, Favorites and
+  Check-In. Choice-bearing account dialogs remain native.
 
 ## Active blocker(s)
 
-Physical Android validation of the Phase 5 Check-In and `Mis visitas` flow
-remains before publishing its API/App branches. Production infrastructure and
-Apple/native iOS work remain Phase 12/13 gates.
+The Phase 5 API branch and the final App branch remain local: the notification
+changes need their focused commit, then both branches require publication, CI,
+review and merge into `experimental`. Production infrastructure and Apple/native
+iOS work remain Phase 12/13 gates.
 
 ## Important current decisions
 
@@ -84,11 +93,12 @@ Apple/native iOS work remain Phase 12/13 gates.
   the 10 newest verified check-ins.
 - Check-In requests location only after the explicit action, uses a 15-second
   acquisition timeout and does not persist or background-track coordinates.
+- Notifications are UI-only Zustand state, show one item at a time and preserve
+  full-screen recovery states for failures that require an explicit retry.
 - Apple authentication/native iOS remain Phase 13 release gates, not Phase 3
   blockers.
 
 ## Next intended action
 
-Validate Check-In outcomes and the newest-10 `Mis visitas` screen on the
-physical Android device. If accepted, publish both Phase 5 branches, verify CI
-and merge them into `experimental`.
+Create the focused notification commit, publish the Phase 5 API and final App
+branches, verify both CI runs and merge them into `experimental`.

@@ -23,7 +23,10 @@ export const Easing = {
   out: <T,>(easing: T) => easing,
 };
 export const FadeIn = chainableTransition;
+export const FadeInDown = chainableTransition;
 export const FadeInUp = chainableTransition;
+export const FadeOutUp = chainableTransition;
+export const LinearTransition = chainableTransition;
 export const cancelAnimation = () => undefined;
 export const runOnJS = <T extends (...args: never[]) => unknown>(callback: T) =>
   callback;

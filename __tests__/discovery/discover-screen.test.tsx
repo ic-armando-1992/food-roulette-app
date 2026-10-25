@@ -168,7 +168,7 @@ jest.mock('@/features/discovery/components/RecommendationCard', () => {
           <NativeText>ABRIR EN MAPAS</NativeText>
         </Pressable>
         <Pressable accessibilityRole="button" onPress={onCheckIn}>
-          <NativeText>HACER CHECK-IN</NativeText>
+          <NativeText>REGISTRAR VISITA</NativeText>
         </Pressable>
       </View>
     ),
@@ -281,7 +281,7 @@ describe('DiscoverScreen', () => {
 
     expect(screen.getByText('Tu sesión anterior terminó')).toBeOnTheScreen();
     fireEvent.press(
-      screen.getByRole('button', { name: 'Ocultar aviso de sesión' }),
+      screen.getByRole('button', { name: 'Cerrar notificación' }),
     );
     expect(dismissSessionRecoveryNotice).toHaveBeenCalledTimes(1);
   });
@@ -407,7 +407,7 @@ describe('DiscoverScreen', () => {
     render(<DiscoverScreen />);
     fireEvent.press(screen.getByText('GIRAR RULETA'));
     await screen.findByText('La Cocina de Prueba');
-    fireEvent.press(screen.getByText('HACER CHECK-IN'));
+    fireEvent.press(screen.getByText('REGISTRAR VISITA'));
 
     expect(mockCheckInMutate).toHaveBeenCalledWith({
       visitId: '33333333-3333-4333-8333-333333333333',
