@@ -5,41 +5,32 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
-### 2026-10-23 — Phase 3 Favorites App implemented and verified
+### 2026-10-24 — Phase 3 integrated and Phase 4 spin foundation implemented
 
-- Timestamp: 2026-10-23.
-- Branch: created `feature/phase-3-favorites-app` from synchronized
-  `experimental`.
-- Result: added the authenticated Favorites client contract, result-card heart
-  toggle, home navigation entry and a dedicated live Favorites screen with
-  loading, empty, error, unavailable-place, Maps, photo-attribution and removal
-  states.
-- Ownership/privacy: TanStack Query owns Favorites server state; status checks
-  use the cheap database endpoint and the full provider-hydrated list loads only
-  on its screen. Confirmed account switches now clear private query cache before
-  showing the target account.
-- Account-transfer follow-up (2026-10-24): when Google already belongs to an
-  existing owner, the confirmation dialog now explicitly offers to combine the
-  guest's Favorites without duplicates. Cancel leaves the guest unchanged; the
-  API performs the transactional transfer before the App activates the target
-  account and clears private Query state.
-- Physical validation (2026-10-24): the developer installed the development
-  build on a replacement Android phone and accepted the complete Favorites
-  flow, including the updated guest-to-existing-Google behavior.
-- Telemetry/security: added the shared `restaurant_favorited` event and updated
-  direct Zod to 4.6.7, removing its direct high-severity advisory. Remaining
-  Expo/Tailwind transitive advisories require breaking upgrades; the configured
-  critical threshold passes.
-- Validation: format, lint, strict typecheck, all 23 suites/144 tests, Expo
-  dependency validation, Android Hermes export, critical audit and whitespace
-  checks pass.
+- Timestamp: 2026-10-24.
+- Phase 3 closeout: API PR #8 and App PR #12 passed CI and merged into
+  `experimental` after the developer accepted the complete Favorites flow on a
+  replacement Android phone.
+- Phase 4 implementation: created `feature/phase-4-spin-activity-app` from the
+  integrated base and added automatic `spinId` correlation plus owner-scoped
+  Maps-open tracking. After physical review, the roulette-history navigation
+  and screen were removed: Phase 5 will expose only verified visits.
+- Ownership/privacy: provider presentation and coordinates are not persisted
+  locally. Confirmed existing-account switches explicitly combine Favorites
+  and guest progress, then clear private Query state before rendering the target
+  owner.
+- Validation: format, lint, strict typecheck, all 23 suites/145 tests, Expo
+  dependency validation, Android Hermes export and whitespace checks pass.
+- Physical acceptance (2026-10-25): the developer accepted the Android flow and
+  confirmed that spins remain internal, Maps is not a visit and Phase 5 owns
+  the visible verified-visit history.
 - History: rotated the oldest logging-validation entry into
   `docs/agent-logs/2026-08-mobile-context-foundation.md`; no history was deleted
   and this rolling log remains at 50 entries.
-- Blocker: no implementation or device blocker; publication/review remain
-  before integration. Native iOS remains Phase 13.
-- Next intended action: publish both authorized feature branches, open PRs into
-  `experimental` and verify CI before requesting merge approval.
+- Blocker: publication/review remain before Phase 4 closeout; native iOS remains
+  Phase 13.
+- Next intended action: publish both accepted Phase 4 branches, verify CI,
+  merge them into `experimental` and begin Phase 5.
 
 ### 2026-10-23 — Phase 2 Android scope closed; Phase 3 authorized
 

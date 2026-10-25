@@ -122,8 +122,8 @@ describe('GoogleSignInAction', () => {
 
     const buttons = alert.mock.calls[0]?.[2];
     expect(alert).toHaveBeenCalledWith(
-      '¿Combinar tus favoritos?',
-      'Esta cuenta de Google ya existe. Si continúas, tus favoritos de invitado se agregarán a esa cuenta sin duplicarse.',
+      '¿Combinar tu progreso?',
+      'Esta cuenta de Google ya existe. Si continúas, tus favoritos y tu progreso de invitado se agregarán a esa cuenta.',
       expect.any(Array),
       { cancelable: true },
     );

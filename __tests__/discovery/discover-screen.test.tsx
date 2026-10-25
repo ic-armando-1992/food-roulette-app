@@ -6,6 +6,7 @@ import {
 } from '@testing-library/react-native';
 
 import { RandomRecommendationResponse } from '@/api/contracts/recommendations';
+import { markSpinMapsOpened } from '@/api/endpoints/spins.api';
 import { useAuth } from '@/features/auth/providers/AuthProvider';
 import {
   hasSeenGoogleLinkPrompt,
@@ -70,6 +71,10 @@ jest.mock('@/features/favorites/hooks/useFavoriteStatus', () => ({
   }),
 }));
 
+jest.mock('@/api/endpoints/spins.api', () => ({
+  markSpinMapsOpened: jest.fn(),
+}));
+
 jest.mock('@/features/discovery/utils/waitForMinimumSpinDuration', () => ({
   waitForMinimumSpinDuration: () => mockWaitForMinimumSpinDuration(),
 }));
@@ -132,10 +137,12 @@ jest.mock('@/features/discovery/components/RecommendationCard', () => {
   return {
     RecommendationCard: ({
       onBack,
+      onMapsOpened,
       onReroll,
       result,
     }: {
       onBack: () => void;
+      onMapsOpened: () => void;
       onReroll: () => void;
       result: RandomRecommendationResponse;
     }) => (
@@ -146,6 +153,9 @@ jest.mock('@/features/discovery/components/RecommendationCard', () => {
         </Pressable>
         <Pressable accessibilityRole="button" onPress={onBack}>
           <NativeText>VOLVER</NativeText>
+        </Pressable>
+        <Pressable accessibilityRole="button" onPress={onMapsOpened}>
+          <NativeText>ABRIR EN MAPAS</NativeText>
         </Pressable>
       </View>
     ),
@@ -191,6 +201,7 @@ describe('DiscoverScreen', () => {
     });
     jest.mocked(hasSeenGoogleLinkPrompt).mockResolvedValue(false);
     jest.mocked(markGoogleLinkPromptSeen).mockResolvedValue();
+    jest.mocked(markSpinMapsOpened).mockResolvedValue();
   });
 
   it('keeps the profile entry visible without showing a registration card', () => {
@@ -282,6 +293,7 @@ describe('DiscoverScreen', () => {
       latitude: 32.5149,
       longitude: -117.0382,
       radiusMeters: 3_000,
+      spinId: '33333333-3333-4333-8333-333333333333',
     });
     expect(mockTrackProductEvent).toHaveBeenCalledWith(
       'roulette_spin_started',
@@ -310,7 +322,21 @@ describe('DiscoverScreen', () => {
       latitude: 32.5149,
       longitude: -117.0382,
       radiusMeters: 3_000,
+      spinId: '33333333-3333-4333-8333-333333333333',
     });
+  });
+
+  it('marks the displayed spin after Maps opens', async () => {
+    mockRecommend.mockResolvedValue(buildRecommendation());
+
+    render(<DiscoverScreen />);
+    fireEvent.press(screen.getByText('GIRAR RULETA'));
+    await screen.findByText('La Cocina de Prueba');
+    fireEvent.press(screen.getByText('ABRIR EN MAPAS'));
+
+    expect(markSpinMapsOpened).toHaveBeenCalledWith(
+      '33333333-3333-4333-8333-333333333333',
+    );
   });
 
   it('shows one contextual Google invitation after the first successful spin', async () => {
@@ -475,6 +501,7 @@ describe('DiscoverScreen', () => {
       latitude: 32.5149,
       longitude: -117.0382,
       radiusMeters: 3_000,
+      spinId: '33333333-3333-4333-8333-333333333333',
     });
     expect(mockTrackProductEvent).toHaveBeenCalledWith('roulette_spin_again', {
       restaurantId: '55555555-5555-4555-8555-555555555555',

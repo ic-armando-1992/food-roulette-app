@@ -9,6 +9,7 @@ export const PRICE_LEVELS = [
 export type PriceLevel = (typeof PRICE_LEVELS)[number];
 
 export type RandomRecommendationRequest = {
+  spinId: string;
   latitude: number;
   longitude: number;
   countryCode: string;

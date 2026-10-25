@@ -320,7 +320,8 @@ secure guest bootstrap / restore
 
 The Android-targeted Phase 2 identity/authentication scope closed on
 2026-10-23 after automated and physical-device validation. Product development
-continues with Phase 3 Favorites. Apple authentication and native iOS validation
+continues with the Phase 4 spin-activity foundation after Favorites merged
+through API PR #8 and App PR #12. Apple authentication and native iOS validation
 remain required before an iOS release and are intentionally deferred to Phase
 13.
 
@@ -345,12 +346,31 @@ Google display content and always renders the returned Google/photo attribution.
 Logout, invalid-session recovery and confirmed switches to an existing account
 clear private Query state so one owner's Favorites cannot remain visible for
 another owner. If Google already belongs to another owner, the confirmation
-dialog explicitly offers to combine the guest's Favorites into that account;
-the API performs the deduplicated transfer transactionally before switching.
+dialog explicitly offers to combine the guest's Favorites and progress into
+that account; the API performs the transfer transactionally before switching.
 
 Phase 3 automated checks and its physical Android flow were accepted on
-2026-10-24. Branch publication, review and merge remain before integration into
-`experimental`.
+2026-10-24. API PR #8 and App PR #12 passed CI and merged into `experimental`.
+
+## Spin activity and future visits
+
+Every recommendation and reroll carries the same generated `spinId` used by
+telemetry. When a guest/account session is available, the API records that
+successful result without storing the search coordinates or provider display
+content. Anonymous fallback recommendations remain usable but cannot be
+attached to an owner.
+
+Spin activity remains internal for analytics and future product rules. The home
+header does not expose a roulette-history screen. Opening Maps marks the Spin
+idempotently after the native link succeeds, but it does not count as a visit.
+
+If Google already belongs to another owner, the explicit confirmation now
+combines guest Favorites and progress before the private query cache is cleared
+and the target account becomes visible.
+
+Phase 5 will add verified check-ins and a `Mis visitas` screen containing only
+the 10 newest verified visits. A spin or Maps opening alone will never appear as
+a visit.
 
 The API remains authoritative for user identity and future owned data. The app
 does not persist an authoritative balance, provider subject or provider profile.
@@ -374,8 +394,8 @@ If Google already belongs to another internal user, the app keeps the guest
 session active and displays a confirmation dialog. Cancel performs no account
 operation. Confirm exchanges the server-issued one-time token for a new session
 on the existing Google account and instructs the API to merge guest Favorites
-without duplicates. The app never merges or rewrites owned data itself, and no
-other data category is transferred implicitly.
+and progress. The app never merges or rewrites owned data itself, and no later
+data category is transferred implicitly.
 
 ### Android physical-device development build
 

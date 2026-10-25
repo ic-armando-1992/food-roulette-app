@@ -5,6 +5,7 @@ import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RandomRecommendationResponse } from '@/api/contracts/recommendations';
+import { markSpinMapsOpened } from '@/api/endpoints/spins.api';
 import { Button } from '@/components/ui/Button';
 import { AccountButton } from '@/features/auth/components/AccountButton';
 import { AccountModal } from '@/features/auth/components/AccountModal';
@@ -186,6 +187,7 @@ export function DiscoverScreen() {
     try {
       const result = await recommendation.recommend({
         ...locationState.coordinates,
+        spinId,
         allowInternational: false,
         radiusMeters,
         candidatePoolId: isReroll
@@ -284,6 +286,7 @@ export function DiscoverScreen() {
             }}
             onMapsOpened={() => {
               if (displayedSpinId) {
+                void markSpinMapsOpened(displayedSpinId).catch(() => undefined);
                 trackProductEvent(TELEMETRY_EVENTS.mapsOpened, {
                   restaurantId: displayedResult.recommendation.id,
                   spinId: displayedSpinId,
