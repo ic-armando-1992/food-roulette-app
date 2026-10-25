@@ -8,6 +8,7 @@ import {
 import * as ReactNative from 'react-native';
 
 import { AuthUser } from '@/api/contracts/auth';
+import { useNotificationStore } from '@/core/notifications/notification.store';
 import { AccountButton } from '@/features/auth/components/AccountButton';
 import { AccountModal } from '@/features/auth/components/AccountModal';
 import { useAuth } from '@/features/auth/providers/AuthProvider';
@@ -93,6 +94,38 @@ describe('account UI', () => {
     expect(
       screen.getByRole('button', { name: 'Continuar con Google' }),
     ).toBeOnTheScreen();
+  });
+
+  it('opens account recovery and retries an unavailable guest session', () => {
+    const retry = jest.fn();
+    jest.mocked(useAuth).mockReturnValue({
+      beginGoogleAccountUpgrade: jest.fn(),
+      confirmGoogleAccountSwitch: jest.fn(),
+      dismissSessionRecoveryNotice: jest.fn(),
+      logout: jest.fn(),
+      retry,
+      sessionRecoveryNoticeVisible: false,
+      status: 'unavailable',
+      user: null,
+    });
+    const onPress = jest.fn();
+    render(
+      <>
+        <AccountButton onPress={onPress} />
+        <AccountModal onClose={jest.fn()} visible />
+      </>,
+    );
+
+    const accountButton = screen.getByRole('button', {
+      name: 'Abrir cuenta de invitado',
+    });
+    expect(accountButton).toBeEnabled();
+    fireEvent.press(accountButton);
+    expect(onPress).toHaveBeenCalledTimes(1);
+
+    fireEvent.press(screen.getByText('RECONECTAR CUENTA'));
+    expect(retry).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Continuar con Google')).not.toBeOnTheScreen();
   });
 
   it('shows Google account status and an accessible avatar fallback', () => {
@@ -185,11 +218,16 @@ describe('account UI', () => {
       alert.mock.calls[0]?.[2]?.[1]?.onPress?.();
     });
 
-    await waitFor(() => expect(alert).toHaveBeenCalledTimes(2));
-    expect(alert).toHaveBeenLastCalledWith(
-      'Sesión cerrada en este dispositivo',
-      expect.stringContaining('no pudimos confirmar la revocación remota'),
+    await waitFor(() =>
+      expect(useNotificationStore.getState().queue[0]).toMatchObject({
+        description: expect.stringContaining(
+          'no pudimos confirmar la revocación remota',
+        ),
+        message: 'Sesión cerrada en este dispositivo',
+        type: 'warning',
+      }),
     );
+    expect(alert).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the account content scrollable on a compact screen', () => {

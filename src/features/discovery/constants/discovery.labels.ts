@@ -11,11 +11,15 @@ export const DISCOVERY_LABELS = {
     searchProgress: 'Buscando un restaurante cercano',
     settings: 'Abrir ajustes de la aplicación',
     favorites: 'Abrir favoritos',
+    visits: 'Abrir mis visitas',
     weeklyHoursHide: 'Ocultar horario semanal',
     weeklyHoursShow: 'Mostrar horario semanal',
   },
   actions: {
     backToRoulette: 'Volver a la ruleta',
+    checkIn: 'REGISTRAR VISITA',
+    checkingIn: 'REGISTRANDO…',
+    checkInVerified: 'VISITA REGISTRADA',
     openMaps: 'ABRIR EN MAPAS',
     openSettings: 'ABRIR AJUSTES',
     retry: 'INTENTAR DE NUEVO',
@@ -65,8 +69,6 @@ export const DISCOVERY_LABELS = {
       'No pudimos conectarnos al servicio de restaurantes. Revisa tu conexión e inténtalo de nuevo.',
     mapsUnavailable:
       'No pudimos abrir Maps. Revisa que tengas una aplicación de mapas disponible e inténtalo de nuevo.',
-    favoriteUnavailable:
-      'No pudimos actualizar este favorito. Revisa tu conexión e inténtalo de nuevo.',
     noResults:
       'No encontramos restaurantes cercanos con esas opciones. Prueba con un radio más amplio.',
     serviceUnavailable:

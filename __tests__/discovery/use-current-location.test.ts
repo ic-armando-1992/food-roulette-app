@@ -18,7 +18,6 @@ jest.mock('expo-location', () => ({
     UNDETERMINED: 'undetermined',
   },
   getForegroundPermissionsAsync: jest.fn(),
-  getLastKnownPositionAsync: jest.fn(),
   requestForegroundPermissionsAsync: jest.fn(),
   reverseGeocodeAsync: jest.fn(),
   watchPositionAsync: jest.fn(),
@@ -49,7 +48,12 @@ describe('useCurrentLocation', () => {
       granted: true,
       status: Location.PermissionStatus.GRANTED,
     } as Location.LocationPermissionResponse);
-    locationMock.getLastKnownPositionAsync.mockResolvedValue(locationObject);
+    locationMock.watchPositionAsync.mockImplementation(
+      async (_options, callback) => {
+        callback(locationObject);
+        return { remove: jest.fn() };
+      },
+    );
     locationMock.reverseGeocodeAsync.mockResolvedValue([
       {
         city: 'Tijuana',
@@ -98,6 +102,7 @@ describe('useCurrentLocation', () => {
     });
     expect(mockTrackProductEvent).toHaveBeenCalledTimes(1);
     expect(mockTrackProductEvent).toHaveBeenCalledWith('location_granted', {});
+    expect(locationMock.watchPositionAsync).toHaveBeenCalledTimes(2);
   });
 
   it('exposes denied without repeatedly requesting determined permission', async () => {
@@ -119,7 +124,7 @@ describe('useCurrentLocation', () => {
   });
 
   it('exposes unavailable location as a recoverable error', async () => {
-    locationMock.getLastKnownPositionAsync.mockRejectedValue(
+    locationMock.watchPositionAsync.mockRejectedValue(
       new Error('location unavailable'),
     );
     const { result } = renderHook(() => useCurrentLocation());
@@ -132,11 +137,10 @@ describe('useCurrentLocation', () => {
   it('times out a current-location watch that never produces coordinates', async () => {
     jest.useFakeTimers();
     const remove = jest.fn();
-    locationMock.getLastKnownPositionAsync.mockResolvedValue(null);
     locationMock.watchPositionAsync.mockResolvedValue({ remove });
     const { result } = renderHook(() => useCurrentLocation());
 
-    let request: Promise<void> | undefined;
+    let request: Promise<unknown> | undefined;
     act(() => {
       request = result.current.requestLocation();
     });

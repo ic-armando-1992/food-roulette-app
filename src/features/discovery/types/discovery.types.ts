@@ -3,6 +3,7 @@ import {
   RestaurantOpeningHours,
   RestaurantPhotoAuthorAttribution,
 } from '@/api/contracts/recommendations';
+import { CheckInResponse } from '@/api/contracts/visits';
 
 export type DiscoveryView = 'home' | 'result';
 
@@ -10,11 +11,11 @@ export type BrandHeaderProps = {
   actionsDisabled?: boolean;
   onAccountPress: () => void;
   onFavoritesPress?: () => void;
+  onVisitsPress?: () => void;
   showFavorites?: boolean;
+  showVisits?: boolean;
   showSettings?: boolean;
 };
-export type ErrorMessageProps = { message: string };
-
 export type GeographicCoordinates = {
   latitude: number;
   longitude: number;
@@ -70,12 +71,14 @@ export type OpeningHoursSectionProps = {
 };
 
 export type RecommendationCardProps = {
+  checkInResult: CheckInResponse | null;
   favoriteDisabled: boolean;
-  favoriteError: boolean;
   isFavorite: boolean;
   isFavoritePending: boolean;
   isRerolling: boolean;
+  isCheckInPending: boolean;
   onBack: () => void;
+  onCheckIn: () => void;
   onFavoriteToggle: () => void;
   onMapsOpened: () => void;
   onReroll: () => void;

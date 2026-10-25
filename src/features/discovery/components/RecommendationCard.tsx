@@ -21,6 +21,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { getApiResourceUrl } from '@/api/client';
 import { Button } from '@/components/ui/Button';
+import { notify } from '@/core/notifications/notify';
 import { OpeningHoursSection } from '@/features/discovery/components/OpeningHoursSection';
 import { FavoriteToggleButton } from '@/features/favorites/components/FavoriteToggleButton';
 import {
@@ -85,11 +86,13 @@ function PhotoAttribution({ attribution }: PhotoAttributionProps) {
 
 export function RecommendationCard({
   favoriteDisabled,
-  favoriteError,
   isFavorite,
   isFavoritePending,
+  checkInResult,
+  isCheckInPending,
   isRerolling,
   onBack,
+  onCheckIn,
   onFavoriteToggle,
   onMapsOpened,
   onReroll,
@@ -105,9 +108,6 @@ export function RecommendationCard({
     string | null
   >(null);
   const [loadedPhotoKey, setLoadedPhotoKey] = useState<string | null>(null);
-  const [failedMapsRestaurantId, setFailedMapsRestaurantId] = useState<
-    string | null
-  >(null);
   const photoFailed = failedPhotoRestaurantId === recommendation.id;
   const photoUrl = useMemo(
     () => (photo ? getApiResourceUrl(photo.url) : null),
@@ -128,13 +128,11 @@ export function RecommendationCard({
   ).slice(0, DISCOVERY_RESULT_LAYOUT.maximumCategoryTags);
 
   const handleOpenMaps = async () => {
-    setFailedMapsRestaurantId(null);
-
     try {
       await Linking.openURL(mapsUri);
       onMapsOpened();
     } catch {
-      setFailedMapsRestaurantId(recommendation.id);
+      notify.error(DISCOVERY_LABELS.error.mapsUnavailable);
     }
   };
 
@@ -278,11 +276,20 @@ export function RecommendationCard({
             label={DISCOVERY_LABELS.actions.openMaps}
             onPress={() => void handleOpenMaps()}
           />
-          {failedMapsRestaurantId === recommendation.id ? (
-            <Text accessibilityRole="alert" className="text-sm text-error">
-              {DISCOVERY_LABELS.error.mapsUnavailable}
-            </Text>
-          ) : null}
+          <Button
+            disabled={checkInResult?.status === 'verified'}
+            icon={<MapPin color={colors.foreground} size={19} />}
+            label={
+              checkInResult?.status === 'verified'
+                ? DISCOVERY_LABELS.actions.checkInVerified
+                : isCheckInPending
+                  ? DISCOVERY_LABELS.actions.checkingIn
+                  : DISCOVERY_LABELS.actions.checkIn
+            }
+            loading={isCheckInPending}
+            onPress={onCheckIn}
+            variant="secondary"
+          />
           <Button
             icon={<RotateCw color={colors.foreground} size={20} />}
             label={
@@ -294,11 +301,6 @@ export function RecommendationCard({
             onPress={onReroll}
             variant="secondary"
           />
-          {favoriteError ? (
-            <Text accessibilityRole="alert" className="text-sm text-error">
-              {DISCOVERY_LABELS.error.favoriteUnavailable}
-            </Text>
-          ) : null}
         </View>
 
         <View className="gap-1 border-t border-border pt-4">

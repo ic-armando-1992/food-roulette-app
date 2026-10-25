@@ -6,6 +6,7 @@ import {
 } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 
+import { useNotificationStore } from '@/core/notifications/notification.store';
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
 
 import { buildRecommendation } from '../../test-support/recommendation.fixture';
@@ -25,12 +26,14 @@ describe('RecommendationCard', () => {
   it('presents a complete closed result, attribution and Maps action', async () => {
     render(
       <RecommendationCard
+        checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -66,12 +69,14 @@ describe('RecommendationCard', () => {
   it('expands the weekly schedule for a closed restaurant', () => {
     render(
       <RecommendationCard
+        checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -88,12 +93,14 @@ describe('RecommendationCard', () => {
     const onFavoriteToggle = jest.fn();
     const { rerender } = render(
       <RecommendationCard
+        checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={onFavoriteToggle}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -110,12 +117,14 @@ describe('RecommendationCard', () => {
 
     rerender(
       <RecommendationCard
+        checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={onFavoriteToggle}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -133,12 +142,14 @@ describe('RecommendationCard', () => {
   it('keeps the result usable when optional metadata is missing', () => {
     render(
       <RecommendationCard
+        checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -177,12 +188,14 @@ describe('RecommendationCard', () => {
 
     render(
       <RecommendationCard
+        checkInResult={null}
         favoriteDisabled={false}
-        favoriteError={false}
         isFavorite={false}
         isFavoritePending={false}
+        isCheckInPending={false}
         isRerolling={false}
         onBack={jest.fn()}
+        onCheckIn={jest.fn()}
         onFavoriteToggle={jest.fn()}
         onMapsOpened={onMapsOpened}
         onReroll={jest.fn()}
@@ -192,11 +205,48 @@ describe('RecommendationCard', () => {
 
     fireEvent.press(screen.getByText('ABRIR EN MAPAS'));
 
-    expect(
-      await screen.findByText(
-        'No pudimos abrir Maps. Revisa que tengas una aplicación de mapas disponible e inténtalo de nuevo.',
-      ),
-    ).toBeOnTheScreen();
+    await waitFor(() =>
+      expect(useNotificationStore.getState().queue[0]).toMatchObject({
+        message:
+          'No pudimos abrir Maps. Revisa que tengas una aplicación de mapas disponible e inténtalo de nuevo.',
+        type: 'error',
+      }),
+    );
     expect(onMapsOpened).not.toHaveBeenCalled();
+  });
+
+  it('disables check-in after a verified visit', () => {
+    const commonProps = {
+      favoriteDisabled: false,
+      isCheckInPending: false,
+      isFavorite: false,
+      isFavoritePending: false,
+      isRerolling: false,
+      onBack: jest.fn(),
+      onCheckIn: jest.fn(),
+      onFavoriteToggle: jest.fn(),
+      onMapsOpened,
+      onReroll: jest.fn(),
+      result: buildRecommendation(),
+    };
+    render(
+      <RecommendationCard
+        {...commonProps}
+        checkInResult={{
+          status: 'verified',
+          visit: {
+            id: '88888888-8888-4888-8888-888888888888',
+            restaurantId: '55555555-5555-4555-8555-555555555555',
+            spinId: '33333333-3333-4333-8333-333333333333',
+            checkedInAt: '2026-10-25T12:00:00.000Z',
+            verificationDistanceMeters: 42.5,
+            locationAccuracyMeters: 8,
+            source: 'roulette',
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText('VISITA REGISTRADA')).toBeDisabled();
   });
 });

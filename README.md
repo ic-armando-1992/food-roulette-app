@@ -150,6 +150,32 @@ nearest `types/`, `contracts/` or model file, while reusable mappings, limits,
 paths and other behavior constants belong in `*.constants.ts`. Keep these files
 feature-local unless the definition is genuinely application-wide.
 
+### Integrated notifications
+
+Transient operation feedback uses the global notification API instead of
+feature-local cards or native one-button alerts:
+
+```ts
+import { notify } from '@/core/notifications/notify';
+
+notify.success('Asistencia registrada correctamente');
+notify.error('No fue posible registrar la asistencia');
+notify.warning('Ya registraste tu asistencia');
+notify.info('Tu sesión expirará pronto');
+```
+
+`NotificationRegion` belongs immediately below the current screen header. It
+renders one queued message at a time as part of normal layout, so its animated
+entry pushes content instead of covering it. Messages expire according to their
+variant or an explicit `durationMs`; use `persistent: true` only when the user
+must acknowledge the message. Native alerts remain appropriate for decisions
+that require two or more explicit actions, such as account-switch and logout
+confirmation.
+
+The implementation lives under `src/core/notifications/`. Feature code should
+call `notify` and keep its visible copy in the feature's labels file. Do not add
+another toast provider or render independent transient error banners.
+
 Expected base components:
 
 ```text
@@ -320,10 +346,10 @@ secure guest bootstrap / restore
 
 The Android-targeted Phase 2 identity/authentication scope closed on
 2026-10-23 after automated and physical-device validation. Product development
-continues with the Phase 4 spin-activity foundation after Favorites merged
-through API PR #8 and App PR #12. Apple authentication and native iOS validation
-remain required before an iOS release and are intentionally deferred to Phase
-13.
+continues with Phase 5 verified Check-In after the spin-activity foundation
+merged through API PR #9 and App PR #13. Apple authentication and native iOS
+validation remain required before an iOS release and are intentionally deferred
+to Phase 13.
 
 ## ❤️ Favorites
 
@@ -352,7 +378,7 @@ that account; the API performs the transfer transactionally before switching.
 Phase 3 automated checks and its physical Android flow were accepted on
 2026-10-24. API PR #8 and App PR #12 passed CI and merged into `experimental`.
 
-## Spin activity and future visits
+## Spin activity and verified visits
 
 Every recommendation and reroll carries the same generated `spinId` used by
 telemetry. When a guest/account session is available, the API records that
@@ -364,13 +390,34 @@ Spin activity remains internal for analytics and future product rules. The home
 header does not expose a roulette-history screen. Opening Maps marks the Spin
 idempotently after the native link succeeds, but it does not count as a visit.
 
+Each spin obtains a fresh foreground position and updates the visible locality
+before requesting a recommendation. A reroll reuses its cost-saving candidate
+pool only when the new reading remains within 100 meters of the previous search;
+after a meaningful move it starts a pool for the new location. A Check-In also
+uses a fresh reading and synchronizes the displayed locality.
+
 If Google already belongs to another owner, the explicit confirmation now
 combines guest Favorites and progress before the private query cache is cleared
 and the target account becomes visible.
 
-Phase 5 will add verified check-ins and a `Mis visitas` screen containing only
-the 10 newest verified visits. A spin or Maps opening alone will never appear as
-a visit.
+The selected restaurant card offers `REGISTRAR VISITA`. This explicit action asks
+for one fresh foreground high-accuracy location, applies a 15-second acquisition
+timeout and submits the displayed Spin and restaurant to the API. Coordinates
+remain in request memory and are not written to device storage or collected in
+the background. The UI distinguishes verified, too-far, poor-accuracy,
+permission and request-failure outcomes.
+
+The home header opens `/visits` as `Mis visitas`. It displays only the 10 newest
+verified Visits with current provider name/address, optional photo attribution,
+Maps, checked-in date and verification distance, plus complete
+loading/empty/error/unavailable states. A spin or Maps opening alone never
+appears as a Visit, while returning to the same restaurant can create a later
+separate Visit.
+
+Successful verification emits `restaurant_checked_in` without exact location
+properties and refreshes the server-backed Visit query. Confirming a switch to
+an existing Google account transfers guest Visits together with Favorites and
+internal spin progress.
 
 The API remains authoritative for user identity and future owned data. The app
 does not persist an authoritative balance, provider subject or provider profile.

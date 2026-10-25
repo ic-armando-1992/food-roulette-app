@@ -7,6 +7,7 @@ import {
 } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 
+import { useNotificationStore } from '@/core/notifications/notification.store';
 import { GoogleSignInAction } from '@/features/auth/components/GoogleSignInAction';
 import { AUTH_ERROR_MESSAGES } from '@/features/auth/constants/auth.constants';
 import { useAuth } from '@/features/auth/providers/AuthProvider';
@@ -61,7 +62,6 @@ describe('GoogleSignInAction', () => {
       status: 'linked',
       user: { ...guestUser, isGuest: false },
     });
-    const alert = jest.spyOn(Alert, 'alert');
     const onLinked = jest.fn();
     render(<GoogleSignInAction onLinked={onLinked} />);
 
@@ -73,10 +73,11 @@ describe('GoogleSignInAction', () => {
       ),
     );
     expect(confirmGoogleAccountSwitch).not.toHaveBeenCalled();
-    expect(alert).toHaveBeenCalledWith(
-      'Cuenta vinculada',
-      'Tu progreso quedó vinculado a tu cuenta de Google.',
-    );
+    expect(useNotificationStore.getState().queue[0]).toMatchObject({
+      description: 'Tu progreso quedó vinculado a tu cuenta de Google.',
+      message: 'Cuenta vinculada',
+      type: 'success',
+    });
     expect(onLinked).toHaveBeenCalledTimes(1);
   });
 
@@ -123,7 +124,7 @@ describe('GoogleSignInAction', () => {
     const buttons = alert.mock.calls[0]?.[2];
     expect(alert).toHaveBeenCalledWith(
       '¿Combinar tu progreso?',
-      'Esta cuenta de Google ya existe. Si continúas, tus favoritos y tu progreso de invitado se agregarán a esa cuenta.',
+      'Esta cuenta de Google ya existe. Si continúas, tus favoritos, visitas y progreso de invitado se agregarán a esa cuenta.',
       expect.any(Array),
       { cancelable: true },
     );
@@ -179,18 +180,18 @@ describe('GoogleSignInAction', () => {
     jest
       .mocked(requestGoogleIdToken)
       .mockRejectedValue(new Error('sensitive provider detail'));
-    const alert = jest.spyOn(Alert, 'alert');
     render(<GoogleSignInAction />);
 
     fireEvent.press(screen.getByTestId('google-sign-in-button'));
 
     await waitFor(() =>
-      expect(alert).toHaveBeenCalledWith(
-        'No pudimos iniciar sesión',
-        AUTH_ERROR_MESSAGES.googleSignInFailed,
-      ),
+      expect(useNotificationStore.getState().queue[0]).toMatchObject({
+        description: AUTH_ERROR_MESSAGES.googleSignInFailed,
+        message: 'No pudimos iniciar sesión',
+        type: 'error',
+      }),
     );
-    expect(JSON.stringify(alert.mock.calls)).not.toContain(
+    expect(JSON.stringify(useNotificationStore.getState().queue)).not.toContain(
       'sensitive provider detail',
     );
   });

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { AlertCircle, Heart, Settings, Sparkles } from 'lucide-react-native';
+import { Heart, MapPin, Settings, Sparkles } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,28 +7,33 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RandomRecommendationResponse } from '@/api/contracts/recommendations';
 import { markSpinMapsOpened } from '@/api/endpoints/spins.api';
 import { Button } from '@/components/ui/Button';
+import { NotificationRegion } from '@/core/notifications/NotificationRegion';
+import { notify } from '@/core/notifications/notify';
 import { AccountButton } from '@/features/auth/components/AccountButton';
 import { AccountModal } from '@/features/auth/components/AccountModal';
 import { GoogleLinkPrompt } from '@/features/auth/components/GoogleLinkPrompt';
 import { SessionRecoveryNotice } from '@/features/auth/components/SessionRecoveryNotice';
 import { useGoogleLinkPrompt } from '@/features/auth/hooks/useGoogleLinkPrompt';
 import { useFavoriteStatus } from '@/features/favorites/hooks/useFavoriteStatus';
+import { useCheckIn } from '@/features/visits/hooks/useCheckIn';
 import { LocationPill } from '@/features/discovery/components/LocationPill';
 import { RadiusSelector } from '@/features/discovery/components/RadiusSelector';
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
 import { RouletteLoadingState } from '@/features/discovery/components/RouletteLoadingState';
 import { RouletteSpinner } from '@/features/discovery/components/RouletteSpinner';
+import { DISCOVERY_LOCATION } from '@/features/discovery/constants/discovery.constants';
 import { DISCOVERY_LABELS } from '@/features/discovery/constants/discovery.labels';
 import { useCurrentLocation } from '@/features/discovery/hooks/useCurrentLocation';
 import { useRandomRecommendation } from '@/features/discovery/hooks/useRandomRecommendation';
 import { useDiscoveryStore } from '@/features/discovery/store/discovery.store';
 import {
   BrandHeaderProps,
+  Coordinates,
   DiscoveryView,
-  ErrorMessageProps,
   RouletteSpinPhase,
 } from '@/features/discovery/types/discovery.types';
 import { getRecommendationErrorMessage } from '@/features/discovery/utils/getRecommendationErrorMessage';
+import { getGeographicDistanceMeters } from '@/features/discovery/utils/getGeographicDistanceMeters';
 import { waitForMinimumSpinDuration } from '@/features/discovery/utils/waitForMinimumSpinDuration';
 import {
   createTelemetryId,
@@ -42,7 +47,9 @@ function BrandHeader({
   actionsDisabled = false,
   onAccountPress,
   onFavoritesPress,
+  onVisitsPress,
   showFavorites = false,
+  showVisits = false,
   showSettings = false,
 }: BrandHeaderProps) {
   return (
@@ -51,6 +58,21 @@ function BrandHeader({
         {DISCOVERY_LABELS.brandName}
       </Text>
       <View className="flex-row items-center gap-2">
+        {showVisits && onVisitsPress ? (
+          <Pressable
+            accessibilityLabel={DISCOVERY_LABELS.accessibility.visits}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: actionsDisabled }}
+            className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
+            disabled={actionsDisabled}
+            onPress={onVisitsPress}
+            style={({ pressed }) => ({
+              opacity: actionsDisabled ? 0.5 : pressed ? 0.7 : 1,
+            })}
+          >
+            <MapPin color={colors.foreground} size={21} />
+          </Pressable>
+        ) : null}
         {showFavorites && onFavoritesPress ? (
           <Pressable
             accessibilityLabel={DISCOVERY_LABELS.accessibility.favorites}
@@ -87,28 +109,21 @@ function BrandHeader({
   );
 }
 
-function ErrorMessage({ message }: ErrorMessageProps) {
-  return (
-    <View className="mx-5 mb-4 flex-row gap-3 rounded-2xl bg-surface px-4 py-3">
-      <AlertCircle color={colors.error} size={20} />
-      <View className="flex-1">
-        <Text className="font-bold text-error">
-          {DISCOVERY_LABELS.error.title}
-        </Text>
-        <Text className="mt-1 text-sm leading-5 text-mutedForeground">
-          {message}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
 export function DiscoverScreen() {
   const router = useRouter();
   const radiusMeters = useDiscoveryStore((state) => state.radiusMeters);
   const setRadiusMeters = useDiscoveryStore((state) => state.setRadiusMeters);
-  const { requestLocation, state: locationState } = useCurrentLocation();
+  const {
+    requestLocation,
+    state: locationState,
+    synchronizeLocation,
+  } = useCurrentLocation();
   const recommendation = useRandomRecommendation();
+  const checkIn = useCheckIn({
+    onLocationResolved: async (location) => {
+      await synchronizeLocation(location);
+    },
+  });
   const googleLinkPrompt = useGoogleLinkPrompt();
   const [accountVisible, setAccountVisible] = useState(false);
   const [excludedRestaurantIds, setExcludedRestaurantIds] = useState<string[]>(
@@ -117,10 +132,12 @@ export function DiscoverScreen() {
   const [displayedResult, setDisplayedResult] =
     useState<RandomRecommendationResponse | null>(null);
   const [displayedSpinId, setDisplayedSpinId] = useState<string | null>(null);
+  const [displayedVisitId, setDisplayedVisitId] = useState<string | null>(null);
   const [view, setView] = useState<DiscoveryView>('home');
   const [roulettePhase, setRoulettePhase] = useState<RouletteSpinPhase>('idle');
   const requestedLocationOnMount = useRef(false);
   const requestInFlight = useRef(false);
+  const lastSearchCoordinates = useRef<Coordinates | null>(null);
   const stopAnimationResolver = useRef<(() => void) | null>(null);
   const isSpinning = roulettePhase !== 'idle';
   const favorite = useFavoriteStatus(
@@ -150,6 +167,16 @@ export function DiscoverScreen() {
     }
   }, [requestLocation]);
 
+  useEffect(() => {
+    if (!recommendation.isError) {
+      return;
+    }
+
+    notify.error(DISCOVERY_LABELS.error.title, {
+      description: getRecommendationErrorMessage(recommendation.error),
+    });
+  }, [recommendation.error, recommendation.isError]);
+
   const requestRecommendation = async (isReroll: boolean) => {
     if (
       locationState.status !== 'granted' ||
@@ -160,7 +187,6 @@ export function DiscoverScreen() {
     }
 
     const previousResult = displayedResult;
-    const exclusions = isReroll ? excludedRestaurantIds : [];
     const spinId = createTelemetryId();
     const startedAt = Date.now();
     const minimumSpinDuration = waitForMinimumSpinDuration();
@@ -168,6 +194,7 @@ export function DiscoverScreen() {
     setAccountVisible(false);
     setRoulettePhase('spinning');
     recommendation.reset();
+    checkIn.reset();
 
     if (!isReroll) {
       setExcludedRestaurantIds([]);
@@ -185,12 +212,38 @@ export function DiscoverScreen() {
     });
 
     try {
+      const refreshedCoordinates = await requestLocation();
+
+      if (!refreshedCoordinates) {
+        throw new Error('location-unavailable');
+      }
+
+      const previousCoordinates = lastSearchCoordinates.current;
+      const canReuseCandidatePool = Boolean(
+        isReroll &&
+        previousResult &&
+        previousCoordinates &&
+        previousCoordinates.countryCode === refreshedCoordinates.countryCode &&
+        getGeographicDistanceMeters(
+          previousCoordinates,
+          refreshedCoordinates,
+        ) <= DISCOVERY_LOCATION.candidatePoolReuseDistanceMeters,
+      );
+      const searchCoordinates = canReuseCandidatePool
+        ? previousCoordinates!
+        : refreshedCoordinates;
+      const exclusions = canReuseCandidatePool ? excludedRestaurantIds : [];
+
+      if (!canReuseCandidatePool) {
+        setExcludedRestaurantIds([]);
+      }
+
       const result = await recommendation.recommend({
-        ...locationState.coordinates,
+        ...searchCoordinates,
         spinId,
         allowInternational: false,
         radiusMeters,
-        candidatePoolId: isReroll
+        candidatePoolId: canReuseCandidatePool
           ? previousResult?.candidatePool.id
           : undefined,
         excludedRestaurantIds: exclusions.length > 0 ? exclusions : undefined,
@@ -208,8 +261,10 @@ export function DiscoverScreen() {
           source: result.source,
         });
         setExcludedRestaurantIds([...exclusions, result.recommendation.id]);
+        lastSearchCoordinates.current = searchCoordinates;
         setDisplayedResult(result);
         setDisplayedSpinId(spinId);
+        setDisplayedVisitId(createTelemetryId());
         googleLinkPrompt.recordSuccessfulSpin();
         await waitForRouletteToStop();
         setView('result');
@@ -237,6 +292,7 @@ export function DiscoverScreen() {
     }
 
     setRadiusMeters(nextRadiusMeters);
+    lastSearchCoordinates.current = null;
     setExcludedRestaurantIds([]);
     recommendation.reset();
   };
@@ -250,6 +306,7 @@ export function DiscoverScreen() {
           actionsDisabled
           onAccountPress={() => setAccountVisible(true)}
         />
+        <NotificationRegion />
         <ScrollView contentContainerClassName="flex-grow" scrollEnabled={false}>
           <RouletteLoadingState
             onSpinStopped={handleRouletteStopped}
@@ -267,22 +324,28 @@ export function DiscoverScreen() {
   if (view === 'result' && displayedResult) {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-        <ScrollView contentContainerClassName="pb-4">
-          <SessionRecoveryNotice />
-          {recommendation.isError ? (
-            <ErrorMessage
-              message={getRecommendationErrorMessage(recommendation.error)}
-            />
-          ) : null}
+        <NotificationRegion />
+        <SessionRecoveryNotice />
+        <ScrollView className="flex-1" contentContainerClassName="pb-4">
           <RecommendationCard
+            checkInResult={checkIn.data ?? null}
             favoriteDisabled={!favorite.isReady}
-            favoriteError={Boolean(favorite.error)}
             isFavorite={favorite.isFavorite}
             isFavoritePending={favorite.isPending}
+            isCheckInPending={checkIn.isPending}
             isRerolling={isSpinning}
             onBack={() => {
               recommendation.reset();
               setView('home');
+            }}
+            onCheckIn={() => {
+              if (displayedSpinId && displayedVisitId) {
+                checkIn.mutate({
+                  visitId: displayedVisitId,
+                  spinId: displayedSpinId,
+                  restaurantId: displayedResult.recommendation.id,
+                });
+              }
             }}
             onMapsOpened={() => {
               if (displayedSpinId) {
@@ -310,9 +373,12 @@ export function DiscoverScreen() {
       <BrandHeader
         onAccountPress={() => setAccountVisible(true)}
         onFavoritesPress={() => router.push('/favorites')}
+        onVisitsPress={() => router.push('/visits')}
         showFavorites
+        showVisits
         showSettings
       />
+      <NotificationRegion enabled={!accountVisible} />
       <SessionRecoveryNotice />
       <ScrollView
         contentContainerClassName="px-5 pb-12"
@@ -352,14 +418,6 @@ export function DiscoverScreen() {
             onChange={handleRadiusChange}
           />
         </View>
-
-        {recommendation.isError ? (
-          <View className="mt-5">
-            <ErrorMessage
-              message={getRecommendationErrorMessage(recommendation.error)}
-            />
-          </View>
-        ) : null}
 
         {locationState.status === 'denied' ||
         locationState.status === 'error' ? (

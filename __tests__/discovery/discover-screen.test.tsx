@@ -17,6 +17,7 @@ import { DiscoverScreen } from '@/features/discovery/screens/DiscoverScreen';
 import { buildRecommendation } from '../../test-support/recommendation.fixture';
 
 const mockRequestLocation = jest.fn();
+const mockSynchronizeLocation = jest.fn();
 const mockRecommend = jest.fn<
   Promise<RandomRecommendationResponse | null>,
   [unknown]
@@ -26,8 +27,10 @@ const mockTrackProductEvent = jest.fn();
 const mockWaitForMinimumSpinDuration = jest.fn();
 const mockStopSpin = jest.fn<void, [() => void]>();
 const mockPush = jest.fn();
+const mockCheckInMutate = jest.fn();
 let mockLocationState: unknown;
 let mockRecommendationState: Record<string, unknown>;
+let mockCheckInState: Record<string, unknown>;
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
@@ -37,6 +40,7 @@ jest.mock('@/features/discovery/hooks/useCurrentLocation', () => ({
   useCurrentLocation: () => ({
     requestLocation: mockRequestLocation,
     state: mockLocationState,
+    synchronizeLocation: mockSynchronizeLocation,
   }),
 }));
 
@@ -69,6 +73,10 @@ jest.mock('@/features/favorites/hooks/useFavoriteStatus', () => ({
     isReady: true,
     toggle: jest.fn(),
   }),
+}));
+
+jest.mock('@/features/visits/hooks/useCheckIn', () => ({
+  useCheckIn: () => mockCheckInState,
 }));
 
 jest.mock('@/api/endpoints/spins.api', () => ({
@@ -137,11 +145,13 @@ jest.mock('@/features/discovery/components/RecommendationCard', () => {
   return {
     RecommendationCard: ({
       onBack,
+      onCheckIn,
       onMapsOpened,
       onReroll,
       result,
     }: {
       onBack: () => void;
+      onCheckIn: () => void;
       onMapsOpened: () => void;
       onReroll: () => void;
       result: RandomRecommendationResponse;
@@ -157,6 +167,9 @@ jest.mock('@/features/discovery/components/RecommendationCard', () => {
         <Pressable accessibilityRole="button" onPress={onMapsOpened}>
           <NativeText>ABRIR EN MAPAS</NativeText>
         </Pressable>
+        <Pressable accessibilityRole="button" onPress={onCheckIn}>
+          <NativeText>REGISTRAR VISITA</NativeText>
+        </Pressable>
       </View>
     ),
   };
@@ -165,6 +178,11 @@ jest.mock('@/features/discovery/components/RecommendationCard', () => {
 describe('DiscoverScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRequestLocation.mockResolvedValue({
+      countryCode: 'MX',
+      latitude: 32.5149,
+      longitude: -117.0382,
+    });
     mockWaitForMinimumSpinDuration.mockResolvedValue(undefined);
     mockStopSpin.mockImplementation((onStopped) => onStopped());
     mockLocationState = {
@@ -182,6 +200,14 @@ describe('DiscoverScreen', () => {
       isPending: false,
       recommend: mockRecommend,
       reset: mockReset,
+    };
+    mockCheckInState = {
+      data: null,
+      error: null,
+      isError: false,
+      isPending: false,
+      mutate: mockCheckInMutate,
+      reset: jest.fn(),
     };
     jest.mocked(useAuth).mockReturnValue({
       beginGoogleAccountUpgrade: jest.fn(),
@@ -224,6 +250,14 @@ describe('DiscoverScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/favorites');
   });
 
+  it('opens verified visits from the home header', () => {
+    render(<DiscoverScreen />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Abrir mis visitas' }));
+
+    expect(mockPush).toHaveBeenCalledWith('/visits');
+  });
+
   it('shows a dismissible recovery notice after an invalid account session', () => {
     const dismissSessionRecoveryNotice = jest.fn();
     jest.mocked(useAuth).mockReturnValue({
@@ -247,7 +281,7 @@ describe('DiscoverScreen', () => {
 
     expect(screen.getByText('Tu sesión anterior terminó')).toBeOnTheScreen();
     fireEvent.press(
-      screen.getByRole('button', { name: 'Ocultar aviso de sesión' }),
+      screen.getByRole('button', { name: 'Cerrar notificación' }),
     );
     expect(dismissSessionRecoveryNotice).toHaveBeenCalledTimes(1);
   });
@@ -308,6 +342,34 @@ describe('DiscoverScreen', () => {
     );
   });
 
+  it('refreshes location before spinning instead of reusing the mounted coordinates', async () => {
+    mockRequestLocation
+      .mockResolvedValueOnce({
+        countryCode: 'GL',
+        latitude: 64.1835,
+        longitude: -51.7216,
+      })
+      .mockResolvedValueOnce({
+        countryCode: 'MX',
+        latitude: 32.5149,
+        longitude: -117.0382,
+      });
+    mockRecommend.mockResolvedValue(buildRecommendation());
+
+    render(<DiscoverScreen />);
+    fireEvent.press(screen.getByText('GIRAR RULETA'));
+
+    await screen.findByText('La Cocina de Prueba');
+    expect(mockRequestLocation).toHaveBeenCalledTimes(2);
+    expect(mockRecommend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        countryCode: 'MX',
+        latitude: 32.5149,
+        longitude: -117.0382,
+      }),
+    );
+  });
+
   it('starts the same recommendation flow by pressing the roulette', async () => {
     mockRecommend.mockResolvedValue(buildRecommendation());
 
@@ -337,6 +399,21 @@ describe('DiscoverScreen', () => {
     expect(markSpinMapsOpened).toHaveBeenCalledWith(
       '33333333-3333-4333-8333-333333333333',
     );
+  });
+
+  it('starts a check-in for the displayed spin and restaurant', async () => {
+    mockRecommend.mockResolvedValue(buildRecommendation());
+
+    render(<DiscoverScreen />);
+    fireEvent.press(screen.getByText('GIRAR RULETA'));
+    await screen.findByText('La Cocina de Prueba');
+    fireEvent.press(screen.getByText('REGISTRAR VISITA'));
+
+    expect(mockCheckInMutate).toHaveBeenCalledWith({
+      visitId: '33333333-3333-4333-8333-333333333333',
+      spinId: '33333333-3333-4333-8333-333333333333',
+      restaurantId: '55555555-5555-4555-8555-555555555555',
+    });
   });
 
   it('shows one contextual Google invitation after the first successful spin', async () => {
@@ -435,7 +512,7 @@ describe('DiscoverScreen', () => {
       screen.getByRole('button', { name: 'Abrir cuenta de invitado' }),
     ).toBeDisabled();
     expect(screen.queryByText('La Cocina de Prueba')).not.toBeOnTheScreen();
-    expect(mockRecommend).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(mockRecommend).toHaveBeenCalledTimes(1));
 
     resolveRequest?.(buildRecommendation());
     await screen.findByText('La Cocina de Prueba');
@@ -505,6 +582,47 @@ describe('DiscoverScreen', () => {
     });
     expect(mockTrackProductEvent).toHaveBeenCalledWith('roulette_spin_again', {
       restaurantId: '55555555-5555-4555-8555-555555555555',
+    });
+  });
+
+  it('starts a new pool when the refreshed location changed significantly', async () => {
+    const secondResult = buildRecommendation({
+      id: '66666666-6666-4666-8666-666666666666',
+      name: 'Restaurante en ubicación nueva',
+    });
+    mockRequestLocation
+      .mockResolvedValueOnce({
+        countryCode: 'MX',
+        latitude: 32.5149,
+        longitude: -117.0382,
+      })
+      .mockResolvedValueOnce({
+        countryCode: 'MX',
+        latitude: 32.5149,
+        longitude: -117.0382,
+      })
+      .mockResolvedValueOnce({
+        countryCode: 'MX',
+        latitude: 19.4326,
+        longitude: -99.1332,
+      });
+    mockRecommend
+      .mockResolvedValueOnce(buildRecommendation())
+      .mockResolvedValueOnce(secondResult);
+
+    render(<DiscoverScreen />);
+    fireEvent.press(screen.getByText('GIRAR RULETA'));
+    await screen.findByText('La Cocina de Prueba');
+    fireEvent.press(screen.getByText('GIRAR OTRA VEZ'));
+    await screen.findByText('Restaurante en ubicación nueva');
+
+    expect(mockRecommend).toHaveBeenNthCalledWith(2, {
+      allowInternational: false,
+      countryCode: 'MX',
+      latitude: 19.4326,
+      longitude: -99.1332,
+      radiusMeters: 3_000,
+      spinId: '33333333-3333-4333-8333-333333333333',
     });
   });
 

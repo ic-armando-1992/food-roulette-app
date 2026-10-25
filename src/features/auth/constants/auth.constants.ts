@@ -33,6 +33,8 @@ export const AUTH_LABELS = {
       openGoogle: 'Abrir cuenta de Google',
       openGuest: 'Abrir cuenta de invitado',
     },
+    connectionUnavailable:
+      'No pudimos preparar tu cuenta. Reconecta la sesión de invitado antes de iniciar sesión con Google.',
     googleBody:
       'Tu progreso está vinculado y podrás recuperarlo en otro dispositivo.',
     googleTitle: 'Cuenta de Google',
@@ -40,13 +42,14 @@ export const AUTH_LABELS = {
       'Puedes seguir usando la ruleta sin registrarte. Vincula Google para conservar tu progreso al cambiar de dispositivo.',
     guestTitle: 'Cuenta de invitado',
     memberSince: (date: string) => `Cuenta creada el ${date}`,
+    retry: 'RECONECTAR CUENTA',
     title: 'Cuenta',
   },
   google: {
     cancel: 'Cancelar',
     conflictConfirm: 'Combinar y continuar',
     conflictMessage:
-      'Esta cuenta de Google ya existe. Si continúas, tus favoritos y tu progreso de invitado se agregarán a esa cuenta.',
+      'Esta cuenta de Google ya existe. Si continúas, tus favoritos, visitas y progreso de invitado se agregarán a esa cuenta.',
     conflictTitle: '¿Combinar tu progreso?',
     continue: 'Continuar con Google',
     errorTitle: 'No pudimos iniciar sesión',
@@ -74,7 +77,6 @@ export const AUTH_LABELS = {
     title: '¿Quieres conservar tu progreso?',
   },
   sessionRecovery: {
-    accessibilityDismiss: 'Ocultar aviso de sesión',
     body: 'Continúa como invitado o inicia sesión con Google desde Cuenta para recuperar tu progreso.',
     title: 'Tu sesión anterior terminó',
   },
