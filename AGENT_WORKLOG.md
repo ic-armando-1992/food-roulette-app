@@ -28,6 +28,12 @@ Rolling log of recent meaningful activity. Archive older entries under
   is now reachable, retry visibly reinitializes the guest session, and Favorites
   and Visits show recovery instead of an infinite loader. Four regression tests
   raise the App suite to 25 suites/156 tests; format, lint and typecheck pass.
+- Fresh-location correction: removed the two-minute last-known-position reuse.
+  Every spin now resolves and displays a fresh foreground location; rerolls
+  reuse their candidate pool only within 100 meters and start a new pool after a
+  meaningful move. Check-In also synchronizes its fresh reading back to the
+  shared location label. The App now passes 27 suites/160 tests, lint, strict
+  typecheck, formatting and Android Hermes export.
 - Pending acceptance: validate Check-In and `Mis visitas` on the physical
   Android device before publishing Phase 5; native iOS remains Phase 13.
 

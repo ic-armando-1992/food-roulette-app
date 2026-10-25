@@ -14,4 +14,8 @@ export type CheckInCoordinates = {
   accuracyMeters: number;
 };
 
+export type UseCheckInOptions = {
+  onLocationResolved?: (location: CheckInCoordinates) => void | Promise<void>;
+};
+
 export type VisitCardProps = { item: VisitHistoryItem };

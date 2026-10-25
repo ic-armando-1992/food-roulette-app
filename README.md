@@ -364,6 +364,12 @@ Spin activity remains internal for analytics and future product rules. The home
 header does not expose a roulette-history screen. Opening Maps marks the Spin
 idempotently after the native link succeeds, but it does not count as a visit.
 
+Each spin obtains a fresh foreground position and updates the visible locality
+before requesting a recommendation. A reroll reuses its cost-saving candidate
+pool only when the new reading remains within 100 meters of the previous search;
+after a meaningful move it starts a pool for the new location. A Check-In also
+uses a fresh reading and synchronizes the displayed locality.
+
 If Google already belongs to another owner, the explicit confirmation now
 combines guest Favorites and progress before the private query cache is cleared
 and the target account becomes visible.

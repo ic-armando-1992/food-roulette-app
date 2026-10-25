@@ -26,17 +26,20 @@ import { RadiusSelector } from '@/features/discovery/components/RadiusSelector';
 import { RecommendationCard } from '@/features/discovery/components/RecommendationCard';
 import { RouletteLoadingState } from '@/features/discovery/components/RouletteLoadingState';
 import { RouletteSpinner } from '@/features/discovery/components/RouletteSpinner';
+import { DISCOVERY_LOCATION } from '@/features/discovery/constants/discovery.constants';
 import { DISCOVERY_LABELS } from '@/features/discovery/constants/discovery.labels';
 import { useCurrentLocation } from '@/features/discovery/hooks/useCurrentLocation';
 import { useRandomRecommendation } from '@/features/discovery/hooks/useRandomRecommendation';
 import { useDiscoveryStore } from '@/features/discovery/store/discovery.store';
 import {
   BrandHeaderProps,
+  Coordinates,
   DiscoveryView,
   ErrorMessageProps,
   RouletteSpinPhase,
 } from '@/features/discovery/types/discovery.types';
 import { getRecommendationErrorMessage } from '@/features/discovery/utils/getRecommendationErrorMessage';
+import { getGeographicDistanceMeters } from '@/features/discovery/utils/getGeographicDistanceMeters';
 import { waitForMinimumSpinDuration } from '@/features/discovery/utils/waitForMinimumSpinDuration';
 import {
   createTelemetryId,
@@ -132,9 +135,17 @@ export function DiscoverScreen() {
   const router = useRouter();
   const radiusMeters = useDiscoveryStore((state) => state.radiusMeters);
   const setRadiusMeters = useDiscoveryStore((state) => state.setRadiusMeters);
-  const { requestLocation, state: locationState } = useCurrentLocation();
+  const {
+    requestLocation,
+    state: locationState,
+    synchronizeLocation,
+  } = useCurrentLocation();
   const recommendation = useRandomRecommendation();
-  const checkIn = useCheckIn();
+  const checkIn = useCheckIn({
+    onLocationResolved: async (location) => {
+      await synchronizeLocation(location);
+    },
+  });
   const googleLinkPrompt = useGoogleLinkPrompt();
   const [accountVisible, setAccountVisible] = useState(false);
   const [excludedRestaurantIds, setExcludedRestaurantIds] = useState<string[]>(
@@ -148,6 +159,7 @@ export function DiscoverScreen() {
   const [roulettePhase, setRoulettePhase] = useState<RouletteSpinPhase>('idle');
   const requestedLocationOnMount = useRef(false);
   const requestInFlight = useRef(false);
+  const lastSearchCoordinates = useRef<Coordinates | null>(null);
   const stopAnimationResolver = useRef<(() => void) | null>(null);
   const isSpinning = roulettePhase !== 'idle';
   const favorite = useFavoriteStatus(
@@ -187,7 +199,6 @@ export function DiscoverScreen() {
     }
 
     const previousResult = displayedResult;
-    const exclusions = isReroll ? excludedRestaurantIds : [];
     const spinId = createTelemetryId();
     const startedAt = Date.now();
     const minimumSpinDuration = waitForMinimumSpinDuration();
@@ -213,12 +224,38 @@ export function DiscoverScreen() {
     });
 
     try {
+      const refreshedCoordinates = await requestLocation();
+
+      if (!refreshedCoordinates) {
+        throw new Error('location-unavailable');
+      }
+
+      const previousCoordinates = lastSearchCoordinates.current;
+      const canReuseCandidatePool = Boolean(
+        isReroll &&
+        previousResult &&
+        previousCoordinates &&
+        previousCoordinates.countryCode === refreshedCoordinates.countryCode &&
+        getGeographicDistanceMeters(
+          previousCoordinates,
+          refreshedCoordinates,
+        ) <= DISCOVERY_LOCATION.candidatePoolReuseDistanceMeters,
+      );
+      const searchCoordinates = canReuseCandidatePool
+        ? previousCoordinates!
+        : refreshedCoordinates;
+      const exclusions = canReuseCandidatePool ? excludedRestaurantIds : [];
+
+      if (!canReuseCandidatePool) {
+        setExcludedRestaurantIds([]);
+      }
+
       const result = await recommendation.recommend({
-        ...locationState.coordinates,
+        ...searchCoordinates,
         spinId,
         allowInternational: false,
         radiusMeters,
-        candidatePoolId: isReroll
+        candidatePoolId: canReuseCandidatePool
           ? previousResult?.candidatePool.id
           : undefined,
         excludedRestaurantIds: exclusions.length > 0 ? exclusions : undefined,
@@ -236,6 +273,7 @@ export function DiscoverScreen() {
           source: result.source,
         });
         setExcludedRestaurantIds([...exclusions, result.recommendation.id]);
+        lastSearchCoordinates.current = searchCoordinates;
         setDisplayedResult(result);
         setDisplayedSpinId(spinId);
         setDisplayedVisitId(createTelemetryId());
@@ -266,6 +304,7 @@ export function DiscoverScreen() {
     }
 
     setRadiusMeters(nextRadiusMeters);
+    lastSearchCoordinates.current = null;
     setExcludedRestaurantIds([]);
     recommendation.reset();
   };

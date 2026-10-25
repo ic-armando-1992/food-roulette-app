@@ -112,9 +112,28 @@ export function useCurrentLocation() {
   const requestInFlight = useRef(false);
   const lastTrackedPermission = useRef<boolean | undefined>(undefined);
 
+  const synchronizeLocation = useCallback(
+    async (coordinates: GeographicCoordinates) => {
+      const locationContext = await resolveLocationContext(coordinates);
+      const resolvedCoordinates = {
+        ...coordinates,
+        countryCode: locationContext.countryCode,
+      };
+
+      setState({
+        status: 'granted',
+        coordinates: resolvedCoordinates,
+        label: locationContext.label,
+      });
+
+      return resolvedCoordinates;
+    },
+    [],
+  );
+
   const requestLocation = useCallback(async () => {
     if (requestInFlight.current) {
-      return;
+      return null;
     }
 
     requestInFlight.current = true;
@@ -133,7 +152,7 @@ export function useCurrentLocation() {
           lastTrackedPermission.current = false;
         }
         setState({ status: 'denied' });
-        return;
+        return null;
       }
 
       if (lastTrackedPermission.current !== true) {
@@ -141,35 +160,23 @@ export function useCurrentLocation() {
         lastTrackedPermission.current = true;
       }
 
-      const location =
-        (await Location.getLastKnownPositionAsync({
-          maxAge: DISCOVERY_TIMING.lastKnownLocationMaxAgeMs,
-          requiredAccuracy: 200,
-        })) ?? (await watchForCurrentLocation());
+      const location = await watchForCurrentLocation();
       const coordinates = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       };
-      const locationContext = await resolveLocationContext(coordinates);
-
-      setState({
-        status: 'granted',
-        coordinates: {
-          ...coordinates,
-          countryCode: locationContext.countryCode,
-        },
-        label: locationContext.label,
-      });
+      return await synchronizeLocation(coordinates);
     } catch (error) {
       if (__DEV__) {
         console.warn(LOCATION_ERROR_MESSAGES.warning, error);
       }
 
       setState({ status: 'error' });
+      return null;
     } finally {
       requestInFlight.current = false;
     }
-  }, []);
+  }, [synchronizeLocation]);
 
-  return { requestLocation, state };
+  return { requestLocation, state, synchronizeLocation };
 }

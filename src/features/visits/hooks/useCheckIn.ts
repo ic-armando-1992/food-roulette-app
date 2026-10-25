@@ -5,14 +5,24 @@ import { trackProductEvent } from '@/core/telemetry/telemetry';
 import { TELEMETRY_EVENTS } from '@/core/telemetry/constants/telemetry.constants';
 import { VISITS_QUERY_KEY } from '@/features/visits/constants/visits.constants';
 import { getCheckInLocation } from '@/features/visits/services/check-in-location';
-import { CheckInVariables } from '@/features/visits/types/visits.types';
+import {
+  CheckInVariables,
+  UseCheckInOptions,
+} from '@/features/visits/types/visits.types';
 
-export function useCheckIn() {
+export function useCheckIn(options: UseCheckInOptions = {}) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ visitId, spinId }: CheckInVariables) => {
       const location = await getCheckInLocation();
+
+      if (options.onLocationResolved) {
+        void Promise.resolve(options.onLocationResolved(location)).catch(
+          () => undefined,
+        );
+      }
+
       return checkIn({ visitId, spinId, ...location });
     },
     mutationKey: ['visits', 'check-in'],

@@ -7,13 +7,16 @@ import colors from '@/theme/colors.json';
 
 export const DISCOVERY_TIMING = {
   countryLookupTimeoutMs: 8_000,
-  lastKnownLocationMaxAgeMs: 2 * 60 * 1_000,
   locationRequestTimeoutMs: 12_000,
   loadingMessageIntervalMs: 850,
   minimumSpinDurationMs: 2_000,
   rouletteStopDurationMs: 700,
   rouletteStopRotationDegrees: 180,
   rouletteSpinDurationMs: 1_100,
+} as const;
+
+export const DISCOVERY_LOCATION = {
+  candidatePoolReuseDistanceMeters: 100,
 } as const;
 
 export const RADIUS_OPTIONS = [
