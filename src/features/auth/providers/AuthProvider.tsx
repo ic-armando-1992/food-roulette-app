@@ -23,6 +23,7 @@ import {
   AuthProviderProps,
   AuthStatus,
 } from '@/features/auth/types/auth.types';
+import { clearPrivateAchievementCache } from '@/features/achievements/services/achievement-cache';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [sessionRecoveryNoticeVisible, setSessionRecoveryNoticeVisible] =
     useState(false);
+  const currentUserId = user?.id;
 
   const initialize = useCallback(async () => {
     const generation = ++operationGeneration.current;
@@ -126,18 +128,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (generation === operationGeneration.current) {
         queryClient.clear();
+        if (currentUserId) void clearPrivateAchievementCache(currentUserId);
         setUser(switchedUser);
         setSessionRecoveryNoticeVisible(false);
       }
 
       return switchedUser;
     },
-    [queryClient],
+    [currentUserId, queryClient],
   );
 
   const logout = useCallback(async () => {
+    const previousUserId = currentUserId;
     const generation = ++operationGeneration.current;
     queryClient.clear();
+    if (previousUserId) await clearPrivateAchievementCache(previousUserId);
     const result = await logoutCurrentSession();
 
     if (generation === operationGeneration.current) {
@@ -147,7 +152,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     return result;
-  }, [queryClient]);
+  }, [currentUserId, queryClient]);
 
   const dismissSessionRecoveryNotice = useCallback(
     () => setSessionRecoveryNoticeVisible(false),

@@ -10,11 +10,12 @@ export type DiscoveryView = 'home' | 'result';
 export type BrandHeaderProps = {
   actionsDisabled?: boolean;
   onAccountPress: () => void;
+  onAchievementsPress?: () => void;
   onFavoritesPress?: () => void;
   onVisitsPress?: () => void;
+  showAchievements?: boolean;
   showFavorites?: boolean;
   showVisits?: boolean;
-  showSettings?: boolean;
 };
 export type GeographicCoordinates = {
   latitude: number;

@@ -2,98 +2,113 @@
 
 ## Current phase
 
-Roadmap Phases 0--5 are complete in `experimental`. Phase 5 Verified Restaurant
-Check-In and the integrated notification refactor passed CI and merged through
-API PR #10 and App PR #14 after accepted physical Android validation.
-Apple authentication and native iOS validation remain deferred to Phase 13.
+Achievements V1 plus Phase 2 XP/level progression and the Android collection
+layout/performance refactor are implemented locally on `experimental`. API and
+app automated verification passes; physical-device profiling and visual review
+are the remaining release-quality steps.
 
 ## Current branch
 
-`experimental`, synchronized with origin after the final App documentation PR
-#15 merged as `e2007c8`.
+`experimental`; achievements and the finalized header/account presentation are
+part of the current branch delivery. No merge or release tag was performed.
 
 ## Current environment status
 
 Expo SDK 57.0.31, React Native 0.86.3 and Node.js 20.20.2 are active. Format,
-lint, strict typecheck, 28 suites/170 tests and an Android Hermes export pass.
-The physical Android device is connected; ADB reverse mappings for Metro 8081
-and API 3000 are active, and `/health` returns database `up` from the phone.
-The direct Zod dependency is patched to 4.6.7; the critical audit threshold
-passes while known Expo/Tailwind transitive moderate/high advisories still
-require breaking upgrades. Native iOS validation has not run on this Linux/WSL
-host.
+lint, strict typecheck and 30 suites/184 tests pass. Offline Metro/Hermes exports
+pass for Android and iOS and include all 50 official images plus the locked
+fallback. No device is currently visible through `adb`, so physical FPS/memory
+measurements were not claimed.
 
 ## Completed milestones
 
-- Phase 0 discovery, Phase 1 telemetry and Phase 2 guest/Google behavior remain
-  green.
-- Typed Favorites endpoints use the centralized authenticated API client for
-  idempotent save/status/list/remove operations.
-- The result card exposes one accessible heart action whose state comes from a
-  cheap owner-scoped database query and whose mutation invalidates the list.
-- The home header opens a dedicated Expo Router Favorites screen with live
-  names, address, optional photo attribution, Maps action, saved date, removal,
-  empty/error/loading and unavailable-place states.
-- TanStack Query remains the sole owner of Favorites server state; Zustand and
-  local databases do not mirror it.
-- Confirming an existing-account switch explicitly merges guest Favorites and
-  guest progress into the Google owner through the API, then clears private
-  Query state before the new principal is rendered.
-- Successful saves emit the strict shared `restaurant_favorited` event.
-- Each recommendation sends its existing telemetry UUID as `spinId` so the API
-  can associate minimal internal spin activity with its owner.
-- Successful Maps launches update the owner-scoped Spin through the API while
-  telemetry remains best-effort; this does not create a visit.
-- The home header no longer exposes roulette history; its `Mis visitas` entry
-  uses only verified check-ins.
-- The result card now offers `REGISTRAR VISITA`, obtains one fresh foreground
-  high-accuracy location and renders pending, verified, too-far, poor-accuracy,
-  permission and request-failure outcomes without retaining coordinates.
-- The home header opens `Mis visitas`, which renders the 10 newest verified
-  visits with live provider details, date, verification distance, Maps and
-  empty/error/loading/unavailable states.
-- Successful verification emits `restaurant_checked_in` and refreshes the Visit
-  query. A new spin or reroll resets the prior Check-In result.
-- A temporary API outage no longer leaves account-dependent screens loading
-  forever. Account, Favorites and Visits expose an explicit guest-session retry,
-  while the anonymous roulette remains usable.
-- Every spin now requests a fresh foreground location and updates the visible
-  locality. Rerolls preserve the cost-saving candidate pool only within 100
-  meters; a meaningful move starts a pool for the new location. Check-In's fresh
-  reading also synchronizes the shared visible location.
-- Transient success, error, warning and info feedback now uses one global
-  `notify` API and a compact queued region directly below each active screen
-  header. It pushes layout, supports manual/automatic/persistent dismissal,
-  respects reduced motion and replaces duplicated operation banners/native
-  one-button alerts across authentication, recommendations, Maps, Favorites and
-  Check-In. Choice-bearing account dialogs remain native.
+- Added typed catalog, progress, summary, notification and acknowledgement API
+  contracts without adding dependencies.
+- Catalog and per-user progress use Expo SQLite persistence. Cached values render
+  before background ETag revalidation and 304 responses reuse local data.
+- All 50 assets and `locked_achievement` are registered centrally. Expo Image
+  prefers versioned remote URLs with disk cache and falls back locally.
+- Added a responsive two-column collection, level/XP/completion header,
+  all/unlocked/pending/secret/category filters and an achievement detail modal.
+- The original Stack/header navigation remains active: Logros, Visitas,
+  Favoritos and the level-badged avatar appear in that order. Settings lives
+  only inside the scrollable Account sheet, which closes before opening the
+  existing application-settings destination.
+- Refactored the collection to deterministic two-column card geometry without
+  virtual-list container gaps, duplicate filter keys or viewport padding.
+- The grid now owns each fixed-width/fixed-height cell; cards fill those cells
+  and use fixed art, two-line title, rarity, progress and status slots. Content
+  can truncate or clip inside its slot but cannot resize a card or column.
+- The collection keeps explicit outer breathing room above and below the grid
+  while preserving the existing horizontal inset and inter-card gaps.
+- Card content redistributes the existing vertical inset to keep 18 pixels above
+  the fixed-size achievement circle and a compact 2-pixel title offset without
+  changing card/grid geometry or image dimensions.
+- Memoized cards, images and the XP summary; stabilized item callbacks and keys;
+  limited virtualized render batches; and disabled simultaneous grid image
+  transitions.
+- Expo Image now explicitly downsamples the 1254px source art at card size,
+  uses memory/disk cache, keeps a local placeholder for remote assets and safely
+  resets remote failures by URL.
+- Achievement art now renders inside a fixed two-layer canvas. A centralized
+  asset-key visual map applies bounded scale/translation overrides to measured
+  alpha-bound outliers, with the same proportional treatment in cards, details
+  and celebrations; no PNG or achievement definition changed.
+- The compact header now has one XP bar plus a separate unlocked count. Pull to
+  refresh performs real network revalidation, preserves cached data on errors
+  and reports stale-data state.
+- Locked-secret concealment is enforced at the UI boundary while public locked
+  achievements retain their real name and image. The detail sheet scrolls on
+  small screens and never reveals a locked secret condition.
+- Locked secrets show generic copy, no target/progress and the locked fallback.
+- Added a reduced-motion-aware reward popup with rarity treatment, XP, Continue
+  and Ver mis logros actions.
+- Server-confirmed spin/accept/visit responses display grouped activity-XP
+  toasts; achievement XP remains explicit in the achievement celebration.
+- The avatar has a level badge. Account and achievements screens share the
+  server progression, XP bar and remaining-XP values.
+- Level-up and achievement celebrations share one durable queue. Multi-level
+  jumps render once with their complete from/to range.
+- The durable owner-scoped queue deduplicates notifications, persists across
+  restarts, presents one modal at a time and acknowledges each item to the API.
+- The roulette supplies stable session UUIDs, explicit reroll state and an IANA
+  time zone, and refreshes unlocks only after the result is visible. Maps and
+  verified check-in consume their authoritative XP result immediately.
+- Check-in sends the foreground observation timestamp; stale fixes are rejected
+  without recording a visit.
+- Logout/account switching clears private achievement data and generation checks
+  prevent stale-account queue responses from being rendered.
+- UI tests cover all asset registrations, locked progress, popup content/actions
+  and the updated roulette contract; the existing full app suite remains green.
 
 ## Active blocker(s)
 
-No active blocker remains for Phase 5. Production infrastructure and
-Apple/native iOS work remain Phase 12/13 gates.
+No code or automated-test blocker. CDN/object-storage credentials are absent by
+design and local assets remain functional. Physical Android/iOS visual,
+accessibility, scroll profiling and reduced-motion validation remains pending;
+no Android device is currently connected to `adb`.
 
 ## Important current decisions
 
-- The API remains authoritative for Favorites and user ownership.
-- The result heart does not load provider display content; it calls the cheap
-  status endpoint. The full list is fetched only on the Favorites screen and
-  uses a one-minute in-memory stale window to avoid unnecessary refetches.
-- Provider presentation data is not persisted on-device. Google and photo
-  author attribution remain attached to the live list response.
-- Account switches/logout/recovery must clear private query state whenever the
-  internal owner changes.
-- Existing-account confirmation names Favorites and guest progress; cancelling
-  preserves the guest unchanged and no later product data is implied.
-- Roulette results and Maps openings are not visits. `Mis visitas` shows only
-  the 10 newest verified check-ins.
-- Check-In requests location only after the explicit action, uses a 15-second
-  acquisition timeout and does not persist or background-track coordinates.
-- Notifications are UI-only Zustand state, show one item at a time and preserve
-  full-screen recovery states for failures that require an explicit retry.
-- Apple authentication/native iOS remain Phase 13 release gates, not Phase 3
-  blockers.
+- TanStack Query owns live server state; SQLite is a last-known offline cache,
+  not a second authoritative database.
+- Queue persistence is namespaced by internal user ID and backend acknowledgement
+  is the cross-device source of truth.
+- No image was regenerated, modified or encoded into SQLite/AsyncStorage.
+- The existing `FlatList` remains sufficient for the current 50 and tested 100
+  items; no FlashList dependency or unreliable estimated item height was added.
+- Original 1254x1254 art remains unchanged per product constraints; runtime
+  downsampling and bounded virtualization address decode/render pressure.
+- Visual-size overrides are based on alpha>=64 content bounds (roughly 1019 to
+  1207 pixels across the source set), use a neutral default and remain limited
+  to measured outliers instead of embedding per-card styling.
+- The project remains mobile-only; the failed `--platform all` check was caused
+  solely by the intentionally absent `react-native-web`. Android and iOS exports
+  both pass independently.
 
 ## Next intended action
 
-Begin Phase 6 Achievements planning from synchronized `experimental`.
+Connect the physical Android device and verify the restored header navigation
+plus Account-to-Settings dismissal; then profile collection open/scroll/filter,
+image memory, large-font layouts, XP sequencing and reduced motion before
+preparing reviewable commits if requested.

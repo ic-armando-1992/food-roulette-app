@@ -45,6 +45,7 @@ export async function getCheckInLocation(): Promise<CheckInCoordinates> {
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
       accuracyMeters: location.coords.accuracy,
+      observedAt: new Date(location.timestamp).toISOString(),
     };
   } catch (error) {
     if (error instanceof CheckInLocationError) {

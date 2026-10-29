@@ -1,3 +1,5 @@
+import { XpOperationResult } from './achievements';
+
 export const PRICE_LEVELS = [
   'FREE',
   'INEXPENSIVE',
@@ -10,6 +12,9 @@ export type PriceLevel = (typeof PRICE_LEVELS)[number];
 
 export type RandomRecommendationRequest = {
   spinId: string;
+  rouletteSessionId?: string;
+  isReroll?: boolean;
+  timeZone?: string;
   latitude: number;
   longitude: number;
   countryCode: string;
@@ -70,4 +75,5 @@ export type RandomRecommendationResponse = {
     provider: string;
     displayText: string;
   } | null;
+  progressionUpdate?: XpOperationResult | null;
 };

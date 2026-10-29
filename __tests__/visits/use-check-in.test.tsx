@@ -73,6 +73,7 @@ describe('useCheckIn', () => {
       visitId: '88888888-8888-4888-8888-888888888888',
       spinId: '33333333-3333-4333-8333-333333333333',
       ...location,
+      observedAt: expect.any(String),
     });
     expect(useNotificationStore.getState().queue[0]).toMatchObject({
       description:

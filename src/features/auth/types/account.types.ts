@@ -1,11 +1,15 @@
+import { AchievementProgression } from '@/api/contracts/achievements';
+
 export type AccountButtonProps = {
   disabled?: boolean;
+  level?: number;
   onPress: () => void;
 };
 
 export type AccountModalProps = {
   onClose: () => void;
   visible: boolean;
+  progression?: AchievementProgression | null;
 };
 
 export type GoogleLinkPromptProps = {

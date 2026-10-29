@@ -1,4 +1,5 @@
 import { FavoriteRestaurant } from '@/api/contracts/favorites';
+import { XpOperationResult } from '@/api/contracts/achievements';
 
 export type CheckInRequest = {
   visitId: string;
@@ -6,6 +7,7 @@ export type CheckInRequest = {
   latitude: number;
   longitude: number;
   accuracyMeters: number;
+  observedAt: string;
 };
 
 export type VerifiedVisit = {
@@ -19,7 +21,11 @@ export type VerifiedVisit = {
 };
 
 export type CheckInResponse =
-  | { status: 'verified'; visit: VerifiedVisit }
+  | {
+      status: 'verified';
+      visit: VerifiedVisit;
+      progressionUpdate?: XpOperationResult;
+    }
   | {
       status: 'too_far';
       distanceMeters: number;
@@ -29,6 +35,10 @@ export type CheckInResponse =
       status: 'accuracy_too_low';
       accuracyMeters: number;
       maximumAccuracyMeters: number;
+    }
+  | {
+      status: 'location_too_old';
+      maximumAgeSeconds: number;
     };
 
 export type VisitHistoryItem = {

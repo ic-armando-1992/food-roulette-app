@@ -46,6 +46,7 @@ describe('getCheckInLocation', () => {
       latitude: 32.5149,
       longitude: -117.0382,
       accuracyMeters: 8.5,
+      observedAt: '1970-01-01T00:00:00.000Z',
     });
     expect(locationMock.getCurrentPositionAsync).toHaveBeenCalledWith({
       accuracy: Location.Accuracy.Highest,

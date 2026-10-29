@@ -47,6 +47,9 @@ jest.mock('@/features/discovery/hooks/useCurrentLocation', () => ({
 jest.mock('@/features/auth/providers/AuthProvider', () => ({
   useAuth: jest.fn(),
 }));
+jest.mock('@/features/achievements/hooks/useProgression', () => ({
+  useProgression: () => ({ data: null }),
+}));
 
 jest.mock('@/features/auth/services/auth-storage', () => ({
   hasSeenGoogleLinkPrompt: jest.fn(),
@@ -227,7 +230,7 @@ describe('DiscoverScreen', () => {
     });
     jest.mocked(hasSeenGoogleLinkPrompt).mockResolvedValue(false);
     jest.mocked(markGoogleLinkPromptSeen).mockResolvedValue();
-    jest.mocked(markSpinMapsOpened).mockResolvedValue();
+    jest.mocked(markSpinMapsOpened).mockResolvedValue(undefined as never);
   });
 
   it('keeps the profile entry visible without showing a registration card', () => {
@@ -242,20 +245,40 @@ describe('DiscoverScreen', () => {
     ).not.toBeOnTheScreen();
   });
 
-  it('opens the Favorites screen from the home header', () => {
+  it('restores the original header order without the Settings action', () => {
     render(<DiscoverScreen />);
 
-    fireEvent.press(screen.getByRole('button', { name: 'Abrir favoritos' }));
-
-    expect(mockPush).toHaveBeenCalledWith('/favorites');
+    expect(screen.getByText('Food Roulette')).toBeOnTheScreen();
+    expect(
+      screen
+        .getAllByRole('button')
+        .slice(0, 4)
+        .map((button) => button.props.accessibilityLabel),
+    ).toEqual([
+      'Abrir mis logros',
+      'Abrir mis visitas',
+      'Abrir favoritos',
+      'Abrir cuenta de invitado',
+    ]);
+    expect(
+      screen.queryByRole('button', {
+        name: 'Abrir ajustes de la aplicación',
+      }),
+    ).not.toBeOnTheScreen();
   });
 
-  it('opens verified visits from the home header', () => {
+  it('opens achievements, visits and favorites from the home header', () => {
     render(<DiscoverScreen />);
 
+    fireEvent.press(screen.getByRole('button', { name: 'Abrir mis logros' }));
     fireEvent.press(screen.getByRole('button', { name: 'Abrir mis visitas' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Abrir favoritos' }));
 
-    expect(mockPush).toHaveBeenCalledWith('/visits');
+    expect(mockPush.mock.calls).toEqual([
+      ['/achievements'],
+      ['/visits'],
+      ['/favorites'],
+    ]);
   });
 
   it('shows a dismissible recovery notice after an invalid account session', () => {
@@ -321,14 +344,18 @@ describe('DiscoverScreen', () => {
     expect(
       screen.queryByRole('button', { name: 'Abrir cuenta de invitado' }),
     ).not.toBeOnTheScreen();
-    expect(mockRecommend).toHaveBeenCalledWith({
-      allowInternational: false,
-      countryCode: 'MX',
-      latitude: 32.5149,
-      longitude: -117.0382,
-      radiusMeters: 3_000,
-      spinId: '33333333-3333-4333-8333-333333333333',
-    });
+    expect(mockRecommend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowInternational: false,
+        countryCode: 'MX',
+        latitude: 32.5149,
+        longitude: -117.0382,
+        radiusMeters: 3_000,
+        isReroll: false,
+        rouletteSessionId: '33333333-3333-4333-8333-333333333333',
+        spinId: '33333333-3333-4333-8333-333333333333',
+      }),
+    );
     expect(mockTrackProductEvent).toHaveBeenCalledWith(
       'roulette_spin_started',
       expect.objectContaining({ reroll: false, radiusMeters: 3_000 }),
@@ -378,14 +405,17 @@ describe('DiscoverScreen', () => {
 
     await screen.findByText('La Cocina de Prueba');
     expect(mockRecommend).toHaveBeenCalledTimes(1);
-    expect(mockRecommend).toHaveBeenCalledWith({
-      allowInternational: false,
-      countryCode: 'MX',
-      latitude: 32.5149,
-      longitude: -117.0382,
-      radiusMeters: 3_000,
-      spinId: '33333333-3333-4333-8333-333333333333',
-    });
+    expect(mockRecommend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowInternational: false,
+        countryCode: 'MX',
+        latitude: 32.5149,
+        longitude: -117.0382,
+        radiusMeters: 3_000,
+        isReroll: false,
+        spinId: '33333333-3333-4333-8333-333333333333',
+      }),
+    );
   });
 
   it('marks the displayed spin after Maps opens', async () => {
@@ -570,16 +600,20 @@ describe('DiscoverScreen', () => {
     fireEvent.press(screen.getByText('GIRAR OTRA VEZ'));
     await screen.findByText('Segundo Restaurante');
 
-    expect(mockRecommend).toHaveBeenNthCalledWith(2, {
-      allowInternational: false,
-      candidatePoolId: '77777777-7777-4777-8777-777777777777',
-      countryCode: 'MX',
-      excludedRestaurantIds: ['55555555-5555-4555-8555-555555555555'],
-      latitude: 32.5149,
-      longitude: -117.0382,
-      radiusMeters: 3_000,
-      spinId: '33333333-3333-4333-8333-333333333333',
-    });
+    expect(mockRecommend).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        allowInternational: false,
+        candidatePoolId: '77777777-7777-4777-8777-777777777777',
+        countryCode: 'MX',
+        excludedRestaurantIds: ['55555555-5555-4555-8555-555555555555'],
+        latitude: 32.5149,
+        longitude: -117.0382,
+        radiusMeters: 3_000,
+        isReroll: true,
+        spinId: '33333333-3333-4333-8333-333333333333',
+      }),
+    );
     expect(mockTrackProductEvent).toHaveBeenCalledWith('roulette_spin_again', {
       restaurantId: '55555555-5555-4555-8555-555555555555',
     });
@@ -616,14 +650,18 @@ describe('DiscoverScreen', () => {
     fireEvent.press(screen.getByText('GIRAR OTRA VEZ'));
     await screen.findByText('Restaurante en ubicación nueva');
 
-    expect(mockRecommend).toHaveBeenNthCalledWith(2, {
-      allowInternational: false,
-      countryCode: 'MX',
-      latitude: 19.4326,
-      longitude: -99.1332,
-      radiusMeters: 3_000,
-      spinId: '33333333-3333-4333-8333-333333333333',
-    });
+    expect(mockRecommend).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        allowInternational: false,
+        countryCode: 'MX',
+        latitude: 19.4326,
+        longitude: -99.1332,
+        radiusMeters: 3_000,
+        isReroll: true,
+        spinId: '33333333-3333-4333-8333-333333333333',
+      }),
+    );
   });
 
   it('allows retry after a failed recommendation', async () => {

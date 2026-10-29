@@ -5,6 +5,20 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-29 — Achievements mobile delivery verified
+
+- Timestamp: 2026-10-29.
+- Command/action: completed the final pre-delivery audit on `experimental`,
+  including format, Expo lint, strict typecheck, secret/file audit, all tests
+  and fresh Android/iOS Metro-Hermes exports.
+- Result: success; 30 suites/184 tests pass and both platform bundles include
+  all 50 official achievement assets plus the locked fallback. The ignored
+  local `.env` and Windows Zone.Identifier metadata were not staged, and no
+  credential pattern was detected.
+- Current phase/status: the achievements experience, corrected uniform grid,
+  original header navigation and Account-based Settings access are ready for
+  delivery to `origin/experimental`; no merge or release tag is included.
+
 ### 2026-10-25 — Integrated notification system completed for Android review
 
 - Timestamp: 2026-10-25.
@@ -993,3 +1007,169 @@ Rolling log of recent meaningful activity. Archive older entries under
 - Blocker: none for implementation/static validation; device limitations remain.
 - Next intended action: inspect the backend recommendation contract and create
   global providers, environment config and API boundary.
+
+### 2026-10-25 — Achievements V1 mobile experience implemented and verified
+
+- Timestamp: 2026-10-25.
+- Command/action: added typed achievement APIs, SQLite cache and ETag
+  revalidation, the central 51-image registry, collection/detail UI, persistent
+  owner-scoped celebration queue, reduced-motion popup, auth cleanup and real
+  roulette/Maps/check-in refresh integration.
+- Result: success.
+- Relevant result summary: format, lint, strict typecheck and all 29 suites/173
+  tests pass. Android and iOS offline Hermes exports pass and package every
+  official achievement image without modifying it. No dependency, provider
+  request, deployment or cloud resource was added.
+- Current phase/status: Phase 6 app implementation is complete locally on
+  uncommitted `experimental`.
+- Blocker: no code blocker; physical Android/iOS visual and reduced-motion
+  review remains.
+- Next intended action: run the physical-device achievement UX matrix and
+  prepare small reviewable commits if requested.
+
+### 2026-10-25 — XP and level progression experience completed
+
+- Timestamp: 2026-10-25.
+- Command/action: added progression contracts/API, server-confirmed XP toasts,
+  avatar level badge, account XP card, shared achievement/level queue,
+  multi-level celebration and fresh check-in timestamps.
+- Result: success.
+- Relevant result summary: format, lint, strict typecheck and all 29 suites/175
+  tests pass. Android and iOS Hermes exports pass. No dependency, provider
+  request, deployment or cloud resource was added.
+- Current phase/status: Phase 2 mobile progression is complete locally on
+  uncommitted `experimental`.
+- Blocker: no code blocker; physical-device visual/accessibility/reduced-motion
+  validation remains.
+- Next intended action: run the physical-device XP/level UX matrix and prepare
+  reviewable commits if requested.
+
+### 2026-10-26 — Achievement collection layout and performance refactored
+
+- Timestamp: 2026-10-26.
+- Command/action: diagnosed the two-column collection, card/image components,
+  query/cache flow, filters, API concealment contract and all 51 packaged image
+  files, then refactored the collection without changing API logic or assets.
+- Result: success; format, lint, strict typecheck, 30 suites/180 tests and
+  Android/iOS Metro-Hermes exports pass.
+- Relevant result summary: removed virtual-list viewport padding and container
+  gaps, imposed deterministic responsive card geometry, eliminated the duplicate
+  `SECRET` filter key, memoized stable cells/header/images, bounded render batches,
+  enabled explicit image downsampling plus memory/disk caching, removed 50-way
+  grid transitions, added true pull-to-refresh with stale-cache feedback, and
+  enforced secret concealment in both card and detail UI. A 100-item fixture
+  validates filtering without mutation or duplicate keys.
+- Measured inputs: 51 PNG assets are 1254x1254, total 68 MB compressed and about
+  6.3 MB RGBA each if decoded at source size. No FPS or runtime memory number was
+  claimed because no device is currently visible through `adb`.
+- Current phase/status: implementation and automated/native bundle verification
+  complete; physical release-build profiling remains.
+- Blocker: physical Android/iOS performance and visual validation requires a
+  connected device.
+- Next intended action: connect Android, verify opening/scroll/filter/detail and
+  profile frame timing plus image memory with the release build.
+
+### 2026-10-26 — Achievement visual size normalized without asset changes
+
+- Timestamp: 2026-10-26.
+- Command/action: inspected the shared card/image/detail/celebration rendering,
+  decoded all 51 PNG alpha channels read-only and compared content bounds at
+  multiple alpha thresholds before adding a centralized visual configuration.
+- Result: success; format, lint, strict typecheck, 30 suites/181 tests and fresh
+  Android/iOS Metro-Hermes exports pass.
+- Relevant result summary: source canvases are uniformly 1254x1254, while useful
+  alpha>=64 bounds range from about 1019 to 1207 pixels. Cards now reserve a
+  fixed 108x108 art container and 94x94 image canvas. The default transform is
+  neutral; 17 measured outliers receive bounded 0.96–1.13 scale and small
+  proportional translations. The same canvas ratio is used by detail and reward
+  celebration views.
+- Constraint confirmation: no PNG, filename, achievement JSON, API behavior,
+  unlock condition or XP rule changed; no dependency was added.
+- Current phase/status: visual normalization is implemented and automated/native
+  bundle validation is complete; physical visual review remains.
+- Blocker: final perceptual tuning across Android display densities requires a
+  connected device and human visual comparison.
+- Next intended action: reload the Android client, compare representative small,
+  default and large assets in adjacent rows, and adjust only the centralized map
+  if a final device-specific optical correction is warranted.
+
+### 2026-10-29 — Achievement grid geometry made cell-owned and content-independent
+
+- Timestamp: 2026-10-29.
+- Command/action: audited the complete collection/card/art layout and replaced
+  card-owned width constraints with one responsive fixed-size cell shared by
+  every `FlatList` item. Split the card body into fixed art, two-line title,
+  rarity, progress and status slots with bounded overflow and explicit title
+  ellipsis.
+- Result: success; format, Expo lint, strict typecheck, all 30 suites/183 tests
+  and fresh Android/iOS Metro-Hermes exports pass.
+- Relevant result summary: every row has two equal columns computed from the
+  measured viewport in physical pixels, `space-between` owns the horizontal
+  separation, the row separator owns the vertical separation, and every card
+  fills an identical 246px-high cell. Regression coverage explicitly compares
+  Primera vuelta, El destino decide, Segunda oportunidad and Sin pensarlo dos
+  veces. Achievement behavior, assets, progress, rewards and navigation were
+  not changed.
+- Current phase/status: structural layout correction is complete locally on
+  uncommitted `experimental`; physical Android/iOS visual confirmation remains.
+- Blocker: no code blocker; this environment has no connected physical device.
+- Next intended action: reload the development client on the target Android
+  phone and visually confirm adjacent rows across filters and font/display sizes.
+- Follow-up: increased only the collection's outer vertical insets from 8/28 to
+  12/32 pixels, retained the existing 20-pixel side inset and fixed cell/card
+  geometry, and added a regression assertion for all three container paddings.
+  Both achievement suites (12 tests) remain green.
+- Follow-up: redistributed the card's unchanged 24-pixel vertical padding from
+  12/12 to 18/6, then top-aligned the unchanged 42-pixel title slot with a
+  2-pixel internal offset. This adds space above the unchanged 108-pixel art
+  circle while reducing the visual art-to-title gap; no grid width, column,
+  card-height, image-size or behavior changed. Format, lint, strict typecheck
+  and all 30 suites/183 tests pass.
+
+### 2026-10-29 — Primary navigation refactored to four persistent tabs
+
+- Timestamp: 2026-10-29.
+- Command/action: inspected the existing root Stack, direct route files,
+  Roulette header, root collection screens and native Account modal, then
+  replaced only the root navigator with Expo Router Tabs.
+- Result: success; format, Expo lint, strict typecheck, 31 suites/185 tests and
+  fresh Android/iOS Metro-Hermes exports pass.
+- Relevant result summary: the fixed bottom bar exposes exactly Roulette,
+  Favorites, Visits and Achievements as icon-only destinations with a coral
+  active treatment, neutral inactive icons, subtle border, 48dp minimum tab
+  items, safe-area ownership and history-based Android back behavior. Existing
+  route components remain the source screens, so tab switching preserves the
+  mounted Roulette and filter state.
+- Presentation: removed Favorites, Visits, Achievements and Settings actions
+  from the Roulette header, leaving only the brand and level-badged avatar.
+  Root tab screens no longer render redundant back arrows.
+- Account: added the requested Settings row after progression. It reuses
+  `Linking.openSettings`, closes the native sheet first and waits for its
+  dismissal before opening system application preferences. Logout, Google
+  linking and achievement progression actions remain unchanged.
+- Constraint confirmation: no API, backend contract, authentication behavior,
+  XP/achievement/visit/favorite logic, dependency or duplicated screen changed.
+- Current phase/status: navigation implementation and automated/native bundle
+  verification are complete locally on uncommitted `experimental`.
+- Blocker: physical Android/iOS tab/back/safe-area review still requires a
+  connected device; the current WSL `adb` bridge is unavailable.
+- Next intended action: run the navigation acceptance matrix on the physical
+  phone, especially Roulette state retention and Account-to-Settings dismissal.
+
+### 2026-10-29 — Bottom tabs reverted and original header navigation restored
+
+- Timestamp: 2026-10-29.
+- Command/action: removed the just-added Tabs navigator, tab components,
+  constants/types and navigation-specific test suite, then restored the root
+  Expo Router Stack and the original header/screen-back navigation.
+- Relevant result summary: the Roulette header again renders Logros, Visitas,
+  Favoritos and the level-badged avatar in the original order, sizes and
+  containers. The Settings gear remains intentionally absent from the header.
+- Preserved change: the Settings row remains in the scrollable Account modal
+  after progression and reuses the existing system application-settings action
+  after closing the sheet. Profile, XP, achievement button and logout behavior
+  remain unchanged.
+- Constraint confirmation: no screen, domain behavior, API, backend contract,
+  dependency or recent achievement-card correction was reverted.
+- Result: format, Expo lint, strict typecheck, all 30 suites/184 tests and fresh
+  Android/iOS Metro-Hermes exports pass after the restoration.

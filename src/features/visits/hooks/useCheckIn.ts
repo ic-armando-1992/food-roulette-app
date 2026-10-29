@@ -28,7 +28,12 @@ export function useCheckIn(options: UseCheckInOptions = {}) {
         );
       }
 
-      return checkIn({ visitId, spinId, ...location });
+      return checkIn({
+        visitId,
+        spinId,
+        ...location,
+        observedAt: location.observedAt ?? new Date().toISOString(),
+      });
     },
     mutationKey: ['visits', 'check-in'],
     onSuccess: async (result, variables) => {
@@ -43,6 +48,11 @@ export function useCheckIn(options: UseCheckInOptions = {}) {
         notify.warning(
           VISITS_LABELS.notification.accuracyLow(result.accuracyMeters),
         );
+        return;
+      }
+
+      if (result.status === 'location_too_old') {
+        notify.warning(VISITS_LABELS.notification.locationTooOld);
         return;
       }
 

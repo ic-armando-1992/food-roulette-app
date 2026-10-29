@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { AppProviders } from '@/core/providers/AppProviders';
 import { AuthProvider } from '@/features/auth/providers/AuthProvider';
+import { AchievementNotificationsProvider } from '@/features/achievements/providers/AchievementNotificationsProvider';
 import {
   AppErrorBoundary,
   TelemetryProvider,
@@ -16,10 +17,12 @@ export default function RootLayout() {
     <AppErrorBoundary>
       <AppProviders>
         <AuthProvider>
-          <TelemetryProvider>
-            <StatusBar style="dark" />
-            <Stack screenOptions={{ headerShown: false }} />
-          </TelemetryProvider>
+          <AchievementNotificationsProvider>
+            <TelemetryProvider>
+              <StatusBar style="dark" />
+              <Stack screenOptions={{ headerShown: false }} />
+            </TelemetryProvider>
+          </AchievementNotificationsProvider>
         </AuthProvider>
       </AppProviders>
     </AppErrorBoundary>

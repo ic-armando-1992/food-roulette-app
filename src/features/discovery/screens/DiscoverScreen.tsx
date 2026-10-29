@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { Heart, MapPin, Settings, Sparkles } from 'lucide-react-native';
+import { Href, useRouter } from 'expo-router';
+import { Heart, MapPin, Sparkles, Trophy } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,22 +42,38 @@ import {
 } from '@/core/telemetry/telemetry';
 import { TELEMETRY_EVENTS } from '@/core/telemetry/constants/telemetry.constants';
 import colors from '@/theme/colors.json';
+import { useAchievementNotifications } from '@/features/achievements/providers/AchievementNotificationsProvider';
+import { useProgression } from '@/features/achievements/hooks/useProgression';
 
 function BrandHeader({
   actionsDisabled = false,
   onAccountPress,
+  onAchievementsPress,
   onFavoritesPress,
   onVisitsPress,
+  showAchievements = false,
   showFavorites = false,
   showVisits = false,
-  showSettings = false,
 }: BrandHeaderProps) {
+  const progression = useProgression();
   return (
     <View className="flex-row items-center justify-between px-5 py-3">
       <Text className="text-sm font-extrabold uppercase tracking-widest text-primary">
         {DISCOVERY_LABELS.brandName}
       </Text>
       <View className="flex-row items-center gap-2">
+        {showAchievements && onAchievementsPress ? (
+          <Pressable
+            accessibilityLabel="Abrir mis logros"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: actionsDisabled }}
+            className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
+            disabled={actionsDisabled}
+            onPress={onAchievementsPress}
+          >
+            <Trophy color={colors.foreground} size={21} />
+          </Pressable>
+        ) : null}
         {showVisits && onVisitsPress ? (
           <Pressable
             accessibilityLabel={DISCOVERY_LABELS.accessibility.visits}
@@ -88,22 +104,11 @@ function BrandHeader({
             <Heart color={colors.foreground} size={21} />
           </Pressable>
         ) : null}
-        <AccountButton disabled={actionsDisabled} onPress={onAccountPress} />
-        {showSettings ? (
-          <Pressable
-            accessibilityLabel={DISCOVERY_LABELS.accessibility.settings}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: actionsDisabled }}
-            className="h-11 w-11 items-center justify-center rounded-full bg-surfaceSecondary"
-            disabled={actionsDisabled}
-            onPress={() => void Linking.openSettings()}
-            style={({ pressed }) => ({
-              opacity: actionsDisabled ? 0.5 : pressed ? 0.7 : 1,
-            })}
-          >
-            <Settings color={colors.foreground} size={21} />
-          </Pressable>
-        ) : null}
+        <AccountButton
+          disabled={actionsDisabled}
+          level={progression.data?.level}
+          onPress={onAccountPress}
+        />
       </View>
     </View>
   );
@@ -111,6 +116,8 @@ function BrandHeader({
 
 export function DiscoverScreen() {
   const router = useRouter();
+  const achievementNotifications = useAchievementNotifications();
+  const progression = useProgression();
   const radiusMeters = useDiscoveryStore((state) => state.radiusMeters);
   const setRadiusMeters = useDiscoveryStore((state) => state.setRadiusMeters);
   const {
@@ -139,6 +146,7 @@ export function DiscoverScreen() {
   const requestInFlight = useRef(false);
   const lastSearchCoordinates = useRef<Coordinates | null>(null);
   const stopAnimationResolver = useRef<(() => void) | null>(null);
+  const rouletteSessionId = useRef<string | null>(null);
   const isSpinning = roulettePhase !== 'idle';
   const favorite = useFavoriteStatus(
     view === 'result' && !isSpinning
@@ -177,6 +185,14 @@ export function DiscoverScreen() {
     });
   }, [recommendation.error, recommendation.isError]);
 
+  useEffect(() => {
+    if (checkIn.data?.status === 'verified') {
+      void achievementNotifications.handleProgressionUpdate(
+        checkIn.data.progressionUpdate,
+      );
+    }
+  }, [achievementNotifications, checkIn.data]);
+
   const requestRecommendation = async (isReroll: boolean) => {
     if (
       locationState.status !== 'granted' ||
@@ -188,6 +204,11 @@ export function DiscoverScreen() {
 
     const previousResult = displayedResult;
     const spinId = createTelemetryId();
+    const activeSessionId =
+      isReroll && rouletteSessionId.current
+        ? rouletteSessionId.current
+        : createTelemetryId();
+    if (!isReroll) rouletteSessionId.current = activeSessionId;
     const startedAt = Date.now();
     const minimumSpinDuration = waitForMinimumSpinDuration();
     requestInFlight.current = true;
@@ -241,6 +262,9 @@ export function DiscoverScreen() {
       const result = await recommendation.recommend({
         ...searchCoordinates,
         spinId,
+        rouletteSessionId: activeSessionId,
+        isReroll,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         allowInternational: false,
         radiusMeters,
         candidatePoolId: canReuseCandidatePool
@@ -268,6 +292,9 @@ export function DiscoverScreen() {
         googleLinkPrompt.recordSuccessfulSpin();
         await waitForRouletteToStop();
         setView('result');
+        void achievementNotifications.handleProgressionUpdate(
+          result.progressionUpdate,
+        );
       }
     } catch (error) {
       await minimumSpinDuration;
@@ -315,6 +342,7 @@ export function DiscoverScreen() {
         </ScrollView>
         <AccountModal
           onClose={() => setAccountVisible(false)}
+          progression={progression.data}
           visible={accountVisible}
         />
       </SafeAreaView>
@@ -336,6 +364,7 @@ export function DiscoverScreen() {
             isRerolling={isSpinning}
             onBack={() => {
               recommendation.reset();
+              rouletteSessionId.current = null;
               setView('home');
             }}
             onCheckIn={() => {
@@ -349,7 +378,11 @@ export function DiscoverScreen() {
             }}
             onMapsOpened={() => {
               if (displayedSpinId) {
-                void markSpinMapsOpened(displayedSpinId).catch(() => undefined);
+                void markSpinMapsOpened(displayedSpinId)
+                  .then((update) =>
+                    achievementNotifications.handleProgressionUpdate(update),
+                  )
+                  .catch(() => undefined);
                 trackProductEvent(TELEMETRY_EVENTS.mapsOpened, {
                   restaurantId: displayedResult.recommendation.id,
                   spinId: displayedSpinId,
@@ -372,11 +405,12 @@ export function DiscoverScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <BrandHeader
         onAccountPress={() => setAccountVisible(true)}
+        onAchievementsPress={() => router.push('/achievements' as Href)}
         onFavoritesPress={() => router.push('/favorites')}
         onVisitsPress={() => router.push('/visits')}
+        showAchievements
         showFavorites
         showVisits
-        showSettings
       />
       <NotificationRegion enabled={!accountVisible} />
       <SessionRecoveryNotice />
@@ -442,6 +476,7 @@ export function DiscoverScreen() {
       </ScrollView>
       <AccountModal
         onClose={() => setAccountVisible(false)}
+        progression={progression.data}
         visible={accountVisible}
       />
     </SafeAreaView>

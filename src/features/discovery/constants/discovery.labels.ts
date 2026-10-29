@@ -9,7 +9,6 @@ export const DISCOVERY_LABELS = {
       'Toca la ruleta o gírala con un dedo para buscar un restaurante',
     rouletteSpinning: 'Ruleta girando',
     searchProgress: 'Buscando un restaurante cercano',
-    settings: 'Abrir ajustes de la aplicación',
     favorites: 'Abrir favoritos',
     visits: 'Abrir mis visitas',
     weeklyHoursHide: 'Ocultar horario semanal',

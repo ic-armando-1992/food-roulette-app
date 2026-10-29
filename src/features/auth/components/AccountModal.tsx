@@ -1,7 +1,9 @@
-import { X } from 'lucide-react-native';
+import { ChevronRight, Settings, X } from 'lucide-react-native';
+import { Href, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -26,8 +28,13 @@ import { useAuth } from '@/features/auth/providers/AuthProvider';
 import { AccountModalProps } from '@/features/auth/types/account.types';
 import colors from '@/theme/colors.json';
 
-export function AccountModal({ onClose, visible }: AccountModalProps) {
+export function AccountModal({
+  onClose,
+  progression,
+  visible,
+}: AccountModalProps) {
   const { height } = useWindowDimensions();
+  const router = useRouter();
   const { logout, retry, status, user } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isGoogleUser = status === 'ready' && user?.isGuest === false;
@@ -88,6 +95,13 @@ export function AccountModal({ onClose, visible }: AccountModalProps) {
       onClose();
       setTimeout(resolve, ACCOUNT_MODAL_DISMISS_DELAY_MS);
     });
+
+  const openSettings = () => {
+    onClose();
+    setTimeout(() => {
+      void Linking.openSettings();
+    }, ACCOUNT_MODAL_DISMISS_DELAY_MS);
+  };
 
   return (
     <Modal
@@ -167,6 +181,61 @@ export function AccountModal({ onClose, visible }: AccountModalProps) {
                   </Text>
                 ) : null}
               </View>
+
+              {progression ? (
+                <View className="mt-6 rounded-3xl bg-surface p-5">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-xl font-black text-foreground">
+                      Nivel {progression.level}
+                    </Text>
+                    <Text className="text-sm font-bold text-primary">
+                      {progression.totalXp} XP
+                    </Text>
+                  </View>
+                  <View className="mt-4 h-3 overflow-hidden rounded-full bg-surfaceSecondary">
+                    <View
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${progression.progressPercentage}%` }}
+                    />
+                  </View>
+                  <Text className="mt-2 text-xs font-semibold text-mutedForeground">
+                    {progression.xpRemaining === null
+                      ? 'Nivel máximo configurado por ahora'
+                      : `${progression.xpRemaining} XP para el siguiente nivel`}
+                  </Text>
+                  <View className="mt-4">
+                    <Button
+                      label="VER LOGROS Y PROGRESO"
+                      onPress={() => {
+                        onClose();
+                        router.push('/achievements' as Href);
+                      }}
+                      variant="secondary"
+                    />
+                  </View>
+                </View>
+              ) : null}
+
+              <Pressable
+                accessibilityLabel={AUTH_LABELS.account.settings.accessibility}
+                accessibilityRole="button"
+                className={`${progression ? 'mt-4' : 'mt-6'} min-h-16 flex-row items-center rounded-3xl bg-surface p-4`}
+                onPress={openSettings}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <View className="h-11 w-11 items-center justify-center rounded-2xl bg-rouletteCream">
+                  <Settings color={colors.primary} size={21} />
+                </View>
+                <View className="ml-3 flex-1">
+                  <Text className="text-base font-extrabold text-foreground">
+                    {AUTH_LABELS.account.settings.title}
+                  </Text>
+                  <Text className="mt-0.5 text-sm text-mutedForeground">
+                    {AUTH_LABELS.account.settings.description}
+                  </Text>
+                </View>
+                <ChevronRight color={colors.mutedForeground} size={20} />
+              </Pressable>
 
               {status === 'unavailable' ? (
                 <View className="mt-7 w-full gap-3 rounded-2xl bg-surfaceSecondary p-4">

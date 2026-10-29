@@ -61,17 +61,21 @@ describe('account UI', () => {
     mockAuthUser();
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
 
   it('shows an accessible outlined profile entry for a guest', () => {
     const onPress = jest.fn();
-    render(<AccountButton onPress={onPress} />);
+    render(<AccountButton level={3} onPress={onPress} />);
 
     fireEvent.press(
       screen.getByRole('button', { name: 'Abrir cuenta de invitado' }),
     );
 
     expect(onPress).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('3')).toBeOnTheScreen();
   });
 
   it('blocks account actions when explicitly disabled', () => {
@@ -85,6 +89,57 @@ describe('account UI', () => {
     fireEvent.press(accountButton);
 
     expect(onPress).not.toHaveBeenCalled();
+  });
+
+  it('shows the authoritative level and remaining XP in the account modal', () => {
+    render(
+      <AccountModal
+        onClose={jest.fn()}
+        progression={{
+          level: 3,
+          currentLevel: 3,
+          totalXp: 240,
+          currentLevelXp: 40,
+          requiredXpForNextLevel: 170,
+          nextLevelXp: 170,
+          xpRemaining: 130,
+          progressPercentage: 24,
+          maxConfiguredLevel: 50,
+        }}
+        visible
+      />,
+    );
+
+    expect(screen.getByText('Nivel 3')).toBeOnTheScreen();
+    expect(screen.getByText('240 XP')).toBeOnTheScreen();
+    expect(
+      screen.getByText('130 XP para el siguiente nivel'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Configuración')).toBeOnTheScreen();
+    expect(screen.getByText('Preferencias de la aplicación')).toBeOnTheScreen();
+  });
+
+  it('closes Cuenta before opening the existing application settings', () => {
+    jest.useFakeTimers();
+    const onClose = jest.fn();
+    const openSettings = jest
+      .spyOn(ReactNative.Linking, 'openSettings')
+      .mockResolvedValue(undefined);
+    render(<AccountModal onClose={onClose} visible />);
+
+    fireEvent.press(
+      screen.getByRole('button', {
+        name: 'Abrir configuración de la aplicación',
+      }),
+    );
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(openSettings).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    expect(openSettings).toHaveBeenCalledTimes(1);
   });
 
   it('opens the guest account content with Google Sign-In', () => {

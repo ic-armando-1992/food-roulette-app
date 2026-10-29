@@ -43,6 +43,11 @@ export const AUTH_LABELS = {
     guestTitle: 'Cuenta de invitado',
     memberSince: (date: string) => `Cuenta creada el ${date}`,
     retry: 'RECONECTAR CUENTA',
+    settings: {
+      accessibility: 'Abrir configuración de la aplicación',
+      description: 'Preferencias de la aplicación',
+      title: 'Configuración',
+    },
     title: 'Cuenta',
   },
   google: {

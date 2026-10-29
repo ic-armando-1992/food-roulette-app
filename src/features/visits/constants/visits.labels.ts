@@ -50,6 +50,8 @@ export const VISITS_LABELS = {
       return `Estás a ${distance} del restaurante. Acércate para registrar tu visita.`;
     },
     tooFarTitle: 'Aún no estás ahí 📍',
+    locationTooOld:
+      'La lectura de ubicación ya no es reciente. Intenta registrar la visita otra vez.',
     verified: '¡Visita verificada! ✅',
   },
   subtitle: 'Tus últimas 10 visitas verificadas.',

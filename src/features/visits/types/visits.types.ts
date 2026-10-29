@@ -12,6 +12,7 @@ export type CheckInCoordinates = {
   latitude: number;
   longitude: number;
   accuracyMeters: number;
+  observedAt?: string;
 };
 
 export type UseCheckInOptions = {

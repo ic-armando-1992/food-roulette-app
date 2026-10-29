@@ -10,6 +10,9 @@ function AnimatedView({
 
 const chainableTransition = {
   duration: () => chainableTransition,
+  damping: () => chainableTransition,
+  reduceMotion: () => chainableTransition,
+  springify: () => chainableTransition,
 };
 
 const Animated = {
@@ -27,6 +30,8 @@ export const FadeInDown = chainableTransition;
 export const FadeInUp = chainableTransition;
 export const FadeOutUp = chainableTransition;
 export const LinearTransition = chainableTransition;
+export const ZoomIn = chainableTransition;
+export const ReduceMotion = { System: 'system' };
 export const cancelAnimation = () => undefined;
 export const runOnJS = <T extends (...args: never[]) => unknown>(callback: T) =>
   callback;
