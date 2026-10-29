@@ -10,9 +10,9 @@ implementation blocker.
 
 ## Current branch
 
-`docs/phase-6-final-closeout`, branched from synchronized `experimental` after
-the Phase 6 App delivery was integrated as `8f4a449` and the API delivery as
-`19e9f98`. No release tag was created.
+`experimental`, synchronized with `origin/experimental`. The Phase 6 App
+delivery is integrated as `8f4a449`, the API delivery as `19e9f98`, and their
+documentation closeouts as `b16da19` and `23c4ad5`. No release tag was created.
 
 ## Current environment status
 
@@ -110,6 +110,6 @@ Android device is currently connected to `adb`.
 
 ## Next intended action
 
-Merge this documentation closeout, then begin Phase 7 Sharing from synchronized
-`experimental` when explicitly requested. Before a store release, execute the
-deferred physical Android/iOS progression and accessibility matrix.
+Begin Phase 7 Sharing from synchronized `experimental` when explicitly
+requested. Before a store release, execute the deferred physical Android/iOS
+progression and accessibility matrix.

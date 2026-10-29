@@ -14,13 +14,14 @@ Rolling log of recent meaningful activity. Archive older entries under
 - Result: Phase 6 is closed on `experimental` at App commit `8f4a449` and API
   commit `19e9f98`. The existing green baseline remains 30 suites/184 App tests,
   both native Hermes exports, 62 API unit tests and 47 API E2E tests.
+- Publication: App closeout `b16da19` and API closeout `23c4ad5` were integrated
+  and published to `origin/experimental` without conflicts.
 - Remaining review: no implementation blocker was found. Optional CDN
   publication and the complete physical Android/iOS accessibility, large-font,
   reduced-motion and performance matrix are explicitly deferred to release
   readiness; canonical city/zone progress depends on API-administered IDs, and
   spendable achievement rewards remain Phase 8 scope.
-- Next intended action: merge the documentation closeout and start Phase 7
-  Sharing only after explicit authorization.
+- Next intended action: start Phase 7 Sharing only after explicit authorization.
 
 ### 2026-10-29 — Achievements mobile delivery verified
 
