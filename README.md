@@ -558,6 +558,38 @@ API must allowlist the same Web client ID in `GOOGLE_AUTH_CLIENT_IDS`.
 
 ---
 
+## 🏆 Achievements and progression
+
+Phase 6 is complete on `experimental`. The header trophy opens `Mis logros`, a
+deterministic two-column collection of 50 server-defined achievements. Every
+cell owns the same responsive width and fixed height; art, two-line titles,
+rarity, progress and counters occupy fixed internal slots so content cannot
+resize a card or column.
+
+The API remains authoritative for progress, unlocks, XP and levels. The App
+uses TanStack Query for live state and owner-scoped Expo SQLite data only as a
+last-known offline cache. The catalog revalidates with ETags; private cached
+progress and notification queues are cleared on logout or account switch.
+
+The avatar shows the current level and opens the Account sheet with the shared
+XP summary, `VER LOGROS Y PROGRESO`, Settings and logout. Achievement and
+multi-level celebrations use one durable sequential queue, while
+server-confirmed spin, Maps acceptance and verified-visit XP appears as grouped
+activity feedback. Reduced motion is honored.
+
+The current 50 definitions award XP only. Spendable credits/spins remain Phase
+8 scope and are not represented as a client-owned balance.
+
+All 50 bundled images plus the locked-secret fallback ship in Android and iOS
+bundles. A versioned remote asset URL is preferred when configured, with disk
+cache and bundled fallback; CDN/object-storage credentials are not required.
+Locked secrets never expose their real condition, target or progress.
+
+City and zone achievements advance only after the API's restaurant catalog has
+licensed, stable canonical IDs. The complete Android/iOS accessibility,
+large-font, reduced-motion and performance matrix is a Phase 13 release gate,
+not an open Phase 6 implementation item.
+
 ## 🧪 Testing
 
 Run the deterministic Phase 0 regression suite with:

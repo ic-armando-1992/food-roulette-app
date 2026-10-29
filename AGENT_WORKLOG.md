@@ -5,6 +5,23 @@ Rolling log of recent meaningful activity. Archive older entries under
 
 ## Entries
 
+### 2026-10-29 — Phase 6 achievements closed
+
+- Timestamp: 2026-10-29.
+- Command/action: audited the integrated API/App delivery against the global
+  roadmap, reconciled the expanded 50-achievement plus XP/level scope and
+  updated the roadmap, mobile documentation and synchronized repo status.
+- Result: Phase 6 is closed on `experimental` at App commit `8f4a449` and API
+  commit `19e9f98`. The existing green baseline remains 30 suites/184 App tests,
+  both native Hermes exports, 62 API unit tests and 47 API E2E tests.
+- Remaining review: no implementation blocker was found. Optional CDN
+  publication and the complete physical Android/iOS accessibility, large-font,
+  reduced-motion and performance matrix are explicitly deferred to release
+  readiness; canonical city/zone progress depends on API-administered IDs, and
+  spendable achievement rewards remain Phase 8 scope.
+- Next intended action: merge the documentation closeout and start Phase 7
+  Sharing only after explicit authorization.
+
 ### 2026-10-29 — Achievements mobile delivery verified
 
 - Timestamp: 2026-10-29.
@@ -16,8 +33,8 @@ Rolling log of recent meaningful activity. Archive older entries under
   local `.env` and Windows Zone.Identifier metadata were not staged, and no
   credential pattern was detected.
 - Current phase/status: the achievements experience, corrected uniform grid,
-  original header navigation and Account-based Settings access are ready for
-  delivery to `origin/experimental`; no merge or release tag is included.
+  original header navigation and Account-based Settings access were integrated
+  into `origin/experimental` as `8f4a449`; no release tag was created.
 
 ### 2026-10-25 — Integrated notification system completed for Android review
 

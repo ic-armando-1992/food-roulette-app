@@ -2,15 +2,17 @@
 
 ## Current phase
 
-Achievements V1 plus Phase 2 XP/level progression and the Android collection
-layout/performance refactor are implemented locally on `experimental`. API and
-app automated verification passes; physical-device profiling and visual review
-are the remaining release-quality steps.
+Roadmap Phases 0--6 are complete in `experimental`. Phase 6 Achievements
+delivered the 50-item collection, XP/level progression and the final Android
+grid/header/account presentation. API and App automated verification is green;
+the remaining device matrix is tracked as release-readiness work, not a Phase 6
+implementation blocker.
 
 ## Current branch
 
-`experimental`; achievements and the finalized header/account presentation are
-part of the current branch delivery. No merge or release tag was performed.
+`docs/phase-6-final-closeout`, branched from synchronized `experimental` after
+the Phase 6 App delivery was integrated as `8f4a449` and the API delivery as
+`19e9f98`. No release tag was created.
 
 ## Current environment status
 
@@ -83,10 +85,10 @@ measurements were not claimed.
 
 ## Active blocker(s)
 
-No code or automated-test blocker. CDN/object-storage credentials are absent by
-design and local assets remain functional. Physical Android/iOS visual,
-accessibility, scroll profiling and reduced-motion validation remains pending;
-no Android device is currently connected to `adb`.
+No active blocker remains for Phase 6. Bundled assets are the supported fallback
+without CDN credentials. Complete Android/iOS accessibility, large-font,
+reduced-motion and performance validation remains a Phase 13 release gate; no
+Android device is currently connected to `adb`.
 
 ## Important current decisions
 
@@ -108,7 +110,6 @@ no Android device is currently connected to `adb`.
 
 ## Next intended action
 
-Connect the physical Android device and verify the restored header navigation
-plus Account-to-Settings dismissal; then profile collection open/scroll/filter,
-image memory, large-font layouts, XP sequencing and reduced motion before
-preparing reviewable commits if requested.
+Merge this documentation closeout, then begin Phase 7 Sharing from synchronized
+`experimental` when explicitly requested. Before a store release, execute the
+deferred physical Android/iOS progression and accessibility matrix.
